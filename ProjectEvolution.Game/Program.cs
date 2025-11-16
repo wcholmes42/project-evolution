@@ -2,9 +2,12 @@ using ProjectEvolution.Game;
 
 var ui = new UIRenderer();
 var game = new RPGGame();
+var logger = new GameLogger();
 
+logger.LogEvent("GAME", "Project Evolution started!");
 game.SetPlayerStats(strength: 2, defense: 1);
 game.StartWorldExploration();
+logger.LogEvent("INIT", $"Player spawned at ({game.PlayerX},{game.PlayerY})");
 
 ui.Initialize();
 ui.RenderStatusBar(game);
@@ -110,6 +113,7 @@ while (playing)
 
         if (moved)
         {
+            logger.LogEvent("MOVE", $"{direction} to ({game.PlayerX},{game.PlayerY}) - {game.GetCurrentTerrain()}");
             ui.AddMessage($"Moved {direction} to {game.GetCurrentTerrain()}");
             ui.RenderStatusBar(game);
             ui.RenderMap(game);
@@ -117,8 +121,10 @@ while (playing)
             // Check for encounter
             if (game.RollForEncounter())
             {
+                logger.LogEvent("ENCOUNTER", $"Random encounter at ({game.PlayerX},{game.PlayerY})");
                 ui.AddMessage("💥 AMBUSH! Enemy encountered!");
                 game.TriggerEncounter();
+                logger.LogEvent("COMBAT", $"Fighting {game.EnemyName} [Lvl{game.EnemyLevel}] HP:{game.EnemyHP}");
                 ui.RenderStatusBar(game);
 
                 // Combat
@@ -137,7 +143,16 @@ while (playing)
                     }
 
                     var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
+                    int hpBefore = game.PlayerHP;
                     game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
+                    int hpAfter = game.PlayerHP;
+
+                    if (hpAfter < hpBefore)
+                    {
+                        logger.LogEvent("DAMAGE", $"Player took {hpBefore - hpAfter} damage. HP: {hpAfter}/{game.MaxPlayerHP}");
+                    }
+
+                    logger.LogEvent("COMBAT_ROUND", game.CombatLog);
                     ui.AddMessage(game.CombatLog);
 
                     if (game.CombatEnded)
@@ -145,12 +160,15 @@ while (playing)
                         game.ProcessGameLoopVictory();
                         if (game.IsWon)
                         {
+                            logger.LogEvent("VICTORY", $"Defeated {game.EnemyName}. XP: {game.PlayerXP}");
                             ui.AddMessage("✅ Victory!");
                             ui.RenderStatusBar(game);
                         }
                         else
                         {
+                            logger.LogEvent("DEATH", $"Killed by {game.EnemyName}. HP: 0");
                             ui.AddMessage("💀 YOU DIED! GAME OVER!");
+                            ui.AddMessage($"Killed by: {game.EnemyName} [Lvl {game.EnemyLevel}]");
                             playing = false;
                         }
                     }
@@ -247,9 +265,30 @@ while (playing)
 }
 
 ui.Cleanup();
+
+logger.LogEvent("GAME", "Game session ended");
 Console.WriteLine("\n╔════════════════════════════════════════╗");
-Console.WriteLine("║      THANKS FOR PLAYING!               ║");
+Console.WriteLine("║      GAME ENDED                        ║");
 Console.WriteLine("╚════════════════════════════════════════╝");
-Console.WriteLine($"\nFinal Stats: Level {game.PlayerLevel} | {game.PlayerGold}g | {game.CombatsWon} victories");
+
+// Determine why game ended
+string endReason = "Unknown";
+if (game.PlayerHP <= 0)
+    endReason = "Player Death (HP reached 0)";
+else if (!playing && game.RunEnded)
+    endReason = "Player died in combat";
+else if (!playing)
+    endReason = "Player quit";
+
+Console.WriteLine($"\nEnd Reason: {endReason}");
+Console.WriteLine($"Final Stats: Level {game.PlayerLevel} | {game.PlayerGold}g | {game.CombatsWon} victories");
+
+// Full state dump
+logger.DumpGameState(game, endReason);
+
+// Show recent events
+logger.ShowRecentEvents(15);
+
+Console.WriteLine("\nLog saved to: game_log.txt");
 Console.WriteLine("\nPress any key to exit...");
 Console.ReadKey();
