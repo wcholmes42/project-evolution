@@ -2576,7 +2576,6 @@ public class RPGGame
 
         // Spawn 10-15 mobs across the world
         int mobCount = _random.Next(10, 16);
-        string[] mobNames = { "Goblin Scout", "Orc Wanderer", "Wild Beast", "Bandit", "Skeleton" };
 
         for (int i = 0; i < mobCount; i++)
         {
@@ -2592,10 +2591,19 @@ public class RPGGame
             }
             while ((x == PlayerX && y == PlayerY) || terrain == "Town");
 
-            string name = mobNames[_random.Next(mobNames.Length)];
+            // Random enemy type and derive name from it
+            EnemyType type = (EnemyType)_random.Next(3);
+            string name = type switch
+            {
+                EnemyType.GoblinScout => "Goblin Scout",
+                EnemyType.GoblinWarrior => "Goblin Warrior",
+                EnemyType.GoblinArcher => "Goblin Archer",
+                _ => "Goblin Scout"
+            };
+
             int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2)); // Level ±1 of player
 
-            _activeMobs.Add(new Mob(x, y, name, level));
+            _activeMobs.Add(new Mob(x, y, name, level, type));
         }
     }
 
@@ -2646,11 +2654,10 @@ public class RPGGame
         _combatStarted = true;
         _hpCombat = true;
 
-        // Initialize combat with the mob (use random enemy type for stats)
-        EnemyType randomType = (EnemyType)_random.Next(3);
-        InitializeEnemyWithVariableStats(randomType);
+        // Initialize combat with the mob using its stored type
+        InitializeEnemyWithVariableStats(mob.Type);
 
-        // Override with mob's name and level
+        // Override with mob's name and level (already set by InitializeEnemyWithVariableStats, but ensure level is correct)
         EnemyName = mob.Name;
         EnemyLevel = mob.Level;
 

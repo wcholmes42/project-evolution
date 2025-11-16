@@ -384,16 +384,17 @@ public class UIRenderer
     {
         if (autoPlayer == null) return;
 
-        // Debug panel on the right side of the screen
+        // Debug panel on the right side of the screen (37 char wide)
         int debugX = 82;
         int startY = 1;
+        const int contentWidth = 35; // Width for text content inside borders
 
         // Header
         Console.SetCursorPosition(debugX, startY);
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.Write("╔═══════════════════════════════════╗");
         Console.SetCursorPosition(debugX, startY + 1);
-        Console.Write("║        AI DEBUG PANEL 🤖          ║");
+        Console.Write("║      AI DEBUG PANEL 🤖            ║");
         Console.SetCursorPosition(debugX, startY + 2);
         Console.Write("╠═══════════════════════════════════╣");
         Console.ResetColor();
@@ -405,9 +406,10 @@ public class UIRenderer
         Console.Write("║ ");
         Console.ForegroundColor = ConsoleColor.Cyan;
         string goalDesc = autoPlayer.GetCurrentGoalDescription();
-        Console.Write(goalDesc.PadRight(33));
+        if (goalDesc.Length > contentWidth) goalDesc = goalDesc.Substring(0, contentWidth);
+        Console.Write(goalDesc.PadRight(contentWidth));
         Console.ResetColor();
-        Console.Write(" ║");
+        Console.Write("║");
 
         // Primary Objective
         Console.SetCursorPosition(debugX, startY + 5);
@@ -416,10 +418,10 @@ public class UIRenderer
         Console.Write("║ ");
         Console.ForegroundColor = ConsoleColor.Yellow;
         string objective = autoPlayer.Goals.GetPrimaryObjective(game);
-        if (objective.Length > 33) objective = objective.Substring(0, 30) + "...";
-        Console.Write(objective.PadRight(33));
+        if (objective.Length > contentWidth) objective = objective.Substring(0, contentWidth);
+        Console.Write(objective.PadRight(contentWidth));
         Console.ResetColor();
-        Console.Write(" ║");
+        Console.Write("║");
 
         // Current Target
         Console.SetCursorPosition(debugX, startY + 7);
@@ -428,10 +430,10 @@ public class UIRenderer
         Console.Write("║ ");
         Console.ForegroundColor = ConsoleColor.Green;
         string target = autoPlayer.CurrentTarget;
-        if (target.Length > 33) target = target.Substring(0, 30) + "...";
-        Console.Write(target.PadRight(33));
+        if (target.Length > contentWidth) target = target.Substring(0, contentWidth);
+        Console.Write(target.PadRight(contentWidth));
         Console.ResetColor();
-        Console.Write(" ║");
+        Console.Write("║");
 
         // Last Decision
         Console.SetCursorPosition(debugX, startY + 9);
@@ -440,10 +442,10 @@ public class UIRenderer
         Console.Write("║ ");
         Console.ForegroundColor = ConsoleColor.Magenta;
         string decision = autoPlayer.LastDecision;
-        if (decision.Length > 33) decision = decision.Substring(0, 30) + "...";
-        Console.Write(decision.PadRight(33));
+        if (decision.Length > contentWidth) decision = decision.Substring(0, contentWidth);
+        Console.Write(decision.PadRight(contentWidth));
         Console.ResetColor();
-        Console.Write(" ║");
+        Console.Write("║");
 
         // Progress
         Console.SetCursorPosition(debugX, startY + 11);
@@ -452,29 +454,46 @@ public class UIRenderer
         Console.Write("║ PROGRESS:                         ║");
 
         Console.SetCursorPosition(debugX, startY + 13);
-        string levelProg = $"Level: {game.PlayerLevel}/{autoPlayer.Goals.TargetLevel}".PadRight(35);
-        Console.Write($"║ {levelProg}║");
+        Console.Write("║ ");
+        string levelProg = $"Level: {game.PlayerLevel}/{autoPlayer.Goals.TargetLevel}";
+        Console.Write(levelProg.PadRight(contentWidth));
+        Console.Write("║");
+
         Console.SetCursorPosition(debugX, startY + 14);
-        string goldProg = $"Gold: {game.PlayerGold}/{autoPlayer.Goals.TargetGold}".PadRight(35);
-        Console.Write($"║ {goldProg}║");
+        Console.Write("║ ");
+        string goldProg = $"Gold: {game.PlayerGold}/{autoPlayer.Goals.TargetGold}";
+        Console.Write(goldProg.PadRight(contentWidth));
+        Console.Write("║");
+
         Console.SetCursorPosition(debugX, startY + 15);
-        string dungProg = $"Dungeons: {autoPlayer.Goals.DungeonsExplored}/{autoPlayer.Goals.TargetDungeons}".PadRight(35);
-        Console.Write($"║ {dungProg}║");
+        Console.Write("║ ");
+        string dungProg = $"Dungeons: {autoPlayer.Goals.DungeonsExplored}/{autoPlayer.Goals.TargetDungeons}";
+        Console.Write(dungProg.PadRight(contentWidth));
+        Console.Write("║");
 
         // Stats
         Console.SetCursorPosition(debugX, startY + 16);
         Console.Write("╠═══════════════════════════════════╣");
         Console.SetCursorPosition(debugX, startY + 17);
         Console.Write("║ SESSION STATS:                    ║");
+
         Console.SetCursorPosition(debugX, startY + 18);
-        string turnsStat = $"Turns: {autoPlayer.TurnsSurvived}".PadRight(35);
-        Console.Write($"║ {turnsStat}║");
+        Console.Write("║ ");
+        string turnsStat = $"Turns: {autoPlayer.TurnsSurvived}";
+        Console.Write(turnsStat.PadRight(contentWidth));
+        Console.Write("║");
+
         Console.SetCursorPosition(debugX, startY + 19);
-        string combatsStat = $"Combats Won: {autoPlayer.CombatsWon}".PadRight(35);
-        Console.Write($"║ {combatsStat}║");
+        Console.Write("║ ");
+        string combatsStat = $"Combats Won: {autoPlayer.CombatsWon}";
+        Console.Write(combatsStat.PadRight(contentWidth));
+        Console.Write("║");
+
         Console.SetCursorPosition(debugX, startY + 20);
-        string fledStat = $"Fled: {autoPlayer.CombatsFled}".PadRight(35);
-        Console.Write($"║ {fledStat}║");
+        Console.Write("║ ");
+        string fledStat = $"Fled: {autoPlayer.CombatsFled}";
+        Console.Write(fledStat.PadRight(contentWidth));
+        Console.Write("║");
 
         // Footer
         Console.SetCursorPosition(debugX, startY + 21);
