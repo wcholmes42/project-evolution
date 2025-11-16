@@ -1,5 +1,33 @@
 using ProjectEvolution.Game;
 
+// Main menu
+Console.Clear();
+Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
+Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 32                 ║");
+Console.WriteLine("╠════════════════════════════════════════════════════════════════╣");
+Console.WriteLine("║                                                                ║");
+Console.WriteLine("║  [P] Play Game (Normal Mode)                                   ║");
+Console.WriteLine("║  [T] Automated Testing & Tuning (Simulation Mode)              ║");
+Console.WriteLine("║  [Q] Quit                                                      ║");
+Console.WriteLine("║                                                                ║");
+Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
+Console.Write("\nChoice: ");
+
+var menuChoice = Console.ReadKey(intercept: true).Key;
+Console.Clear();
+
+if (menuChoice == ConsoleKey.T)
+{
+    // Run simulation/tuning mode
+    SimulationRunner.RunInteractiveTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.Q)
+{
+    return;
+}
+
+// Normal play mode
 var ui = new UIRenderer();
 var game = new RPGGame();
 var logger = new GameLogger();

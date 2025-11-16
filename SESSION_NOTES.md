@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-16
-**Current Generation**: 32 (Balanced Populations!) ⚖️
-**Status**: ✅ Game of Life mob dynamics - less murder, more balance!
+**Current Generation**: 33 (Automated Testing!) 🎛️
+**Status**: ✅ Interactive simulation system for balance tuning!
 
 ## 📝 TODO for Next Session
 
@@ -31,7 +31,8 @@
   - v3.4-pacing (Gen 29: Game Feel & Pacing)
   - v3.5-turn-based (Gen 30: Turn-Based World)
   - v4.0-ai-fog-dungeons (Gen 31: AI, Fog, Dungeons)
-  - v4.1-balanced-populations (Gen 32: Game of Life Mobs) ⭐ **CURRENT**
+  - v4.1-balanced-populations (Gen 32: Game of Life Mobs)
+  - v4.2-simulation-tuning (Gen 33: Automated Testing) ⭐ **CURRENT**
 
 **Test Coverage**: 137 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
@@ -330,7 +331,46 @@ dotnet run --project ProjectEvolution.Game  # Play the game
   - Dynamic, living ecosystem!
 - **Test Count**: 137 passing ✅ (+3 new tests!)
 
-### 🎉 Balanced world: Strategic challenge without frustration!
+#### Generation 33: Automated Testing & Tuning System (CURRENT) 🎛️
+- **Interactive Simulation Mode**: Watch the game play itself!
+- **AutoPlayer AI**: Makes strategic decisions
+  - Flees from mobs when low HP
+  - Visits inns when hurt and can afford it
+  - Buys potions strategically
+  - Random exploration otherwise
+  - Combat AI: attack when strong, defend when weak
+  - Uses potions intelligently
+- **GameSimulator**: Runs automated game sessions
+  - Configurable number of runs (1-100)
+  - Collects comprehensive statistics
+  - Visual or headless mode
+- **SimulationStats**: Tracks everything
+  - Total runs, deaths, turns survived
+  - Average turns per run
+  - Max turns survived
+  - Combats won, gold earned
+  - Death reasons and patterns
+- **The Fun Knobs** 🎛️ (All tunable!):
+  - Mob Detection Range (1-10 tiles)
+  - Max/Min Mob populations
+  - Player starting HP
+  - Player strength/defense
+  - Encounter rate multiplier (0-500%)
+  - Simulation speed (0-1000ms per turn)
+  - Visual toggle (watch or batch run)
+- **Balance Analysis**:
+  - Automatic difficulty assessment
+  - "Too Hard" warning if avg < 20 turns
+  - "Too Easy" warning if avg > 200 turns
+  - Recommendations for tuning
+- **Main Menu**: Choose Play vs Simulation mode at launch
+- **BONUS FIX**: Dungeon lockup issue resolved!
+  - Added ui.RenderMap() on dungeon entry
+  - Replaced old [R]oll system with movement exploration
+  - Dungeons now fully functional
+- **Test Count**: 137 passing ✅
+
+### 🎉 Now we can SCIENCE the fun! Data-driven game design!
 
 The game has evolved from "start and win" to a full RPG combat system with:
 - Turn-based combat
