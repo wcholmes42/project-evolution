@@ -24,6 +24,7 @@ public class RPGGame
     public int PlayerXP { get; private set; } = 0;
     public int PlayerLevel { get; private set; } = 1;
     public int XPForNextLevel { get; private set; } = 100;
+    public int AvailableStatPoints { get; private set; } = 0;
 
     public void Start()
     {
@@ -1507,6 +1508,167 @@ public class RPGGame
             PlayerLevel++;
             XPForNextLevel = PlayerLevel * 100; // Level 2 = 200 XP, Level 3 = 300 XP, etc.
             CombatLog += $" LEVEL UP! Now level {PlayerLevel}!";
+        }
+    }
+
+    public void SpendStatPoint(StatType statType)
+    {
+        if (AvailableStatPoints <= 0)
+        {
+            throw new InvalidOperationException("No stat points available");
+        }
+
+        AvailableStatPoints--;
+
+        switch (statType)
+        {
+            case StatType.Strength:
+                PlayerStrength++;
+                break;
+            case StatType.Defense:
+                PlayerDefense++;
+                break;
+        }
+    }
+
+    public void StartCombatWithStatPoints()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        PlayerStamina = 12;
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // XP, Level, AvailableStatPoints, Stats, Gold all persist
+    }
+
+    public void StartNewStatPointsCombat()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        PlayerStamina = 12;
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // XP, Level, AvailableStatPoints, Stats, Gold persist
+    }
+
+    public void ExecuteStatPointsCombatRoundWithRandomHits(CombatAction playerAction, CombatAction enemyAction)
+    {
+        HitType playerHit = DetermineHitType();
+        HitType enemyHit = DetermineHitType();
+        ExecuteStatPointsCombatRound(playerAction, enemyAction, playerHit, enemyHit);
+    }
+
+    public void ExecuteStatPointsCombatRound(CombatAction playerAction, CombatAction enemyAction,
+        HitType playerHitType, HitType enemyHitType)
+    {
+        // Same as XP combat
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return;
+        }
+
+        CombatLog = string.Empty;
+
+        // Stamina check
+        CombatAction actualPlayerAction = playerAction;
+        if (PlayerStamina < 3 && playerAction == CombatAction.Attack)
+        {
+            actualPlayerAction = CombatAction.Defend;
+            CombatLog += "No stamina! ";
+        }
+
+        // Deduct stamina
+        if (actualPlayerAction == CombatAction.Attack)
+        {
+            PlayerStamina = Math.Max(0, PlayerStamina - 3);
+        }
+        else
+        {
+            PlayerStamina = Math.Max(0, PlayerStamina - 1);
+        }
+
+        bool playerAttacks = actualPlayerAction == CombatAction.Attack;
+        bool playerDefends = actualPlayerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Combat resolution (same as XP)
+        if (playerAttacks && !enemyDefends)
+        {
+            if (playerHitType == HitType.Miss)
+            {
+                CombatLog += "MISS! ";
+            }
+            else
+            {
+                int baseDamage = PlayerStrength;
+                int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
+                EnemyHP = Math.Max(0, EnemyHP - damage);
+                CombatLog += playerHitType == HitType.Critical ? $"CRIT {damage}! " : $"Hit {damage}! ";
+            }
+        }
+
+        if (enemyAttacks && !playerDefends)
+        {
+            if (enemyHitType == HitType.Miss)
+            {
+                CombatLog += $"{EnemyName} misses! ";
+            }
+            else
+            {
+                int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
+                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+                CombatLog += enemyHitType == HitType.Critical ? $"{EnemyName} CRIT {actualDamage}! " : $"{EnemyName} {actualDamage}! ";
+            }
+        }
+
+        // Combat end
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            PlayerGold += 10;
+            PlayerXP += 10;
+            CombatLog += "Victory! +10g +10xp!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "DEATH!";
+        }
+        else
+        {
+            if (playerDefends && enemyDefends) CombatLog += "Guard.";
+            else if (playerDefends && enemyAttacks) CombatLog += "Block!";
+            else if (enemyDefends && playerAttacks) CombatLog += $"{EnemyName} blocks!";
+        }
+    }
+
+    public void ProcessStatPointGains()
+    {
+        // Process XP and grant stat points on level up
+        int levelBefore = PlayerLevel;
+        while (PlayerXP >= XPForNextLevel)
+        {
+            PlayerLevel++;
+            XPForNextLevel = PlayerLevel * 100;
+            AvailableStatPoints += 2; // Grant 2 stat points per level
+            CombatLog += $" LEVEL UP {PlayerLevel}! +2 stat points!";
         }
     }
 }

@@ -1229,4 +1229,134 @@ public class GameTests
         Assert.Equal(50, game.PlayerXP);
         Assert.Equal(100, game.XPForNextLevel); // Need 100 total for level 2
     }
+
+    [Fact]
+    public void StatPoints_LevelUp_Grants2StatPoints()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStatPoints();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Level up to 2
+        for (int i = 0; i < 10; i++)
+        {
+            if (i > 0) game.StartNewStatPointsCombat();
+            game.ExecuteStatPointsCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            game.ProcessStatPointGains();
+        }
+
+        // Assert
+        Assert.Equal(2, game.PlayerLevel);
+        Assert.Equal(2, game.AvailableStatPoints);
+    }
+
+    [Fact]
+    public void StatPoints_SpendOnStrength_IncreasesSTR()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStatPoints();
+        game.SetPlayerStats(strength: 2, defense: 1);
+
+        // Level up to get stat points - ensure each combat fully completes
+        for (int i = 0; i < 10; i++)
+        {
+            if (i > 0) game.StartNewStatPointsCombat();
+
+            // Execute until combat ends
+            while (!game.CombatEnded)
+            {
+                game.ExecuteStatPointsCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            }
+
+            game.ProcessStatPointGains();
+        }
+
+        // Debug: Check XP was earned and level up happened
+        Assert.Equal(100, game.PlayerXP); // 10 combats * 10 XP
+        Assert.Equal(2, game.PlayerLevel);
+        Assert.Equal(2, game.AvailableStatPoints); // Should have 2 points
+
+        // Act - Spend 2 points on strength
+        game.SpendStatPoint(StatType.Strength);
+        game.SpendStatPoint(StatType.Strength);
+
+        // Assert
+        Assert.Equal(4, game.PlayerStrength); // 2 + 2 = 4
+        Assert.Equal(0, game.AvailableStatPoints);
+    }
+
+    [Fact]
+    public void StatPoints_SpendOnDefense_IncreasesDEF()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStatPoints();
+        game.SetPlayerStats(strength: 2, defense: 1);
+
+        // Level up - ensure combats complete
+        for (int i = 0; i < 10; i++)
+        {
+            if (i > 0) game.StartNewStatPointsCombat();
+            while (!game.CombatEnded)
+            {
+                game.ExecuteStatPointsCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            }
+            game.ProcessStatPointGains();
+        }
+
+        // Act
+        game.SpendStatPoint(StatType.Defense);
+        game.SpendStatPoint(StatType.Defense);
+
+        // Assert
+        Assert.Equal(3, game.PlayerDefense); // 1 + 2 = 3
+        Assert.Equal(0, game.AvailableStatPoints);
+    }
+
+    [Fact]
+    public void StatPoints_CantSpendMoreThanAvailable()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStatPoints();
+
+        // Act & Assert - Try to spend points when none available
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => game.SpendStatPoint(StatType.Strength)
+        );
+        Assert.Equal("No stat points available", exception.Message);
+    }
+
+    [Fact]
+    public void StatPoints_MixedDistribution()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStatPoints();
+        game.SetPlayerStats(strength: 2, defense: 1);
+
+        // Level up to 3 (2 level ups = 4 stat points) - ensure combats complete
+        for (int i = 0; i < 20; i++)
+        {
+            if (i > 0) game.StartNewStatPointsCombat();
+            while (!game.CombatEnded)
+            {
+                game.ExecuteStatPointsCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            }
+            game.ProcessStatPointGains();
+        }
+
+        // Act - Spend 3 on STR, 1 on DEF
+        game.SpendStatPoint(StatType.Strength);
+        game.SpendStatPoint(StatType.Strength);
+        game.SpendStatPoint(StatType.Strength);
+        game.SpendStatPoint(StatType.Defense);
+
+        // Assert
+        Assert.Equal(5, game.PlayerStrength); // 2 + 3
+        Assert.Equal(2, game.PlayerDefense); // 1 + 1
+        Assert.Equal(0, game.AvailableStatPoints);
+    }
 }
