@@ -1359,4 +1359,81 @@ public class GameTests
         Assert.Equal(2, game.PlayerDefense); // 1 + 1
         Assert.Equal(0, game.AvailableStatPoints);
     }
+
+    [Fact]
+    public void EnemyXP_ScoutGives10XP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithEnemyXP(EnemyType.GoblinScout);
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act
+        while (!game.CombatEnded)
+        {
+            game.ExecuteEnemyXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+        }
+
+        // Assert
+        Assert.Equal(10, game.PlayerXP);
+    }
+
+    [Fact]
+    public void EnemyXP_WarriorGives25XP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithEnemyXP(EnemyType.GoblinWarrior);
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act
+        while (!game.CombatEnded)
+        {
+            game.ExecuteEnemyXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Miss);
+        }
+
+        // Assert
+        Assert.Equal(25, game.PlayerXP);
+    }
+
+    [Fact]
+    public void EnemyXP_ArcherGives15XP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithEnemyXP(EnemyType.GoblinArcher);
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act
+        while (!game.CombatEnded)
+        {
+            game.ExecuteEnemyXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+        }
+
+        // Assert
+        Assert.Equal(15, game.PlayerXP);
+    }
+
+    [Fact]
+    public void EnemyXP_WarriorsLevelFaster()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Defeat 4 warriors (4 * 25 = 100 XP = level 2)
+        for (int i = 0; i < 4; i++)
+        {
+            game.StartCombatWithEnemyXP(EnemyType.GoblinWarrior);
+            while (!game.CombatEnded)
+            {
+                game.ExecuteEnemyXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Miss);
+            }
+            game.ProcessStatPointGains();
+        }
+
+        // Assert
+        Assert.Equal(2, game.PlayerLevel);
+        Assert.Equal(100, game.PlayerXP);
+    }
 }
