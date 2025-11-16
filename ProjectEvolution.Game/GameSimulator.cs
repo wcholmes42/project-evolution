@@ -100,6 +100,7 @@ public class GameSimulator
             _ui.RenderStatusBar(game);
             _ui.RenderMap(game);
             _ui.AddMessage($"🤖 AUTO-PLAY RUN {runNumber}/{totalRuns}");
+            _ui.AddMessage($"Goal: {autoPlayer.GetCurrentGoalDescription()}");
             _ui.RenderCommandBar(false);
         }
 
@@ -163,8 +164,9 @@ public class GameSimulator
                 autoPlayer.PlayTurn();
                 turns++;
 
-                if (_config.ShowVisuals)
+                if (_config.ShowVisuals && turns % 5 == 0) // Update goal display every 5 turns
                 {
+                    _ui.AddMessage($"🤖 {autoPlayer.GetCurrentGoalDescription()} | Turn {turns}");
                     _ui.RenderStatusBar(game);
                     _ui.RenderMap(game);
                     Thread.Sleep(_config.SimulationSpeed);
@@ -183,13 +185,19 @@ public class GameSimulator
         if (game.PlayerHP <= 0)
         {
             _stats.Deaths++;
-            _stats.DeathReasons.Add($"Level {game.PlayerLevel} - Turn {turns}");
+            _stats.DeathReasons.Add($"Lvl{game.PlayerLevel} Turn{turns} vs {game.EnemyName}");
         }
         _stats.TotalTurns += turns;
         _stats.TotalCombatsWon += autoPlayer.CombatsWon;
         _stats.TotalGoldEarned += game.PlayerGold;
         _stats.MaxTurnsSurvived = Math.Max(_stats.MaxTurnsSurvived, turns);
         _stats.MaxLevel = Math.Max(_stats.MaxLevel, game.PlayerLevel);
+
+        // Quick progress indicator for batch runs
+        if (!_config.ShowVisuals && runNumber % 10 == 0)
+        {
+            Console.Write($"\rCompleted {runNumber}/{totalRuns} runs... ");
+        }
 
         if (_config.ShowVisuals)
         {
