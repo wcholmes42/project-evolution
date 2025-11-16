@@ -9,6 +9,7 @@ public class GradientTuner
     private static List<double> _scoreHistory = new List<double>();
     private static int _cyclesRun = 0;
     private static double _targetScore = 50.0; // Target: 50 turns average
+    private static double _bestScore = 0;
 
     private class LeaderboardEntry
     {
@@ -26,7 +27,17 @@ public class GradientTuner
         Console.Clear();
         Console.CursorVisible = false;
 
-        var config = new FloatConfig
+        // Load saved optimal config or use defaults
+        var savedConfig = ConfigPersistence.LoadOptimalConfig();
+        var config = savedConfig != null ? new FloatConfig
+        {
+            MobDetectionRange = savedConfig.MobDetectionRange,
+            MaxMobs = savedConfig.MaxMobs,
+            MinMobs = savedConfig.MinMobs,
+            PlayerStartHP = savedConfig.PlayerStartHP,
+            PlayerStrength = savedConfig.PlayerStrength,
+            PlayerDefense = savedConfig.PlayerDefense
+        } : new FloatConfig
         {
             MobDetectionRange = 3.0,
             MaxMobs = 29.0,
@@ -72,6 +83,13 @@ public class GradientTuner
             _leaderboard.Add(entry);
             _leaderboard = _leaderboard.OrderByDescending(e => e.Score).Take(10).ToList();
 
+            // Save if new best overall
+            if (score > _bestScore || _bestScore == 0)
+            {
+                _bestScore = score;
+                ConfigPersistence.SaveOptimalConfig(config.ToSimConfig(), stats, score, _cyclesRun * 300);
+            }
+
             // Update display
             UpdateGradientDisplay(config, stats, error);
 
@@ -82,13 +100,31 @@ public class GradientTuner
                 EstimateGradients(config, delta, error);
             }
 
-            // Apply gradient descent
+            // Apply gradient descent with EXPLORATION
             if (_cyclesRun > 2) // Need 2+ cycles to estimate gradients
             {
                 // Debug: log before adjustment
                 var beforeConfig = $"Det={config.MobDetectionRange:F1} Mobs={config.MaxMobs:F1} HP={config.PlayerStartHP:F1} Def={config.PlayerDefense:F1}";
 
-                ApplyGradientDescent(config, error);
+                // Every 10 cycles: BIG RANDOM JUMP to escape local minima!
+                if (_cyclesRun % 10 == 0)
+                {
+                    var random = new Random();
+                    config.MobDetectionRange += random.Next(-2, 3);
+                    config.MaxMobs += random.Next(-8, 9);
+                    config.PlayerStartHP += random.Next(-3, 4);
+                    config.PlayerDefense += random.Next(-1, 2);
+
+                    // Clamp
+                    config.MobDetectionRange = Math.Clamp(config.MobDetectionRange, 2, 6);
+                    config.MaxMobs = Math.Clamp(config.MaxMobs, 10, 40);
+                    config.PlayerStartHP = Math.Clamp(config.PlayerStartHP, 5, 20);
+                    config.PlayerDefense = Math.Clamp(config.PlayerDefense, 0, 5);
+                }
+                else
+                {
+                    ApplyGradientDescent(config, error);
+                }
 
                 // Debug: log after adjustment
                 var afterConfig = $"Det={config.MobDetectionRange:F1} Mobs={config.MaxMobs:F1} HP={config.PlayerStartHP:F1} Def={config.PlayerDefense:F1}";
