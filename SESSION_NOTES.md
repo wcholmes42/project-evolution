@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 20 (World Exploration In Progress...)
+**Current Generation**: 21 (Random Encounters Active!)
 **Status**: ✅ Building Warhammer Quest + Ultima IV fusion!
 
 ## 🏆 LINE IN THE SAND - What We've Built
@@ -175,12 +175,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Bounds checking
 - **Test Count**: 92 passing
 
-#### Generation 20: Location System (CURRENT)
+#### Generation 20: Location System
 - EnterLocation() for Towns & Dungeons
 - ExitLocation() back to world
 - InLocation and CurrentLocation properties
-- Only special locations are enterable
-- **Test Count**: 96 passing ✅
+- **Test Count**: 96 passing
+
+#### Generation 21: Random Encounter Tables (CURRENT) 🎲
+- Warhammer Quest style encounter rolling
+- RollForEncounter() based on terrain
+- Forest: 40% | Mountain: 30% | Grassland: 20%
+- Towns: 0% (safe zones)
+- TriggerEncounter() starts combat
+- **Test Count**: 100 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 

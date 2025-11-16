@@ -2171,4 +2171,39 @@ public class RPGGame
         InLocation = false;
         CurrentLocation = null;
     }
+
+    public bool RollForEncounter()
+    {
+        return RollForEncounterOnTerrain(GetCurrentTerrain());
+    }
+
+    public bool RollForEncounterOnTerrain(string terrain)
+    {
+        // Warhammer Quest style encounter tables
+        int encounterChance = terrain switch
+        {
+            "Grassland" => 20,  // 20% chance
+            "Forest" => 40,     // 40% chance (dangerous!)
+            "Mountain" => 30,   // 30% chance
+            "Town" => 0,        // Safe
+            "Dungeon" => 0,     // Encounters handled differently in dungeons
+            _ => 15
+        };
+
+        int roll = _random.Next(100);
+        return roll < encounterChance;
+    }
+
+    public void TriggerEncounter()
+    {
+        // Start combat with level-scaled enemy
+        _combatStarted = true;
+        _hpCombat = true;
+        PlayerStamina = 12;
+        int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
+        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = "You are ambushed!";
+    }
 }

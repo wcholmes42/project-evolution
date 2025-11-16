@@ -1826,4 +1826,90 @@ public class GameTests
         Assert.True(entered);
         Assert.Equal("Dungeon", game.CurrentLocation);
     }
+
+    [Fact]
+    public void Encounter_RollOnMove_CanTrigger()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Move and roll for encounters multiple times
+        var encounterCount = 0;
+        for (int i = 0; i < 50; i++)
+        {
+            game.MoveNorth();
+            if (game.RollForEncounter())
+            {
+                encounterCount++;
+            }
+        }
+
+        // Assert - Should have at least some encounters in 50 moves
+        Assert.True(encounterCount > 0);
+    }
+
+    [Fact]
+    public void Encounter_ForestHigherChance_ThanGrassland()
+    {
+        // Arrange & Act - Sample many rolls
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        int forestEncounters = 0;
+        int grassEncounters = 0;
+
+        for (int i = 0; i < 100; i++)
+        {
+            // Test forest
+            bool forestResult = game.RollForEncounterOnTerrain("Forest");
+            if (forestResult) forestEncounters++;
+
+            // Test grassland
+            bool grassResult = game.RollForEncounterOnTerrain("Grassland");
+            if (grassResult) grassEncounters++;
+        }
+
+        // Assert - Forest should have more encounters
+        Assert.True(forestEncounters > grassEncounters);
+    }
+
+    [Fact]
+    public void Encounter_TownHasNoEncounters()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Roll many times for town
+        int encounters = 0;
+        for (int i = 0; i < 100; i++)
+        {
+            if (game.RollForEncounterOnTerrain("Town"))
+            {
+                encounters++;
+            }
+        }
+
+        // Assert - Towns are safe, no encounters
+        Assert.Equal(0, encounters);
+    }
+
+    [Fact]
+    public void Encounter_TriggersRandomEnemy()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Force an encounter
+        game.TriggerEncounter();
+
+        // Assert - Combat should be initiated
+        Assert.True(game.CombatEnded == false); // Combat started
+        Assert.True(game.EnemyHP > 0); // Enemy exists
+        Assert.NotNull(game.EnemyName); // Enemy has a name
+    }
 }
