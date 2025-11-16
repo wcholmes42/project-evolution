@@ -4,8 +4,8 @@ public class GradientTuner
 {
     private static Dictionary<string, double> _gradients = new Dictionary<string, double>();
     private static Dictionary<string, double> _momentum = new Dictionary<string, double>();
-    private static double _learningRate = 0.5; // How aggressively to adjust
-    private static double _momentumFactor = 0.7; // Smoothing factor
+    private static double _learningRate = 2.0; // INCREASED: More aggressive adjustments!
+    private static double _momentumFactor = 0.3; // REDUCED: Less smoothing initially
     private static List<double> _scoreHistory = new List<double>();
     private static int _cyclesRun = 0;
     private static double _targetScore = 50.0; // Target: 50 turns average
@@ -107,21 +107,25 @@ public class GradientTuner
         // Negative error = too few turns (too hard)
 
         // Update gradient estimates with exponential moving average
-        double alpha = 0.3; // Gradient learning rate
+        double alpha = 0.6; // INCREASED: React faster to changes
 
-        if (Math.Abs(error) > 5) // Only update if significant error
+        if (Math.Abs(error) > 2) // React to smaller errors
         {
             // MobDetection: Higher detection → harder → fewer turns
-            _gradients["MobDetection"] = alpha * (-error / 10.0) + (1 - alpha) * _gradients["MobDetection"];
+            // INCREASED sensitivity (/10 → /3)
+            _gradients["MobDetection"] = alpha * (-error / 3.0) + (1 - alpha) * _gradients["MobDetection"];
 
             // MaxMobs: More mobs → harder → fewer turns
-            _gradients["MaxMobs"] = alpha * (-error / 20.0) + (1 - alpha) * _gradients["MaxMobs"];
+            // INCREASED sensitivity (/20 → /8)
+            _gradients["MaxMobs"] = alpha * (-error / 8.0) + (1 - alpha) * _gradients["MaxMobs"];
 
             // PlayerHP: More HP → easier → more turns
-            _gradients["PlayerHP"] = alpha * (error / 5.0) + (1 - alpha) * _gradients["PlayerHP"];
+            // INCREASED sensitivity (/5 → /2)
+            _gradients["PlayerHP"] = alpha * (error / 2.0) + (1 - alpha) * _gradients["PlayerHP"];
 
             // PlayerDefense: More defense → easier → more turns
-            _gradients["PlayerDefense"] = alpha * (error / 8.0) + (1 - alpha) * _gradients["PlayerDefense"];
+            // INCREASED sensitivity (/8 → /4)
+            _gradients["PlayerDefense"] = alpha * (error / 4.0) + (1 - alpha) * _gradients["PlayerDefense"];
         }
     }
 
@@ -131,7 +135,8 @@ public class GradientTuner
         double errorMagnitude = Math.Abs(error);
 
         // Adaptive learning rate: larger errors = larger adjustments
-        double adaptiveLR = _learningRate * Math.Min(1.0, errorMagnitude / 20.0);
+        // INCREASED: errorMagnitude/20 → errorMagnitude/10
+        double adaptiveLR = _learningRate * Math.Min(1.0, errorMagnitude / 10.0);
 
         // Update each parameter
         config.MobDetectionRange = UpdateParameter(config.MobDetectionRange, "MobDetection", adaptiveLR, 2, 6);
