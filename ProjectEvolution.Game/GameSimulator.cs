@@ -120,12 +120,11 @@ public class GameSimulator
                 // SAFETY: Break out of infinite miss loops
                 if (combatRounds > maxCombatRounds)
                 {
+                    game.EndCombatStalemate();
                     if (_config.ShowVisuals)
                     {
-                        _ui.AddMessage("⚠️ Combat stalemate - both flee!");
+                        _ui.AddMessage("⚠️ Combat stalemate - both disengage!");
                     }
-                    game.CombatEnded = true;
-                    game.IsWon = false; // Draw = loss
                     combatRounds = 0;
                     continue;
                 }

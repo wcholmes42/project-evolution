@@ -2358,6 +2358,14 @@ public class RPGGame
         }
     }
 
+    public void EndCombatStalemate()
+    {
+        // Force end combat due to excessive rounds (infinite miss loop)
+        CombatEnded = true;
+        IsWon = false;
+        CombatLog = "Combat stalemate - both fighters disengage!";
+    }
+
     public bool VisitInn()
     {
         const int innCost = 10;
