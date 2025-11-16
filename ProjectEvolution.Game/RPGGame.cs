@@ -2157,6 +2157,13 @@ public class RPGGame
         return _worldMap[PlayerX, PlayerY];
     }
 
+    public string GetTerrainAt(int x, int y)
+    {
+        if (x < 0 || x >= WorldWidth || y < 0 || y >= WorldHeight)
+            return "OutOfBounds";
+        return _worldMap[x, y];
+    }
+
     public bool EnterLocation()
     {
         string terrain = GetCurrentTerrain();
