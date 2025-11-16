@@ -59,7 +59,19 @@ public class GradientTuner
             // Apply gradient descent
             if (_cyclesRun > 2) // Need 2+ cycles to estimate gradients
             {
+                // Debug: log before adjustment
+                var beforeConfig = $"Det={config.MobDetectionRange:F1} Mobs={config.MaxMobs:F1} HP={config.PlayerStartHP:F1} Def={config.PlayerDefense:F1}";
+
                 ApplyGradientDescent(config, error);
+
+                // Debug: log after adjustment
+                var afterConfig = $"Det={config.MobDetectionRange:F1} Mobs={config.MaxMobs:F1} HP={config.PlayerStartHP:F1} Def={config.PlayerDefense:F1}";
+
+                // Show changes on screen (debugging)
+                Console.SetCursorPosition(2, 26);
+                Console.Write($"DEBUG: Before={beforeConfig}                                               ");
+                Console.SetCursorPosition(2, 27);
+                Console.Write($"       After ={afterConfig}                                               ");
             }
 
             lastAvgTurns = avgTurns;
