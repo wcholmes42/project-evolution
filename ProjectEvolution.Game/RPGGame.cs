@@ -2214,15 +2214,16 @@ public class RPGGame
 
     public bool RollForEncounterOnTerrain(string terrain)
     {
-        // Warhammer Quest style encounter tables
+        // Reduced random encounters now that mobs are visible
+        // These are "ambush" encounters from hidden enemies
         int encounterChance = terrain switch
         {
-            "Grassland" => 20,  // 20% chance
-            "Forest" => 40,     // 40% chance (dangerous!)
-            "Mountain" => 30,   // 30% chance
+            "Grassland" => 5,   // 5% chance (rare ambush)
+            "Forest" => 15,     // 15% chance (enemies can hide)
+            "Mountain" => 10,   // 10% chance (cave dwellers)
             "Town" => 0,        // Safe
             "Dungeon" => 0,     // Encounters handled differently in dungeons
-            _ => 15
+            _ => 5
         };
 
         int roll = _random.Next(100);
@@ -2455,6 +2456,38 @@ public class RPGGame
     public bool IsMobAt(int x, int y)
     {
         return _activeMobs.Any(m => m.X == x && m.Y == y);
+    }
+
+    public Mob? GetMobAt(int x, int y)
+    {
+        return _activeMobs.FirstOrDefault(m => m.X == x && m.Y == y);
+    }
+
+    public void RemoveMob(Mob mob)
+    {
+        _activeMobs.Remove(mob);
+    }
+
+    public void TriggerMobEncounter(Mob mob)
+    {
+        // Initialize combat with the mob (use random enemy type for stats)
+        EnemyType randomType = (EnemyType)_random.Next(3);
+        InitializeEnemyWithVariableStats(randomType);
+
+        // Override with mob's name and level
+        EnemyName = mob.Name;
+        EnemyLevel = mob.Level;
+
+        // Scale mob stats based on level
+        int baseHP = EnemyHP;
+        int baseDamage = EnemyDamage;
+
+        EnemyHP = baseHP + ((mob.Level - 1) * 2);
+        EnemyDamage = Math.Max(1, baseDamage + ((mob.Level - 1) / 2));
+
+        CombatEnded = false;
+        PlayerStamina = 999; // Infinite stamina for encounters
+        CombatLog = $"Encountered {mob.Name} [Level {mob.Level}]!";
     }
 
     // Testing helper methods

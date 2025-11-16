@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-11-16
 **Current Generation**: 30 (Turn-Based World!) 🕐
-**Status**: ✅ True turn-based mechanics with terrain costs and visible mobs!
+**Status**: ✅ Integrated mob encounters - mobs on map are real threats!
 
 ## 📝 TODO for Next Session
 
@@ -273,6 +273,11 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Turn counter displayed in status bar
 - Movement feedback shows terrain difficulty
 - Mob class: X, Y, Name, Level properties
+- **Integrated mob encounters**: Walking into 'M' triggers combat!
+- Defeated mobs removed from map (permanent progress!)
+- Random encounters drastically reduced (5-15% vs old 20-40%)
+- Random encounters are now "ambushes" from hidden enemies
+- Mobs are the PRIMARY encounter system now!
 - FIXED: Treasure test ranges (depth bonus was miscalculated)
 - **Test Count**: 124 passing ✅
 

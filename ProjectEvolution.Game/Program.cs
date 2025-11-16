@@ -135,13 +135,31 @@ while (playing)
             ui.RenderStatusBar(game);
             ui.RenderMap(game);
 
-            // Check for encounter
-            if (game.RollForEncounter())
+            // Check for mob encounter first (visible mobs on map)
+            var mob = game.GetMobAt(game.PlayerX, game.PlayerY);
+            bool hasEncounter = false;
+
+            if (mob != null)
             {
+                // Walked into a visible mob!
+                logger.LogEvent("ENCOUNTER", $"Mob encounter: {mob.Name} at ({game.PlayerX},{game.PlayerY})");
+                ui.AddMessage($"⚔️  Encountered {mob.Name}!");
+                Thread.Sleep(800);
+                game.TriggerMobEncounter(mob);
+                hasEncounter = true;
+            }
+            else if (game.RollForEncounter())
+            {
+                // Random encounter (less common now that we have visible mobs)
                 logger.LogEvent("ENCOUNTER", $"Random encounter at ({game.PlayerX},{game.PlayerY})");
-                ui.AddMessage("💥 AMBUSH! Enemy encountered!");
-                Thread.Sleep(800); // Pause to build tension
+                ui.AddMessage("💥 AMBUSH! Enemy appeared!");
+                Thread.Sleep(800);
                 game.TriggerEncounter();
+                hasEncounter = true;
+            }
+
+            if (hasEncounter)
+            {
                 logger.LogEvent("COMBAT", $"Fighting {game.EnemyName} [Lvl{game.EnemyLevel}] HP:{game.EnemyHP}");
                 ui.RenderStatusBar(game);
                 Thread.Sleep(400); // Brief pause to see enemy stats
@@ -205,6 +223,14 @@ while (playing)
                         {
                             logger.LogEvent("VICTORY", $"Defeated {game.EnemyName}. XP: {game.PlayerXP}");
                             ui.AddMessage("✅ Victory!");
+
+                            // Remove defeated mob from map if it was a mob encounter
+                            if (mob != null)
+                            {
+                                game.RemoveMob(mob);
+                                logger.LogEvent("MOB", $"Removed {mob.Name} from map");
+                            }
+
                             ui.RenderStatusBar(game);
                             Thread.Sleep(1000); // Celebrate victory!
                             ui.RenderMap(game); // Return to map view after combat

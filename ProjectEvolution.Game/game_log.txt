@@ -366,3 +366,8 @@
 [09:26:39] ENCOUNTER: Random encounter at (14,9)
 [09:26:40] COMBAT: Fighting Goblin Scout [Lvl1] HP:3
 [09:32:03] COMBAT_ROUND: Goblin Scout misses! 
+[09:38:01] GAME: Project Evolution started!
+[09:38:01] INIT: Player spawned at (10,10)
+[09:38:08] MOVE: North to (10,9) - Grassland (-1 turns)
+[09:38:08] ENCOUNTER: Random encounter at (10,9)
+[09:38:09] COMBAT: Fighting Goblin Scout [Lvl1] HP:2
