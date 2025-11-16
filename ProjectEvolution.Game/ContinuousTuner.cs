@@ -21,12 +21,12 @@ public class ContinuousTuner
         var config = new SimulationConfig
         {
             ShowVisuals = false,
-            MobDetectionRange = 3,
-            MaxMobs = 20,
-            MinMobs = 5,
-            PlayerStartHP = 10,
-            PlayerStrength = 2,
-            PlayerDefense = 1,
+            MobDetectionRange = 3,  // AI-optimized ✅
+            MaxMobs = 29,           // AI-optimized (was 20)
+            MinMobs = 5,            // AI-optimized ✅
+            PlayerStartHP = 9,      // AI-optimized (was 10)
+            PlayerStrength = 2,     // AI-optimized ✅
+            PlayerDefense = 1,      // AI-optimized ✅
             SimulationSpeed = 0
         };
 

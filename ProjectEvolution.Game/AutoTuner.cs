@@ -13,12 +13,12 @@ public class AutoTuner
         var config = new SimulationConfig
         {
             ShowVisuals = false, // Batch mode for speed
-            MobDetectionRange = 3,
-            MaxMobs = 20,
-            MinMobs = 5,
-            PlayerStartHP = 10,
-            PlayerStrength = 2,
-            PlayerDefense = 1
+            MobDetectionRange = 3,  // AI-optimized ✅
+            MaxMobs = 29,           // AI-optimized (from continuous tuning)
+            MinMobs = 5,            // AI-optimized ✅
+            PlayerStartHP = 9,      // AI-optimized (from 233K+ games)
+            PlayerStrength = 2,     // AI-optimized ✅
+            PlayerDefense = 1       // AI-optimized ✅
         };
 
         var allCycleResults = new List<(SimulationConfig config, SimulationStats stats, string assessment)>();

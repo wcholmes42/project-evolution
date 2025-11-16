@@ -1479,15 +1479,15 @@ public class GameTests
     }
 
     [Fact]
-    public void MaxHP_PlayerStartsWith10MaxHP()
+    public void MaxHP_PlayerStartsWithCorrectMaxHP()
     {
         // Arrange & Act
         var game = new RPGGame();
         game.StartCombatWithMaxHP();
 
-        // Assert
-        Assert.Equal(10, game.MaxPlayerHP);
-        Assert.Equal(10, game.PlayerHP);
+        // Assert - AI-optimized starting HP is 9
+        Assert.Equal(9, game.MaxPlayerHP); // AI-optimized from 233K+ simulations
+        Assert.Equal(9, game.PlayerHP);
     }
 
     [Fact]
@@ -1509,9 +1509,9 @@ public class GameTests
             game.ProcessMaxHPGrowth();
         }
 
-        // Assert - Max HP should increase (+2 per level = 12 at level 2)
+        // Assert - Max HP should increase (+2 per level = 11 at level 2)
         Assert.Equal(2, game.PlayerLevel);
-        Assert.Equal(12, game.MaxPlayerHP);
+        Assert.Equal(11, game.MaxPlayerHP); // 9 base + 2 (AI-optimized)
     }
 
     [Fact]
@@ -1536,8 +1536,8 @@ public class GameTests
 
         // Assert - HP restored to new max
         Assert.Equal(2, game.PlayerLevel);
-        Assert.Equal(12, game.MaxPlayerHP);
-        Assert.Equal(12, game.PlayerHP); // Fully healed to new max
+        Assert.Equal(11, game.MaxPlayerHP); // 9 base + 2 (AI-optimized)
+        Assert.Equal(11, game.PlayerHP); // Fully healed to new max
     }
 
     [Fact]
@@ -1979,7 +1979,7 @@ public class GameTests
         // Assert
         Assert.True(used);
         Assert.Equal(0, game.PotionCount);
-        Assert.Equal(10, game.PlayerHP); // 5 + 5 healing
+        Assert.Equal(9, game.PlayerHP); // 5 + 5 healing, capped at max 9 (AI-optimized)
     }
 
     [Fact]
