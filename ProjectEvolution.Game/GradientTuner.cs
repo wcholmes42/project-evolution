@@ -75,24 +75,6 @@ public class GradientTuner
             _recentScores.Add(score);
             if (_recentScores.Count > 10) _recentScores.RemoveAt(0);
 
-            // Track progress
-            bool improved = score > _bestScore;
-            if (improved)
-            {
-                _cyclesSinceImprovement = 0;
-                _mutationVariance = Math.Max(0.5, _mutationVariance * 0.9); // Reduce variance when improving
-            }
-            else
-            {
-                _cyclesSinceImprovement++;
-
-                // ADAPTIVE EXPLORATION: Stuck? Increase mutation variance!
-                if (_cyclesSinceImprovement > 5)
-                {
-                    _mutationVariance = Math.Min(5.0, _mutationVariance * 1.3); // Increase variance when stuck
-                }
-            }
-
             // Calculate progress rate (improvement over last 10 cycles)
             double progressRate = 0;
             if (_recentScores.Count >= 5)
@@ -100,6 +82,31 @@ public class GradientTuner
                 double firstHalf = _recentScores.Take(5).Average();
                 double secondHalf = _recentScores.Skip(_recentScores.Count - 5).Average();
                 progressRate = secondHalf - firstHalf; // Positive = improving
+            }
+
+            // ADAPTIVE MUTATION based on progress rate (not just best score!)
+            if (progressRate > 1.0) // Good progress!
+            {
+                _cyclesSinceImprovement = 0;
+                _mutationVariance = Math.Max(0.3, _mutationVariance * 0.85); // Cool down (fine-tune)
+            }
+            else if (progressRate < -1.0) // Regressing!
+            {
+                _cyclesSinceImprovement++;
+                _mutationVariance = Math.Min(8.0, _mutationVariance * 1.5); // Heat up! (explore more)
+            }
+            else if (Math.Abs(progressRate) < 0.5) // Stuck/plateaued
+            {
+                _cyclesSinceImprovement++;
+                if (_cyclesSinceImprovement > 3)
+                {
+                    _mutationVariance = Math.Min(8.0, _mutationVariance * 1.4); // Stuck → heat up!
+                }
+            }
+            else
+            {
+                // Moderate progress - maintain current variance
+                _cyclesSinceImprovement = Math.Max(0, _cyclesSinceImprovement - 1);
             }
 
             // Add to leaderboard
@@ -336,10 +343,22 @@ public class GradientTuner
         Console.SetCursorPosition(2, 22);
         Console.Write($"  PlayerDef:    {_gradients["PlayerDefense"],+6:F3}                                                 ");
 
-        // Progress tracking
+        // Progress tracking with color coding
         Console.SetCursorPosition(2, 24);
-        Console.ForegroundColor = progressRate > 0 ? ConsoleColor.Green : progressRate < -2 ? ConsoleColor.Red : ConsoleColor.Yellow;
-        Console.Write($"PROGRESS: {progressRate,+6:F2}/cycle | Stuck: {_cyclesSinceImprovement} | Mutation: {_mutationVariance:F1}x              ");
+
+        // Color based on progress
+        if (progressRate > 1.0)
+            Console.ForegroundColor = ConsoleColor.Green; // Excellent progress!
+        else if (progressRate > 0)
+            Console.ForegroundColor = ConsoleColor.DarkGreen; // Some progress
+        else if (progressRate > -1.0)
+            Console.ForegroundColor = ConsoleColor.Yellow; // Stagnant
+        else
+            Console.ForegroundColor = ConsoleColor.Red; // Regressing!
+
+        string status = progressRate > 1 ? "🚀 IMPROVING" : progressRate < -1 ? "⚠️ REGRESSING" : progressRate > 0 ? "↗️ Progress" : "━ Stuck";
+
+        Console.Write($"{status} Rate:{progressRate,+5:F1} | NoImprove:{_cyclesSinceImprovement,2} | Mutation:{_mutationVariance,4:F1}x            ");
         Console.ResetColor();
     }
 
