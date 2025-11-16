@@ -107,12 +107,29 @@ public class GameSimulator
         int maxTurns = 500; // Safety limit
         int turns = 0;
         bool userAborted = false;
+        int combatRounds = 0;
+        int maxCombatRounds = 50; // Prevent infinite miss loops!
 
         while (autoPlayer.IsAlive && turns < maxTurns && !userAborted)
         {
             // Handle combat if in combat
             if (game.CombatEnded == false && game.EnemyHP > 0)
             {
+                combatRounds++;
+
+                // SAFETY: Break out of infinite miss loops
+                if (combatRounds > maxCombatRounds)
+                {
+                    if (_config.ShowVisuals)
+                    {
+                        _ui.AddMessage("⚠️ Combat stalemate - both flee!");
+                    }
+                    game.CombatEnded = true;
+                    game.IsWon = false; // Draw = loss
+                    combatRounds = 0;
+                    continue;
+                }
+
                 // In combat
                 if (autoPlayer.ShouldUsePotion())
                 {
@@ -169,11 +186,13 @@ public class GameSimulator
                         {
                             autoPlayer.CombatsWon++;
                         }
+                        combatRounds = 0; // Reset for next combat
                     }
                 }
             }
             else
             {
+                combatRounds = 0; // Not in combat, reset counter
                 // Normal exploration
                 autoPlayer.PlayTurn();
                 turns++;
