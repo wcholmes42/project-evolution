@@ -35,6 +35,41 @@ public class SingleParamTuner
         TestParameter("PlayerStartHP", 3, 15, baseConfig, baseStats.AverageTurnsPerRun); // Was 5, now 3!
         TestParameter("PlayerDefense", 0, 4, baseConfig, baseStats.AverageTurnsPerRun);
 
+        // Test each parameter
+        var (bestDet, scoreDet) = TestParameter("MobDetectionRange", 2, 10, baseConfig, ref bestOverall, ref bestOverallScore, ref bestOverallStats);
+        var (bestMobs, scoreMobs) = TestParameter("MaxMobs", 15, 60, baseConfig, ref bestOverall, ref bestOverallScore, ref bestOverallStats);
+        var (bestHP, scoreHP) = TestParameter("PlayerStartHP", 3, 15, baseConfig, ref bestOverall, ref bestOverallScore, ref bestOverallStats);
+        var (bestDef, scoreDef) = TestParameter("PlayerDefense", 0, 4, baseConfig, ref bestOverall, ref bestOverallScore, ref bestOverallStats);
+
+        // Build combined optimal
+        var optimalConfig = new SimulationConfig
+        {
+            MobDetectionRange = bestDet,
+            MaxMobs = bestMobs,
+            PlayerStartHP = bestHP,
+            PlayerDefense = bestDef,
+            PlayerStrength = baseConfig.PlayerStrength,
+            MinMobs = baseConfig.MinMobs,
+            ShowVisuals = false
+        };
+
+        Console.WriteLine("\n╔══════════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║         TESTING COMBINED OPTIMAL                             ║");
+        Console.WriteLine("╚══════════════════════════════════════════════════════════════╝");
+        var finalSim = new GameSimulator(optimalConfig);
+        var finalStats = finalSim.RunSimulation(300);
+        double finalScore = 100 - Math.Abs(finalStats.AverageTurnsPerRun - 75) * 2;
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"✅ RESULT: {finalStats.AverageTurnsPerRun:F1} turns, Score: {finalScore:F1}");
+
+        if (finalScore > baseScore)
+        {
+            ConfigPersistence.SaveOptimalConfig(optimalConfig, finalStats, finalScore, 50000);
+            Console.WriteLine($"💾 Saved for [G] to use!");
+        }
+        Console.ResetColor();
+
         Console.WriteLine("\n\nPress any key to continue...");
         Console.ReadKey(intercept: true);
     }
