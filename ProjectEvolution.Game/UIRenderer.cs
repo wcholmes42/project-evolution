@@ -380,6 +380,107 @@ public class UIRenderer
         Console.ResetColor();
     }
 
+    public void RenderDebugPanel(RPGGame game, AutoPlayer? autoPlayer)
+    {
+        if (autoPlayer == null) return;
+
+        // Debug panel on the right side of the screen
+        int debugX = 82;
+        int startY = 1;
+
+        // Header
+        Console.SetCursorPosition(debugX, startY);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("╔═══════════════════════════════════╗");
+        Console.SetCursorPosition(debugX, startY + 1);
+        Console.Write("║        AI DEBUG PANEL 🤖          ║");
+        Console.SetCursorPosition(debugX, startY + 2);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.ResetColor();
+
+        // Current Goal
+        Console.SetCursorPosition(debugX, startY + 3);
+        Console.Write("║ CURRENT GOAL:                     ║");
+        Console.SetCursorPosition(debugX, startY + 4);
+        Console.Write("║ ");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        string goalDesc = autoPlayer.GetCurrentGoalDescription();
+        Console.Write(goalDesc.PadRight(33));
+        Console.ResetColor();
+        Console.Write(" ║");
+
+        // Primary Objective
+        Console.SetCursorPosition(debugX, startY + 5);
+        Console.Write("║ PRIMARY OBJECTIVE:                ║");
+        Console.SetCursorPosition(debugX, startY + 6);
+        Console.Write("║ ");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        string objective = autoPlayer.Goals.GetPrimaryObjective(game);
+        if (objective.Length > 33) objective = objective.Substring(0, 30) + "...";
+        Console.Write(objective.PadRight(33));
+        Console.ResetColor();
+        Console.Write(" ║");
+
+        // Current Target
+        Console.SetCursorPosition(debugX, startY + 7);
+        Console.Write("║ CURRENT TARGET:                   ║");
+        Console.SetCursorPosition(debugX, startY + 8);
+        Console.Write("║ ");
+        Console.ForegroundColor = ConsoleColor.Green;
+        string target = autoPlayer.CurrentTarget;
+        if (target.Length > 33) target = target.Substring(0, 30) + "...";
+        Console.Write(target.PadRight(33));
+        Console.ResetColor();
+        Console.Write(" ║");
+
+        // Last Decision
+        Console.SetCursorPosition(debugX, startY + 9);
+        Console.Write("║ REASONING:                        ║");
+        Console.SetCursorPosition(debugX, startY + 10);
+        Console.Write("║ ");
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        string decision = autoPlayer.LastDecision;
+        if (decision.Length > 33) decision = decision.Substring(0, 30) + "...";
+        Console.Write(decision.PadRight(33));
+        Console.ResetColor();
+        Console.Write(" ║");
+
+        // Progress
+        Console.SetCursorPosition(debugX, startY + 11);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.SetCursorPosition(debugX, startY + 12);
+        Console.Write("║ PROGRESS:                         ║");
+
+        Console.SetCursorPosition(debugX, startY + 13);
+        Console.Write($"║ Level: {game.PlayerLevel}/{autoPlayer.Goals.TargetLevel}                            ║");
+        Console.SetCursorPosition(debugX, startY + 14);
+        Console.Write($"║ Gold: {game.PlayerGold}/{autoPlayer.Goals.TargetGold}                         ║");
+        Console.SetCursorPosition(debugX, startY + 15);
+        Console.Write($"║ Dungeons: {autoPlayer.Goals.DungeonsExplored}/{autoPlayer.Goals.TargetDungeons}                        ║");
+
+        // Stats
+        Console.SetCursorPosition(debugX, startY + 16);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.SetCursorPosition(debugX, startY + 17);
+        Console.Write("║ SESSION STATS:                    ║");
+        Console.SetCursorPosition(debugX, startY + 18);
+        Console.Write($"║ Turns: {autoPlayer.TurnsSurvived,4}                          ║");
+        Console.SetCursorPosition(debugX, startY + 19);
+        Console.Write($"║ Combats Won: {autoPlayer.CombatsWon,3}                    ║");
+        Console.SetCursorPosition(debugX, startY + 20);
+        Console.Write($"║ Fled: {autoPlayer.CombatsFled,3}                         ║");
+
+        // Footer
+        Console.SetCursorPosition(debugX, startY + 21);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.SetCursorPosition(debugX, startY + 22);
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Write("║   [ESC] Stop Simulation           ║");
+        Console.ResetColor();
+        Console.SetCursorPosition(debugX, startY + 23);
+        Console.Write("╚═══════════════════════════════════╝");
+    }
+
     public void Cleanup()
     {
         Console.Clear();
@@ -387,4 +488,5 @@ public class UIRenderer
         Console.ResetColor();
     }
 }
+
 

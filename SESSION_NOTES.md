@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-11-16
 **Current Generation**: 33 (Automated Testing!) 🎛️
-**Status**: ✅ Interactive simulation system for balance tuning!
+**Status**: ✅ Goal-driven AI with debug panel - watch it think!
 
 ## 📝 TODO for Next Session
 
@@ -368,6 +368,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
   - Added ui.RenderMap() on dungeon entry
   - Replaced old [R]oll system with movement exploration
   - Dungeons now fully functional
+- **UPDATED**: Goal-driven aggressive AI!
+  - Tiered goals: Level 5, 500g, 2 dungeons
+  - Default behavior: HUNTING (not passive exploring)
+  - Risk/reward evaluation for every mob
+  - Actively seeks combat for progression
+  - LastDecision tracking shows reasoning
+  - CurrentTarget shows what AI is pursuing
+- **Debug Panel**: Live AI thinking display
+  - Shows current goal, objective, target
+  - Displays reasoning for decisions
+  - Progress bars toward goals
+  - Session stats (turns, combats, fled)
+  - ESC key to abort simulation anytime!
 - **Test Count**: 137 passing ✅
 
 ### 🎉 Now we can SCIENCE the fun! Data-driven game design!

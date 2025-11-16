@@ -6,7 +6,36 @@ public enum AIGoal
     SeekTown,       // Navigate to nearest town for healing
     ExploreDungeon, // Enter and explore dungeons
     Survive,        // Defensive mode - avoid combat
-    Explore         // Random exploration
+    Explore,        // Random exploration
+    GrindXP,        // Focus on leveling up
+    GrindGold       // Focus on earning gold
+}
+
+public class TieredGoals
+{
+    public int TargetLevel { get; set; } = 5;
+    public int TargetGold { get; set; } = 500;
+    public int DungeonsExplored { get; set; } = 0;
+    public int TargetDungeons { get; set; } = 2;
+
+    public string GetPrimaryObjective(RPGGame game)
+    {
+        if (game.PlayerLevel < TargetLevel)
+            return $"Reach Level {TargetLevel} (Current: {game.PlayerLevel})";
+        if (game.PlayerGold < TargetGold)
+            return $"Earn {TargetGold}g (Current: {game.PlayerGold}g)";
+        if (DungeonsExplored < TargetDungeons)
+            return $"Explore {TargetDungeons} Dungeons (Done: {DungeonsExplored})";
+
+        return "All goals achieved! 🎉";
+    }
+
+    public bool HasAchievedGoals(RPGGame game)
+    {
+        return game.PlayerLevel >= TargetLevel &&
+               game.PlayerGold >= TargetGold &&
+               DungeonsExplored >= TargetDungeons;
+    }
 }
 
 public class AutoPlayer
@@ -22,8 +51,11 @@ public class AutoPlayer
     public string DeathReason { get; set; } = "";
     public bool IsAlive => _game.PlayerHP > 0;
 
-    private AIGoal _currentGoal = AIGoal.Explore;
+    private AIGoal _currentGoal = AIGoal.HuntMobs; // Default to hunting!
     private (int x, int y)? _targetLocation = null;
+    public TieredGoals Goals { get; } = new TieredGoals();
+    public string CurrentTarget { get; private set; } = "Scanning...";
+    public string LastDecision { get; private set; } = "Starting up";
 
     public AutoPlayer(RPGGame game)
     {
@@ -33,41 +65,49 @@ public class AutoPlayer
     private AIGoal DetermineGoal()
     {
         double hpPercent = (double)_game.PlayerHP / _game.MaxPlayerHP;
-        bool needsHealing = hpPercent < 0.5;
-        bool criticalHP = hpPercent < 0.3;
-        bool isStrong = _game.PlayerLevel > 1 && hpPercent > 0.6;
-        bool nearLevelUp = _game.PlayerXP >= _game.XPForNextLevel * 0.8;
+        bool criticalHP = hpPercent < 0.25;
+        bool lowHP = hpPercent < 0.4;
 
-        // Critical HP - survival mode
+        // ALWAYS prioritize survival when critical
         if (criticalHP)
         {
+            LastDecision = "Critical HP - must heal!";
+            return AIGoal.Survive;
+        }
+
+        // Need healing but not critical
+        if (lowHP && _game.PlayerGold >= 10)
+        {
+            LastDecision = "Low HP - seeking town for healing";
             return AIGoal.SeekTown;
         }
 
-        // Needs healing but not critical
-        if (needsHealing && _game.PlayerGold >= 10)
+        // PRIMARY GOALS DRIVE BEHAVIOR (tiered goals)
+
+        // Goal: Reach target level - GRIND XP AGGRESSIVELY
+        if (_game.PlayerLevel < Goals.TargetLevel)
         {
-            return AIGoal.SeekTown;
+            LastDecision = $"Need level {Goals.TargetLevel} - hunting mobs for XP!";
+            return AIGoal.HuntMobs; // Be aggressive!
         }
 
-        // Strong and near level up - hunt for that last bit of XP!
-        if (nearLevelUp && isStrong)
+        // Goal: Earn target gold - GRIND GOLD
+        if (_game.PlayerGold < Goals.TargetGold)
         {
-            return AIGoal.HuntMobs;
+            LastDecision = $"Need {Goals.TargetGold}g - hunting for loot!";
+            return AIGoal.HuntMobs; // Gold comes from combat!
         }
 
-        // Strong and healthy - be aggressive!
-        if (isStrong)
+        // Goal: Explore dungeons
+        if (Goals.DungeonsExplored < Goals.TargetDungeons && hpPercent > 0.6)
         {
-            // 60% hunt, 30% explore, 10% dungeon
-            int roll = _random.Next(100);
-            if (roll < 60) return AIGoal.HuntMobs;
-            if (roll < 90) return AIGoal.Explore;
+            LastDecision = $"Exploring dungeon {Goals.DungeonsExplored + 1}/{Goals.TargetDungeons}";
             return AIGoal.ExploreDungeon;
         }
 
-        // Default: explore
-        return AIGoal.Explore;
+        // All goals achieved! Keep hunting for fun
+        LastDecision = "Goals achieved - continuing hunt!";
+        return AIGoal.HuntMobs; // Default to hunting, not exploring!
     }
 
     public void PlayTurn()
@@ -153,10 +193,16 @@ public class AutoPlayer
                 .ThenBy(m => Math.Abs(m.X - _game.PlayerX) + Math.Abs(m.Y - _game.PlayerY))
                 .First();
 
+            int distance = Math.Abs(targetMob.X - _game.PlayerX) + Math.Abs(targetMob.Y - _game.PlayerY);
+            CurrentTarget = $"{targetMob.Name} [Lvl{targetMob.Level}] @ ({targetMob.X},{targetMob.Y}) - {distance} tiles";
+            LastDecision = $"Moving toward {targetMob.Name} to engage";
+
             MoveToward(targetMob.X, targetMob.Y);
         }
         else
         {
+            CurrentTarget = "No mobs in range - exploring";
+            LastDecision = "Scanning for enemies...";
             // No mobs visible, explore to find some
             ExploreIntelligently();
         }
@@ -212,6 +258,10 @@ public class AutoPlayer
         var nearestTown = towns
             .OrderBy(t => Math.Abs(t.x - _game.PlayerX) + Math.Abs(t.y - _game.PlayerY))
             .First();
+
+        int distance = Math.Abs(nearestTown.x - _game.PlayerX) + Math.Abs(nearestTown.y - _game.PlayerY);
+        CurrentTarget = $"Town @ ({nearestTown.x},{nearestTown.y}) - {distance} tiles";
+        LastDecision = "Navigating to town for healing/supplies";
 
         MoveToward(nearestTown.x, nearestTown.y);
     }

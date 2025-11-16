@@ -100,14 +100,15 @@ public class GameSimulator
             _ui.RenderStatusBar(game);
             _ui.RenderMap(game);
             _ui.AddMessage($"🤖 AUTO-PLAY RUN {runNumber}/{totalRuns}");
-            _ui.AddMessage($"Goal: {autoPlayer.GetCurrentGoalDescription()}");
             _ui.RenderCommandBar(false);
+            _ui.RenderDebugPanel(game, autoPlayer);
         }
 
         int maxTurns = 500; // Safety limit
         int turns = 0;
+        bool userAborted = false;
 
-        while (autoPlayer.IsAlive && turns < maxTurns)
+        while (autoPlayer.IsAlive && turns < maxTurns && !userAborted)
         {
             // Handle combat if in combat
             if (game.CombatEnded == false && game.EnemyHP > 0)
@@ -145,6 +146,19 @@ public class GameSimulator
                     {
                         _ui.AddMessage($"🤖 {action}: {game.CombatLog}");
                         _ui.RenderStatusBar(game);
+                        _ui.RenderDebugPanel(game, autoPlayer);
+
+                        // Check for ESC in combat too
+                        if (Console.KeyAvailable)
+                        {
+                            var key = Console.ReadKey(intercept: true);
+                            if (key.Key == ConsoleKey.Escape)
+                            {
+                                userAborted = true;
+                                break;
+                            }
+                        }
+
                         Thread.Sleep(_config.SimulationSpeed);
                     }
 
@@ -164,11 +178,24 @@ public class GameSimulator
                 autoPlayer.PlayTurn();
                 turns++;
 
-                if (_config.ShowVisuals && turns % 5 == 0) // Update goal display every 5 turns
+                if (_config.ShowVisuals)
                 {
-                    _ui.AddMessage($"🤖 {autoPlayer.GetCurrentGoalDescription()} | Turn {turns}");
                     _ui.RenderStatusBar(game);
                     _ui.RenderMap(game);
+                    _ui.RenderDebugPanel(game, autoPlayer);
+
+                    // Check for ESC key to abort
+                    if (Console.KeyAvailable)
+                    {
+                        var key = Console.ReadKey(intercept: true);
+                        if (key.Key == ConsoleKey.Escape)
+                        {
+                            _ui.AddMessage("⚠️ Simulation aborted by user!");
+                            Thread.Sleep(1000);
+                            userAborted = true;
+                        }
+                    }
+
                     Thread.Sleep(_config.SimulationSpeed);
                 }
             }
@@ -178,6 +205,16 @@ public class GameSimulator
             {
                 break;
             }
+        }
+
+        // Don't count aborted runs in stats
+        if (userAborted)
+        {
+            if (_config.ShowVisuals)
+            {
+                _ui.Cleanup();
+            }
+            return;
         }
 
         // Collect stats
