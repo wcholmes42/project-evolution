@@ -10,10 +10,10 @@
   - v1.0-roguelike-complete (Gen 0-12: Combat Dynamics)
   - v2.0-progression-complete (Gen 13-17: Character Progression)
   - v2.1-endless-mode (Gen 18: Game Loop)
-  - v3.0-world-exploration (Gen 19-25: Warhammer Quest Fusion) ⭐ **NEXT**
+  - v3.0-world-exploration (Gen 19-25: Warhammer Quest Fusion) ⭐ **CURRENT**
 
-**Test Coverage**: 84 passing tests (100% coverage maintained)
-**From "you win" to complete RPG**: 18 TDD generations
+**Test Coverage**: 114 passing tests (100% coverage maintained)
+**From "you win" to Warhammer Quest + Ultima IV**: 25 TDD generations!
 
 ## Quick Start
 ```bash
