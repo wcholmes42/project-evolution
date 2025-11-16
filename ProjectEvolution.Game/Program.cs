@@ -88,21 +88,17 @@ if (optimalConfig != null)
     game.SetPlayerStats(optimalConfig.PlayerStrength, optimalConfig.PlayerDefense);
 
     logger.LogEvent("CONFIG", $"🤖 AI-TUNED: HP={optimalConfig.PlayerStartHP}, Det={optimalConfig.MobDetectionRange}, Mobs={optimalConfig.MaxMobs}, STR={optimalConfig.PlayerStrength}, DEF={optimalConfig.PlayerDefense}");
-
-    // Show player the tuned settings
-    ui.Initialize();
-    ui.RenderStatusBar(game);
-    ui.AddMessage($"🤖 Using AI-optimized settings from {Path.GetFileName("optimal_config.json")}");
-    Thread.Sleep(1500);
 }
 else
 {
     game.SetPlayerStats(strength: 2, defense: 1);
 }
 
+// Start world BEFORE UI (need world to render!)
 game.StartWorldExploration();
 logger.LogEvent("INIT", $"Player spawned at ({game.PlayerX},{game.PlayerY})");
 
+// NOW initialize UI after world exists
 ui.Initialize();
 ui.RenderStatusBar(game);
 ui.RenderMap(game);
