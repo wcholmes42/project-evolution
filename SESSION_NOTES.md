@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 5
+**Current Generation**: 6
 **Status**: ✅ Ready to continue
 
 ## Quick Start
@@ -50,21 +50,25 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Added properties: PlayerHP, EnemyHP, CombatEnded
 - Tests: `CombatWithHP_PlayerStartsWith10HP`, `CombatWithHP_EnemyStartsWith3HP`, `CombatWithHP_PlayerAttacks_EnemyDefends_EnemyTakesNoDamage`, `CombatWithHP_PlayerAttacks_EnemyAttacks_EnemyTakesDamage`, `CombatWithHP_PlayerDefends_EnemyAttacks_PlayerTakesNoDamage`, `CombatWithHP_DefeatEnemy_PlayerWins`, `CombatWithHP_PlayerHPReaches0_PlayerLoses`, `CombatWithHP_CombatEndsWhenEitherDies`
 
-#### Generation 5: Loot & Rewards (Current)
+#### Generation 5: Loot & Rewards
 - Player gains 10 gold per defeated enemy
 - Added PlayerGold property
 - Gold persists across multiple combats
 - Combat log shows gold earned
 - Only award gold on victory (not defeat)
 - Tests: `CombatWithLoot_PlayerStartsWith0Gold`, `CombatWithLoot_DefeatEnemy_PlayerGainsGold`, `CombatWithLoot_LoseToEnemy_NoGoldAwarded`, `CombatWithLoot_GoldPersistsAcrossMultipleCombats`
-- **Current Test Count**: 25 passing
+
+#### Generation 6: Multiple Enemies (Current)
+- Face multiple goblins in sequence (configurable count)
+- Player HP persists between enemies (no healing!)
+- Each defeated enemy spawns the next
+- Must defeat all enemies to win
+- Gold earned for each enemy (accumulates)
+- Added RemainingEnemies property
+- Tests: `MultiEnemy_Start_PlayerFaces3Enemies`, `MultiEnemy_DefeatOneEnemy_CountDecreases`, `MultiEnemy_DefeatAllEnemies_PlayerWins`, `MultiEnemy_PlayerHPPersistsBetweenFights`, `MultiEnemy_PlayerDies_GameOver`
+- **Current Test Count**: 30 passing
 
 ### 🎯 Next Generations (Planned)
-
-#### Generation 6: Multiple Enemies
-- Face 2-3 goblins in sequence
-- Must defeat all to win
-- Progressive difficulty
 
 #### Generation 7: Character Stats
 - Player Strength/Defense attributes
@@ -124,6 +128,15 @@ while (!game.CombatEnded)
     // game.ExecuteLootCombatRound(CombatAction.Attack, CombatAction.Defend);
 }
 
+// Generation 6
+game.StartMultiEnemyCombat(enemyCount: 3);
+while (!game.CombatEnded)
+{
+    game.ExecuteMultiEnemyRoundWithRandomEnemy(CombatAction.Attack);
+    // or for testing:
+    // game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Defend);
+}
+
 // Check results
 bool won = game.IsWon;
 string log = game.CombatLog;
@@ -131,6 +144,7 @@ int playerHP = game.PlayerHP;
 int enemyHP = game.EnemyHP;
 bool ended = game.CombatEnded;
 int gold = game.PlayerGold; // Persists across combats
+int remaining = game.RemainingEnemies;
 ```
 
 ### Design Principles

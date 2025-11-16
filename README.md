@@ -10,13 +10,14 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 5
+## Current State - Generation 6
 
-Combat with loot rewards:
-- Defeat goblins to earn 10 gold each
-- Gold persists across multiple combats
-- Track your growing wealth
-- Only victors earn gold - defeat gives nothing!
+Epic multi-enemy battles:
+- Face 3 goblins in sequence!
+- Your HP carries between fights (no healing!)
+- Strategic challenge: manage resources across battles
+- Earn gold for each defeated goblin
+- Defeat all enemies or die trying!
 
 ## Running the Game
 
@@ -45,7 +46,15 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 5 (Current)
+### Generation 6 (Current)
+- [x] Multiple enemies in sequence (3 goblins)
+- [x] HP persists between enemy encounters
+- [x] Strategic resource management across battles
+- [x] Each enemy defeated spawns next
+- [x] Gold earned per enemy (30g total for 3 goblins)
+- [x] Must survive all encounters to win
+
+### Generation 5
 - [x] Loot system: 10 gold per defeated goblin
 - [x] Gold accumulates across combats
 - [x] Combat log shows gold rewards

@@ -1,16 +1,17 @@
 ﻿using ProjectEvolution.Game;
 
-Console.WriteLine("=== Project Evolution - Generation 5 ===");
+Console.WriteLine("=== Project Evolution - Generation 6 ===");
 Console.WriteLine();
-Console.WriteLine("Welcome, adventurer! Your quest for gold begins...");
+Console.WriteLine("A gang of goblins blocks your path!");
+Console.WriteLine("Defeat all 3 to claim victory!");
 Console.WriteLine();
 
 var game = new RPGGame();
-game.StartCombatWithLoot();
+game.StartMultiEnemyCombat(enemyCount: 3);
 
 while (!game.CombatEnded)
 {
-    Console.WriteLine($"Gold: {game.PlayerGold}g  |  Your HP: {game.PlayerHP}/10  |  Goblin HP: {game.EnemyHP}/3");
+    Console.WriteLine($"Gold: {game.PlayerGold}g  |  Your HP: {game.PlayerHP}/10  |  Goblin HP: {game.EnemyHP}/3  |  Remaining: {game.RemainingEnemies}");
     Console.WriteLine();
     Console.WriteLine("What will you do?");
     Console.WriteLine("1. Attack");
@@ -34,7 +35,7 @@ while (!game.CombatEnded)
         action = CombatAction.Defend;
     }
 
-    game.ExecuteLootCombatRoundWithRandomEnemy(action);
+    game.ExecuteMultiEnemyRoundWithRandomEnemy(action);
 
     Console.WriteLine();
     Console.WriteLine(game.CombatLog);
@@ -50,13 +51,14 @@ while (!game.CombatEnded)
 Console.WriteLine("======================");
 if (game.IsWon)
 {
-    Console.WriteLine("VICTORY! The goblin falls!");
+    Console.WriteLine("EPIC VICTORY! All goblins defeated!");
     Console.WriteLine($"You survived with {game.PlayerHP} HP remaining.");
-    Console.WriteLine($"Total Gold: {game.PlayerGold}g");
+    Console.WriteLine($"Total Gold Earned: {game.PlayerGold}g");
 }
 else
 {
-    Console.WriteLine("DEFEAT! You have fallen in battle!");
+    Console.WriteLine("DEFEAT! The goblins overwhelmed you!");
+    Console.WriteLine($"You managed to defeat {3 - game.RemainingEnemies} of 3 goblins.");
     Console.WriteLine($"Total Gold: {game.PlayerGold}g");
 }
 Console.WriteLine("======================");

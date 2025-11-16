@@ -411,4 +411,119 @@ public class GameTests
         // Assert
         Assert.Equal(goldAfterFirstCombat + 10, game.PlayerGold); // Two combats = 20 gold total
     }
+
+    [Fact]
+    public void MultiEnemy_Start_PlayerFaces3Enemies()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartMultiEnemyCombat(enemyCount: 3);
+
+        // Assert
+        Assert.Equal(3, game.RemainingEnemies);
+    }
+
+    [Fact]
+    public void MultiEnemy_DefeatOneEnemy_CountDecreases()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartMultiEnemyCombat(enemyCount: 3);
+
+        // Act - Defeat first enemy
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+
+        // Assert
+        Assert.Equal(2, game.RemainingEnemies);
+        Assert.False(game.CombatEnded); // Combat continues with next enemy
+    }
+
+    [Fact]
+    public void MultiEnemy_DefeatAllEnemies_PlayerWins()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartMultiEnemyCombat(enemyCount: 2);
+
+        // Act - Defeat both enemies (3 attacks each)
+        // Enemy 1
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        // Enemy 2
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+
+        // Assert
+        Assert.Equal(0, game.RemainingEnemies);
+        Assert.True(game.IsWon);
+        Assert.True(game.CombatEnded);
+        Assert.Equal(20, game.PlayerGold); // 10 gold per enemy
+    }
+
+    [Fact]
+    public void MultiEnemy_PlayerHPPersistsBetweenFights()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartMultiEnemyCombat(enemyCount: 2);
+
+        // Act - First enemy, take some damage
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // P:9, E:2
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // P:8, E:1
+        game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // P:7, E:0
+
+        int hpAfterFirstEnemy = game.PlayerHP;
+
+        // Second enemy begins
+        game.ExecuteMultiEnemyRound(CombatAction.Defend, CombatAction.Attack); // P:7 (defended), E:3
+
+        // Assert
+        Assert.Equal(hpAfterFirstEnemy, game.PlayerHP); // HP didn't reset between enemies
+        Assert.Equal(7, game.PlayerHP);
+    }
+
+    [Fact]
+    public void MultiEnemy_PlayerDies_GameOver()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartMultiEnemyCombat(enemyCount: 10); // Many enemies so player dies before winning
+
+        // Act - Player defends while enemy attacks repeatedly
+        // Player will die eventually, but won't be able to kill all 10 enemies
+        for (int i = 0; i < 15; i++)
+        {
+            if (game.CombatEnded) break;
+            game.ExecuteMultiEnemyRound(CombatAction.Defend, CombatAction.Attack);
+        }
+
+        // Assert - Player defended every time so didn't damage enemies
+        // But if enemy attacked every time (not likely), player still has HP
+        // Let's change to player attacking while enemy attacks, 10 enemies means 30 HP worth
+        // Player has 10 HP, so will die first
+
+        // Actually, a better test: Player never defends, enemy always attacks
+        game = new RPGGame();
+        game.StartMultiEnemyCombat(enemyCount: 5);
+        for (int i = 0; i < 10; i++)
+        {
+            if (game.CombatEnded) break;
+            game.ExecuteMultiEnemyRound(CombatAction.Attack, CombatAction.Attack);
+        }
+
+        // After 10 rounds of both attacking:
+        // Player takes 10 damage (dies at round 10)
+        // Each enemy takes 1 damage per round, so 10 damage total
+        // 5 enemies * 3 HP each = 15 HP, but only 10 damage dealt = 5 HP remaining across enemies
+        // So player dies before all enemies defeated
+        Assert.True(game.CombatEnded);
+        Assert.False(game.IsWon);
+        Assert.Equal(0, game.PlayerHP);
+    }
 }
