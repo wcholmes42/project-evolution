@@ -63,7 +63,7 @@ public class XMenMutationMode
 
             // Display
             Console.Clear();
-            DrawUnicornDisplay(mutations, topUnicorns, config, stats, score, mutName);
+            DrawUnicornDisplay(mutations, topUnicorns, config, stats, finalScore, mutName);
 
             // Save if unicorn found!
             if (finalScore > bestScore)
@@ -73,7 +73,7 @@ public class XMenMutationMode
 
                 Console.SetCursorPosition(2, 20);
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"🦄 UNICORN FOUND! Score {score:F1} - SAVED!                              ");
+                Console.Write($"🦄 UNICORN FOUND! Score {finalScore:F1} - SAVED!                              ");
                 Console.ResetColor();
                 Thread.Sleep(1500);
             }
