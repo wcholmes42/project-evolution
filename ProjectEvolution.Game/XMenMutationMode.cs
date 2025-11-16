@@ -53,14 +53,18 @@ public class XMenMutationMode
                 _ => "🎲 CHAOS"
             };
 
-            // MULTI-OBJECTIVE SCORING: Balance + Diversity!
-            double balanceScore = 100 - Math.Abs(avgTurns - 75) * 2; // How balanced (0-100)
-            double diversityBonus = CalculateDiversityBonus(topUnicorns, mutName); // Class diversity (-8 to +8)
-            double viabilityScore = avgTurns > 30 && avgTurns < 150 ? 10 : 0; // Viable range bonus
+            // ADJUSTED: Target based on empirical data (averaging ~110 turns)
+            double targetTurns = 110.0; // REALISTIC based on your 437K games!
 
-            // FINAL SCORE: Balance (60%) + Diversity (30%) + Viability (10%)
-            double finalScore = (balanceScore * 0.6) + ((diversityBonus + 8) * 3.75) + viabilityScore;
-            // Diversity scaled: -8 to +8 → 0 to 60 points contribution
+            // MULTI-OBJECTIVE SCORING: Balance FIRST, then Diversity!
+            double balanceScore = 100 - Math.Abs(avgTurns - targetTurns) * 2; // How balanced (0-100)
+            double diversityBonus = CalculateDiversityBonus(topUnicorns, mutName); // Class diversity (-8 to +8)
+            double viabilityScore = avgTurns > 30 && avgTurns < 200 ? 10 : 0; // Viable range bonus
+
+            // REBALANCED: Balance (85%) + Diversity (10%) + Viability (5%)
+            // Balance is PRIMARY, diversity is tiebreaker!
+            double finalScore = (balanceScore * 0.85) + ((diversityBonus + 8) * 1.25) + (viabilityScore * 0.5);
+            // Diversity now contributes max 20 points (was 60!)
 
             topUnicorns.Add((config, finalScore, avgTurns, mutName));
             topUnicorns = topUnicorns.OrderByDescending(u => u.score).Take(10).ToList();
@@ -106,14 +110,14 @@ public class XMenMutationMode
         // If this type is underrepresented, give bonus!
         int currentTypeCount = typeCounts.ContainsKey(newMutationType) ? typeCounts[newMutationType] : 0;
 
-        // Diversity bonus: fewer of this type = higher bonus
+        // Diversity bonus: REDUCED impact - tiebreaker only!
         double bonus = currentTypeCount switch
         {
-            0 => 8.0,  // Not in top 5 at all! Big bonus!
-            1 => 4.0,  // Only 1 in top 5, good diversity
+            0 => 4.0,  // Not in top 5 - moderate boost
+            1 => 2.0,  // Only 1 in top 5, slight boost
             2 => 0.0,  // Balanced representation
-            3 => -4.0, // Overrepresented, penalize
-            _ => -8.0  // Dominated top 5, big penalty!
+            3 => -2.0, // Overrepresented, slight penalty
+            _ => -4.0  // Dominated top 5, penalty
         };
 
         return bonus;
