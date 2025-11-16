@@ -1,0 +1,49 @@
+[00:23:10] GAME: Project Evolution started!
+[00:23:10] INIT: Player spawned at (10,10)
+[00:23:14] MOVE: East to (11,10) - Grassland
+[00:23:17] MOVE: South to (11,11) - Grassland
+[00:23:18] MOVE: West to (10,11) - Grassland
+[00:23:20] MOVE: West to (9,11) - Forest
+[00:23:20] ENCOUNTER: Random encounter at (9,11)
+[00:23:20] COMBAT: Fighting Goblin Archer [Lvl1] HP:3
+[00:23:20] COMBAT_ROUND: Goblin Archer misses! DEATH! Run ended!
+[00:23:20] DEATH: Killed by Goblin Archer. HP: 0
+[00:23:20] GAME: Game session ended
+[00:23:20] DUMP: 
+[00:23:20] DUMP: ═══════════════════════════════════════════════════════
+[00:23:20] DUMP:           GAME STATE DUMP
+[00:23:20] DUMP: Reason: Player Death (HP reached 0)
+[00:23:20] DUMP: ═══════════════════════════════════════════════════════
+[00:23:20] DUMP: 
+[00:23:20] DUMP: PLAYER STATE:
+[00:23:20] DUMP:   Level: 1
+[00:23:20] DUMP:   HP: 0/10
+[00:23:20] DUMP:   XP: 0/100
+[00:23:20] DUMP:   Gold: 0g
+[00:23:20] DUMP:   Strength: 2
+[00:23:20] DUMP:   Defense: 1
+[00:23:20] DUMP:   Stamina: 11/12
+[00:23:20] DUMP:   Potions: 0
+[00:23:20] DUMP:   Stat Points: 0
+[00:23:20] DUMP: 
+[00:23:20] DUMP: LOCATION:
+[00:23:20] DUMP:   Position: (9, 11)
+[00:23:20] DUMP:   Terrain: Forest
+[00:23:20] DUMP:   In Location: False
+[00:23:20] DUMP:   In Dungeon: False
+[00:23:20] DUMP:   Dungeon Depth: 0
+[00:23:20] DUMP: 
+[00:23:20] DUMP: PROGRESS:
+[00:23:20] DUMP:   Combats Won: 0
+[00:23:20] DUMP:   Deaths: 0
+[00:23:20] DUMP:   Run Ended: True
+[00:23:20] DUMP: 
+[00:23:20] DUMP: COMBAT STATE:
+[00:23:20] DUMP:   In Combat: False
+[00:23:20] DUMP:   Combat Won: False
+[00:23:20] DUMP:   Enemy: Goblin Archer [Lvl 1]
+[00:23:20] DUMP:   Enemy HP: 3
+[00:23:20] DUMP:   Enemy Damage: 3
+[00:23:20] DUMP: 
+[00:23:20] DUMP: ═══════════════════════════════════════════════════════
+[00:23:20] DUMP: 

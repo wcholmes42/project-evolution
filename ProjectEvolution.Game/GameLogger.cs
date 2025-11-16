@@ -1,5 +1,7 @@
 namespace ProjectEvolution.Game;
 
+using System.Linq;
+
 public class GameLogger
 {
     private List<string> _eventLog = new List<string>();
@@ -83,13 +85,29 @@ public class GameLogger
         }
     }
 
-    public void ShowRecentEvents(int count = 20)
+    public void ShowRecentEvents(int count = 20, bool excludeDumps = true)
     {
         Console.WriteLine("\n═══ RECENT EVENTS ═══");
-        int start = Math.Max(0, _eventLog.Count - count);
-        for (int i = start; i < _eventLog.Count; i++)
+
+        // Filter out DUMP events if requested
+        var relevantEvents = excludeDumps
+            ? _eventLog.Where(e => !e.Contains("DUMP:")).ToList()
+            : _eventLog;
+
+        int start = Math.Max(0, relevantEvents.Count - count);
+        for (int i = start; i < relevantEvents.Count; i++)
         {
-            Console.WriteLine(_eventLog[i]);
+            // Color code events
+            string evt = relevantEvents[i];
+            if (evt.Contains("DEATH") || evt.Contains("DAMAGE"))
+                Console.ForegroundColor = ConsoleColor.Red;
+            else if (evt.Contains("VICTORY"))
+                Console.ForegroundColor = ConsoleColor.Green;
+            else if (evt.Contains("MOVE"))
+                Console.ForegroundColor = ConsoleColor.Cyan;
+
+            Console.WriteLine(evt);
+            Console.ResetColor();
         }
     }
 

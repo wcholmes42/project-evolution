@@ -283,11 +283,11 @@ else if (!playing)
 Console.WriteLine($"\nEnd Reason: {endReason}");
 Console.WriteLine($"Final Stats: Level {game.PlayerLevel} | {game.PlayerGold}g | {game.CombatsWon} victories");
 
-// Full state dump
-logger.DumpGameState(game, endReason);
+// Show recent events FIRST (before they get buried by dump)
+logger.ShowRecentEvents(20, excludeDumps: true);
 
-// Show recent events
-logger.ShowRecentEvents(15);
+// Then full state dump
+logger.DumpGameState(game, endReason);
 
 Console.WriteLine("\nLog saved to: game_log.txt");
 Console.WriteLine("\nPress any key to exit...");
