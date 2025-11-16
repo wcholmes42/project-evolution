@@ -29,10 +29,10 @@ public class SingleParamTuner
 
         Console.WriteLine($"Baseline: {baseStats.AverageTurnsPerRun:F1} turns, Score: {baseScore:F1}\n");
 
-        // Test each parameter independently
-        TestParameter("MobDetectionRange", 2, 6, baseConfig, baseStats.AverageTurnsPerRun);
-        TestParameter("MaxMobs", 15, 40, baseConfig, baseStats.AverageTurnsPerRun);
-        TestParameter("PlayerStartHP", 5, 15, baseConfig, baseStats.AverageTurnsPerRun);
+        // Test each parameter independently with EXPANDED RANGES!
+        TestParameter("MobDetectionRange", 2, 10, baseConfig, baseStats.AverageTurnsPerRun); // Was 6, now 10!
+        TestParameter("MaxMobs", 15, 60, baseConfig, baseStats.AverageTurnsPerRun); // Was 40, now 60!
+        TestParameter("PlayerStartHP", 3, 15, baseConfig, baseStats.AverageTurnsPerRun); // Was 5, now 3!
         TestParameter("PlayerDefense", 0, 4, baseConfig, baseStats.AverageTurnsPerRun);
 
         Console.WriteLine("\n\nPress any key to continue...");

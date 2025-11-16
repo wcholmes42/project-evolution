@@ -19,13 +19,13 @@ public class RandomSearchTuner
 
         for (int i = 0; i < iterations; i++)
         {
-            // Generate random configuration
+            // Generate random configuration with EXPANDED RANGES!
             var config = new SimulationConfig
             {
-                MobDetectionRange = random.Next(2, 7),
-                MaxMobs = random.Next(15, 41),
+                MobDetectionRange = random.Next(2, 11), // Expanded to 10!
+                MaxMobs = random.Next(15, 61), // Expanded to 60!
                 MinMobs = 5,
-                PlayerStartHP = random.Next(6, 16),
+                PlayerStartHP = random.Next(3, 16), // Lowered to 3!
                 PlayerStrength = random.Next(1, 5),
                 PlayerDefense = random.Next(0, 4),
                 ShowVisuals = false

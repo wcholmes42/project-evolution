@@ -183,10 +183,10 @@ public class GradientTuner
                     config.PlayerStartHP += hpJump;
                     config.PlayerDefense += defJump;
 
-                    // Clamp
-                    config.MobDetectionRange = Math.Clamp(config.MobDetectionRange, 2, 6);
-                    config.MaxMobs = Math.Clamp(config.MaxMobs, 10, 40);
-                    config.PlayerStartHP = Math.Clamp(config.PlayerStartHP, 5, 20);
+                    // Clamp with EXPANDED RANGES!
+                    config.MobDetectionRange = Math.Clamp(config.MobDetectionRange, 2, 10);
+                    config.MaxMobs = Math.Clamp(config.MaxMobs, 10, 60);
+                    config.PlayerStartHP = Math.Clamp(config.PlayerStartHP, 3, 20);
                     config.PlayerDefense = Math.Clamp(config.PlayerDefense, 0, 5);
                 }
                 else
@@ -284,10 +284,10 @@ public class GradientTuner
         // INCREASED: errorMagnitude/20 → errorMagnitude/10
         double adaptiveLR = _learningRate * Math.Min(1.0, errorMagnitude / 10.0);
 
-        // Update each parameter
-        config.MobDetectionRange = UpdateParameter(config.MobDetectionRange, "MobDetection", adaptiveLR, 2, 6);
-        config.MaxMobs = UpdateParameter(config.MaxMobs, "MaxMobs", adaptiveLR, 10, 40);
-        config.PlayerStartHP = UpdateParameter(config.PlayerStartHP, "PlayerHP", adaptiveLR, 5, 20);
+        // Update each parameter with EXPANDED RANGES to break the barrier!
+        config.MobDetectionRange = UpdateParameter(config.MobDetectionRange, "MobDetection", adaptiveLR, 2, 10); // Was 6, now 10!
+        config.MaxMobs = UpdateParameter(config.MaxMobs, "MaxMobs", adaptiveLR, 10, 60); // Was 40, now 60!
+        config.PlayerStartHP = UpdateParameter(config.PlayerStartHP, "PlayerHP", adaptiveLR, 3, 20); // Was 5, now 3!
         config.PlayerDefense = UpdateParameter(config.PlayerDefense, "PlayerDefense", adaptiveLR, 0, 5);
     }
 
