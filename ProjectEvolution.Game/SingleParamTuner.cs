@@ -46,10 +46,10 @@ public class SingleParamTuner
         Console.WriteLine($"{"Value",-8} {"AvgTurns",-12} {"Score",-10} {"vs Baseline"}");
         Console.WriteLine(new string('-', 50));
 
-        double bestScore = 0;
-        int bestValue = 0;
+        double bestScore = -1000; // Start very low
+        int bestValue = min;
 
-        for (int value = min; value <= max; value++)
+        for (int i = min, value = min; value <= max; value++, i++)
         {
             var testConfig = CloneConfig(baseConfig);
 
@@ -64,16 +64,27 @@ public class SingleParamTuner
 
             var simulator = new GameSimulator(testConfig);
             var stats = simulator.RunSimulation(200); // Parallel execution
-            double score = 100 - Math.Abs(stats.AverageTurnsPerRun - 50) * 2;
 
-            if (score > bestScore)
+            double avgTurns = stats.AverageTurnsPerRun;
+            double score = 100.0 - Math.Abs(avgTurns - 50.0) * 2.0;
+
+            // Track best for this parameter
+            if (i == min || score > bestScore)
             {
-                bestScore = score;
-                bestValue = value;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestValue = value;
+                }
             }
 
-            string indicator = score > bestScore - 1 ? "✅" : value == GetCurrentValue(baseConfig, paramName) ? "📍" : "  ";
-            Console.WriteLine($"{value,-8} {stats.AverageTurnsPerRun,-12:F1} {score,-10:F1} {indicator}");
+            // Indicator
+            string indicator = "";
+            if (value == bestValue && i > min) indicator = "✅ BEST";
+            else if (value == GetCurrentValue(baseConfig, paramName)) indicator = "📍 CURRENT";
+            else if (Math.Abs(score - bestScore) < 2) indicator = "⭐ GOOD";
+
+            Console.WriteLine($"{value,-8} {avgTurns,-12:F1} {score,-10:F1} {indicator}");
         }
 
         Console.ForegroundColor = ConsoleColor.Green;

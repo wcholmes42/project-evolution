@@ -5,8 +5,8 @@
   "PlayerStartHP": 5,
   "PlayerStrength": 1,
   "PlayerDefense": 0,
-  "Score": 41.893333333333345,
-  "AvgTurns": 79.05333333333333,
-  "TotalGamesSimulated": 109800,
-  "Discovered": "2025-11-16T13:52:46.1364597-08:00"
+  "Score": 53.5,
+  "AvgTurns": 73.25,
+  "TotalGamesSimulated": 16500,
+  "Discovered": "2025-11-16T13:56:48.1716814-08:00"
 }
