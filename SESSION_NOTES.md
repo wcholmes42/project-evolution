@@ -1,0 +1,127 @@
+# Project Evolution - Session Notes
+
+**Last Updated**: 2025-11-15
+**Current Generation**: 2
+**Status**: ✅ Ready to continue
+
+## Quick Start
+```bash
+cd project-evolution
+dotnet test                    # Run all tests
+dotnet run --project ProjectEvolution.Game  # Play the game
+```
+
+## Evolution Roadmap
+
+### ✅ Completed Generations
+
+#### Generation 0: The Beginning
+- Auto-win game
+- Validates TDD setup
+- Test: `StartGame_ImmediatelyWins`
+
+#### Generation 1: Chance
+- Coin flip mechanic
+- Random win/lose
+- Tests: `CoinFlipGame_CanWin`, `CoinFlipGame_CanLose`, `CoinFlipGame_RandomOutcome_ProducesBothResults`
+
+#### Generation 2: Player Agency
+- Combat with weak goblin
+- Player chooses: Attack (wins) or Defend (loses)
+- Tests: `Combat_PlayerAttacks_DefeatsWeakEnemy`, `Combat_PlayerDefends_FailsToDefeatEnemy`, `Combat_NotStarted_CannotChooseAction`
+- **Current Test Count**: 7 passing
+
+### 🎯 Next Generations (Planned)
+
+#### Generation 3: Enemy AI
+- Enemy fights back with random actions
+- Rock-paper-scissors style:
+  - Attack vs Attack = 50/50
+  - Attack vs Defend = Attacker wins
+  - Defend vs Attack = Attacker wins
+  - Defend vs Defend = Draw (player loses)
+
+#### Generation 4: Health Points
+- Player HP: 10
+- Enemy HP: 3
+- Combat takes multiple rounds
+- Track damage and death
+
+#### Generation 5: Loot & Rewards
+- Win combat → gain gold
+- Track player inventory
+- Display rewards
+
+#### Generation 6: Multiple Enemies
+- Face 2-3 goblins in sequence
+- Must defeat all to win
+- Progressive difficulty
+
+#### Generation 7: Character Stats
+- Player Strength/Defense attributes
+- Stats affect combat outcomes
+- Foundation for character progression
+
+## Technical Details
+
+### Project Structure
+```
+project-evolution/
+├── ProjectEvolution.sln
+├── ProjectEvolution.Game/
+│   ├── Program.cs              # Console interface
+│   ├── RPGGame.cs              # Core game logic
+│   └── CombatAction.cs         # Enum: Attack, Defend
+└── ProjectEvolution.Tests/
+    └── UnitTest1.cs            # All tests (7 passing)
+```
+
+### Current API
+```csharp
+var game = new RPGGame();
+
+// Generation 0
+game.Start();  // Auto-win
+
+// Generation 1
+game.StartWithCoinFlip(heads: true);  // Deterministic
+game.StartWithRandomCoinFlip();       // Random
+
+// Generation 2
+game.StartCombat();
+game.ChooseAction(CombatAction.Attack);  // or CombatAction.Defend
+bool won = game.IsWon;
+```
+
+### Design Principles
+1. **TDD First**: Always write failing test before implementation
+2. **Backward Compatible**: Old tests keep passing
+3. **Incremental**: Each gen adds ONE core concept
+4. **Thematic**: Stay true to RPG theme
+5. **Git History**: Each generation is a commit
+
+## GitHub Repository
+https://github.com/wcholmes42/project-evolution
+
+## How to Continue This Project
+
+1. Read this file to understand current state
+2. Run `dotnet test` to verify all tests pass
+3. Implement next generation following TDD:
+   - Write failing tests
+   - Implement minimal code to pass
+   - Update Program.cs for user experience
+   - Update this SESSION_NOTES.md
+   - Commit and push
+4. Repeat for next generation
+
+## Notes for Future Sessions
+
+- Tech stack: C# .NET 9.0, xUnit
+- All generations maintain backward compatibility
+- Tests are in one file (UnitTest1.cs) for simplicity
+- Console uses ReadLine/ReadKey for interaction
+- Random seed not controlled (true randomness in tests where applicable)
+
+---
+*This file is updated after each generation to ensure safe session closure*
