@@ -6,6 +6,8 @@ public class ContinuousTuner
     private static SimulationStats _bestStats = null!;
     private static double _bestScore = 0;
     private static int _cyclesRun = 0;
+    private static List<double> _scoreHistory = new List<double>();
+    private static int _bestCycleNumber = 0;
 
     public static void RunContinuousTuning()
     {
@@ -26,6 +28,7 @@ public class ContinuousTuner
 
         _bestConfig = CloneConfig(config);
         _cyclesRun = 0;
+        _scoreHistory.Clear();
 
         DrawStaticUI();
 
@@ -40,6 +43,7 @@ public class ContinuousTuner
 
             // Score this config (prefer 40-60 turn average)
             double score = CalculateScore(stats);
+            _scoreHistory.Add(score);
 
             // Update best if improved
             if (score > _bestScore || _bestScore == 0)
@@ -47,6 +51,7 @@ public class ContinuousTuner
                 _bestScore = score;
                 _bestConfig = CloneConfig(config);
                 _bestStats = stats;
+                _bestCycleNumber = _cyclesRun;
             }
 
             // Update display
@@ -89,6 +94,14 @@ public class ContinuousTuner
         Console.WriteLine("║   Results:                                                                 ║");
         Console.WriteLine("║   Score:                                                                   ║");
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
+        Console.WriteLine("║ BALANCE CONVERGENCE GRAPH (Last 30 Cycles):                               ║");
+        Console.WriteLine("║ 100 ┤                                                                      ║");
+        Console.WriteLine("║  80 ┤ ▓▓▓▓▓▓ IDEAL ZONE ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓              ║");
+        Console.WriteLine("║  60 ┤                                                                      ║");
+        Console.WriteLine("║  40 ┤                                                                      ║");
+        Console.WriteLine("║  20 ┤                                                                      ║");
+        Console.WriteLine("║   0 ┤                                                                      ║");
+        Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
         Console.WriteLine("║ TRENDING:                                                                  ║");
         Console.WriteLine("║   Direction:                                                               ║");
         Console.WriteLine("║   Progress:                                                                ║");
@@ -130,20 +143,92 @@ public class ContinuousTuner
             Console.Write($"Score: {_bestScore:F2}/100                                                            ");
         }
 
+        // Draw graph
+        DrawTrendingGraph();
+
         // Trending
-        Console.SetCursorPosition(4, 16);
+        Console.SetCursorPosition(4, 23);
         string direction = score > _bestScore ? "↗️ IMPROVING" : score == _bestScore ? "→ STABLE" : "↘️ DECLINING";
         Console.Write($"Direction: {direction}                                                        ");
 
-        Console.SetCursorPosition(4, 17);
-        Console.Write($"Progress: {_cyclesRun} cycles completed                                               ");
+        Console.SetCursorPosition(4, 24);
+        Console.Write($"Progress: {_cyclesRun} cycles completed, {_cyclesRun * 20} total games                    ");
+    }
+
+    private static void DrawTrendingGraph()
+    {
+        // Graph shows last 30 cycles
+        int graphWidth = 60;
+        int graphHeight = 6;
+        int startX = 7;
+        int startY = 17;
+
+        // Get last 30 scores (or all if less)
+        var recentScores = _scoreHistory.TakeLast(graphWidth).ToList();
+        if (recentScores.Count == 0) return;
+
+        // Clear graph area first
+        for (int y = 0; y < graphHeight; y++)
+        {
+            Console.SetCursorPosition(startX, startY + y);
+            Console.Write(new string(' ', graphWidth));
+        }
+
+        // Plot each score
+        for (int i = 0; i < recentScores.Count; i++)
+        {
+            double score = recentScores[i];
+            int x = startX + i;
+
+            // Map score (0-100) to graph height (0-5)
+            int barHeight = (int)(score / 100.0 * graphHeight);
+            barHeight = Math.Clamp(barHeight, 0, graphHeight - 1);
+
+            // Draw from bottom up
+            for (int h = 0; h <= barHeight; h++)
+            {
+                int y = startY + (graphHeight - 1 - h);
+
+                Console.SetCursorPosition(x, y);
+
+                // Color based on score
+                if (score >= 80)
+                    Console.ForegroundColor = ConsoleColor.Green;
+                else if (score >= 60)
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                else
+                    Console.ForegroundColor = ConsoleColor.Red;
+
+                // Different characters for different heights
+                if (h == barHeight)
+                    Console.Write("█");
+                else
+                    Console.Write("█");
+
+                Console.ResetColor();
+            }
+        }
+
+        // Draw ideal zone line (at score 80)
+        int idealY = startY + (int)((1.0 - 0.80) * graphHeight);
+        Console.SetCursorPosition(startX, idealY);
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        for (int x = 0; x < Math.Min(graphWidth, recentScores.Count); x++)
+        {
+            Console.SetCursorPosition(startX + x, idealY);
+            if (recentScores[x] >= 80)
+                Console.Write("█"); // Bar already there
+            else
+                Console.Write("─"); // Show threshold
+        }
+        Console.ResetColor();
     }
 
     private static int GetBestCycleNumber()
     {
-        // Would need tracking, for now just show a placeholder
-        return _cyclesRun;
+        return _bestCycleNumber;
     }
+
 
     private static double CalculateScore(SimulationStats stats)
     {
