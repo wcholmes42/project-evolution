@@ -10,6 +10,17 @@ public class GradientTuner
     private static int _cyclesRun = 0;
     private static double _targetScore = 50.0; // Target: 50 turns average
 
+    private class LeaderboardEntry
+    {
+        public int Cycle { get; set; }
+        public FloatConfig Config { get; set; } = null!;
+        public double AvgTurns { get; set; }
+        public double Score { get; set; }
+        public int Combats { get; set; }
+    }
+
+    private static List<LeaderboardEntry> _leaderboard = new List<LeaderboardEntry>();
+
     public static void RunGradientTuning()
     {
         Console.Clear();
@@ -43,8 +54,22 @@ public class GradientTuner
 
             double avgTurns = stats.AverageTurnsPerRun;
             double error = avgTurns - _targetScore; // How far from ideal?
+            double score = 100 - Math.Abs(error) * 2; // Score out of 100
 
             _scoreHistory.Add(avgTurns);
+
+            // Add to leaderboard
+            var entry = new LeaderboardEntry
+            {
+                Cycle = _cyclesRun,
+                Config = CloneConfig(config),
+                AvgTurns = avgTurns,
+                Score = score,
+                Combats = (int)stats.AverageCombatsWon
+            };
+
+            _leaderboard.Add(entry);
+            _leaderboard = _leaderboard.OrderByDescending(e => e.Score).Take(10).ToList();
 
             // Update display
             UpdateGradientDisplay(config, stats, error);
@@ -185,20 +210,18 @@ public class GradientTuner
         Console.WriteLine("║ CURRENT CONFIG:                                                            ║");
         Console.WriteLine("║ RESULTS:                                                                   ║");
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
+        Console.WriteLine("║ 🏆 TOP 10 LEADERBOARD (Best Balanced Configs):                            ║");
+        Console.WriteLine("║ #  Cycle  Score   AvgTurns  Det Mobs HP Def  Combats                      ║");
+        for (int i = 0; i < 10; i++)
+        {
+            Console.WriteLine("║                                                                            ║");
+        }
+        Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
         Console.WriteLine("║ GRADIENTS (Parameter Impact):                                             ║");
         Console.WriteLine("║   MobDetection:                                                            ║");
         Console.WriteLine("║   MaxMobs:                                                                 ║");
         Console.WriteLine("║   PlayerHP:                                                                ║");
         Console.WriteLine("║   PlayerDef:                                                               ║");
-        Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
-        Console.WriteLine("║ CONVERGENCE GRAPH (Last 60 Cycles) - Target: 50 turns:                    ║");
-        Console.WriteLine("║ 100 ┤                                                                      ║");
-        Console.WriteLine("║  80 ┤                                                                      ║");
-        Console.WriteLine("║  60 ┤                                                                      ║");
-        Console.WriteLine("║  50 ┤ ════════════════════ TARGET ═════════════════════════               ║");
-        Console.WriteLine("║  40 ┤                                                                      ║");
-        Console.WriteLine("║  20 ┤                                                                      ║");
-        Console.WriteLine("║   0 ┤                                                                      ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════╝");
     }
 
@@ -218,18 +241,60 @@ public class GradientTuner
         Console.Write($"RESULTS: Avg {stats.AverageTurnsPerRun:F1} turns, {stats.AverageCombatsWon:F1} combats                                ");
         Console.ResetColor();
 
-        // Gradients
-        Console.SetCursorPosition(2, 9);
-        Console.Write($"  MobDetection: {_gradients["MobDetection"],+6:F3}  (impact on turns)                              ");
-        Console.SetCursorPosition(2, 10);
-        Console.Write($"  MaxMobs:      {_gradients["MaxMobs"],+6:F3}                                                 ");
-        Console.SetCursorPosition(2, 11);
-        Console.Write($"  PlayerHP:     {_gradients["PlayerHP"],+6:F3}                                                 ");
-        Console.SetCursorPosition(2, 12);
-        Console.Write($"  PlayerDef:    {_gradients["PlayerDefense"],+6:F3}                                                 ");
+        // Draw leaderboard
+        DrawLeaderboard();
 
-        // Draw convergence graph
-        DrawConvergenceGraph();
+        // Gradients
+        Console.SetCursorPosition(2, 19);
+        Console.Write($"  MobDetection: {_gradients["MobDetection"],+6:F3}  (impact on turns)                              ");
+        Console.SetCursorPosition(2, 20);
+        Console.Write($"  MaxMobs:      {_gradients["MaxMobs"],+6:F3}                                                 ");
+        Console.SetCursorPosition(2, 21);
+        Console.Write($"  PlayerHP:     {_gradients["PlayerHP"],+6:F3}                                                 ");
+        Console.SetCursorPosition(2, 22);
+        Console.Write($"  PlayerDef:    {_gradients["PlayerDefense"],+6:F3}                                                 ");
+    }
+
+    private static void DrawLeaderboard()
+    {
+        int startY = 9;
+
+        for (int i = 0; i < 10; i++)
+        {
+            Console.SetCursorPosition(2, startY + i);
+
+            if (i < _leaderboard.Count)
+            {
+                var entry = _leaderboard[i];
+
+                // Color by rank
+                if (i == 0)
+                    Console.ForegroundColor = ConsoleColor.Yellow; // Gold
+                else if (i == 1)
+                    Console.ForegroundColor = ConsoleColor.Gray; // Silver
+                else if (i == 2)
+                    Console.ForegroundColor = ConsoleColor.DarkYellow; // Bronze
+                else
+                    Console.ForegroundColor = ConsoleColor.White;
+
+                string rank = (i + 1).ToString().PadLeft(2);
+                string cycle = entry.Cycle.ToString().PadLeft(5);
+                string score = entry.Score.ToString("F1").PadLeft(6);
+                string turns = entry.AvgTurns.ToString("F1").PadLeft(8);
+                string det = entry.Config.MobDetectionRange.ToString("F0").PadLeft(3);
+                string mobs = entry.Config.MaxMobs.ToString("F0").PadLeft(4);
+                string hp = entry.Config.PlayerStartHP.ToString("F0").PadLeft(2);
+                string def = entry.Config.PlayerDefense.ToString("F0").PadLeft(3);
+                string combats = entry.Combats.ToString().PadLeft(7);
+
+                Console.Write($"{rank} {cycle} {score}  {turns}   {det} {mobs} {hp}  {def}  {combats}                  ");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.Write("                                                                            ");
+            }
+        }
     }
 
     private static void DrawConvergenceGraph()
