@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 9
+**Current Generation**: 10
 **Status**: ✅ Ready to continue - Combat dynamics evolution in progress!
 
 ## Quick Start
@@ -86,7 +86,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Combat is now unpredictable - same fight can end differently
 - Tests: `CriticalHit_DoesDoubleDamage`, `Miss_DealsNoDamage`, `NormalHit_DealsNormalDamage`, `BothMiss_NoDamageDealt`, `CriticalHit_RandomRNG_CanOccur`
 
-#### Generation 9: Stamina Resource System (Current)
+#### Generation 9: Stamina Resource System
 - Added PlayerStamina property (starts at 12)
 - Attack costs 3 stamina
 - Defend costs 1 stamina
@@ -95,7 +95,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Adds strategic resource management to combat
 - Must balance aggression vs conservation
 - Tests: `Stamina_PlayerStartsWith12Stamina`, `Stamina_AttackCosts3Stamina`, `Stamina_DefendCosts1Stamina`, `Stamina_RunOutForcesSamina`, `Stamina_ManageResourceToWin`, `Stamina_CantGoNegative`
-- **Current Test Count**: 46 passing
+
+#### Generation 10: Enemy Variety (Current)
+- Added EnemyType enum and InitializeEnemy() method
+- Three distinct enemy types with different strategies:
+  * Goblin Scout: 2 HP, 1 damage (quick fights)
+  * Goblin Warrior: 5 HP, 1 damage (endurance test)
+  * Goblin Archer: 3 HP, 2 damage (hit hard, die fast)
+- Added EnemyDamage and EnemyName properties
+- Random enemy selection each combat
+- Each enemy type requires different tactics
+- Combat log shows enemy name
+- Tests: `EnemyType_GoblinScout_Has2HP`, `EnemyType_GoblinWarrior_Has5HP`, `EnemyType_GoblinArcher_Has3HP2Damage`, `EnemyType_ArcherDealsMoreDamage`, `EnemyType_WarriorTakesLongerToDefeat`, `EnemyType_RandomEncounters_AllTypesCanAppear`
+- **Current Test Count**: 52 passing
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 

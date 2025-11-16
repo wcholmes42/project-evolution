@@ -10,15 +10,16 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 9
+## Current State - Generation 10
 
-Resource Management + RNG Chaos:
-- **Limited Stamina**: 12 stamina per fight
-- **Attack costs 3**, Defend costs 1
-- **Run out? Forced to defend!**
-- **Strategic Choices**: Spam attacks and risk exhaustion? Or pace yourself?
-- **Combined with Crits/Misses**: Miss an attack = wasted 3 stamina!
-- **Every decision matters** - stamina + RNG = nail-biting combat!
+Enemy Variety + Tactical Adaptation:
+- **3 Enemy Types**: Scout (fast), Warrior (tank), Archer (hard-hitter)
+- **Random Encounters**: Never know what you'll face!
+- **Different Tactics Required**:
+  - Scout: Quick 2 HP fight
+  - Warrior: 5 HP endurance battle (stamina drain!)
+  - Archer: 2 damage = DANGEROUS, kill fast!
+- **Layered Complexity**: Enemy type + Stamina + Crits/Misses = TRUE CHAOS!
 
 ## Running the Game
 
@@ -47,14 +48,22 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 9 (Current)
+### Generation 10 (Current)
+- [x] Three distinct enemy types
+- [x] Goblin Scout: 2 HP, 1 dmg (easy)
+- [x] Goblin Warrior: 5 HP, 1 dmg (stamina drain)
+- [x] Goblin Archer: 3 HP, 2 dmg (deadly)
+- [x] Random enemy selection
+- [x] Tactical diversity required
+- [x] **52 tests, all passing**
+
+### Generation 9
 - [x] Stamina system (12 stamina per combat)
 - [x] Attack costs 3 stamina
 - [x] Defend costs 1 stamina
 - [x] Run out of stamina = forced defend
 - [x] Strategic resource management layer
 - [x] Combines with crit/miss for high stakes
-- [x] **46 tests, all passing**
 
 ### Generation 8
 - [x] Critical hit system (15% chance, 2x damage)

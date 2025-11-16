@@ -819,4 +819,95 @@ public class GameTests
         // Assert
         Assert.Equal(0, game.PlayerStamina); // Can't go below 0
     }
+
+    [Fact]
+    public void EnemyType_GoblinScout_Has2HP()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartCombatWithEnemyType(EnemyType.GoblinScout);
+
+        // Assert
+        Assert.Equal(2, game.EnemyHP);
+        Assert.Equal(1, game.EnemyDamage);
+        Assert.Equal("Goblin Scout", game.EnemyName);
+    }
+
+    [Fact]
+    public void EnemyType_GoblinWarrior_Has5HP()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartCombatWithEnemyType(EnemyType.GoblinWarrior);
+
+        // Assert
+        Assert.Equal(5, game.EnemyHP);
+        Assert.Equal(1, game.EnemyDamage);
+        Assert.Equal("Goblin Warrior", game.EnemyName);
+    }
+
+    [Fact]
+    public void EnemyType_GoblinArcher_Has3HP2Damage()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartCombatWithEnemyType(EnemyType.GoblinArcher);
+
+        // Assert
+        Assert.Equal(3, game.EnemyHP);
+        Assert.Equal(2, game.EnemyDamage);
+        Assert.Equal("Goblin Archer", game.EnemyName);
+    }
+
+    [Fact]
+    public void EnemyType_ArcherDealsMoreDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithEnemyType(EnemyType.GoblinArcher);
+        game.SetPlayerStats(strength: 1, defense: 0);
+
+        // Act - Both attack
+        game.ExecuteEnemyTypeCombatRound(CombatAction.Attack, CombatAction.Attack,
+            HitType.Normal, HitType.Normal);
+
+        // Assert - Player takes 2 damage from archer
+        Assert.Equal(8, game.PlayerHP); // 10 - 2 = 8
+    }
+
+    [Fact]
+    public void EnemyType_WarriorTakesLongerToDefeat()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithEnemyType(EnemyType.GoblinWarrior);
+        game.SetPlayerStats(strength: 1, defense: 0);
+
+        // Act - Attack 3 times (warrior has 5 HP)
+        game.ExecuteEnemyTypeCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal); // 4
+        game.ExecuteEnemyTypeCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal); // 3
+        game.ExecuteEnemyTypeCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal); // 2
+
+        // Assert - Still alive after 3 hits
+        Assert.False(game.CombatEnded);
+        Assert.Equal(2, game.EnemyHP);
+    }
+
+    [Fact]
+    public void EnemyType_RandomEncounters_AllTypesCanAppear()
+    {
+        // Arrange & Act
+        var enemyTypes = new List<string>();
+        for (int i = 0; i < 100; i++)
+        {
+            var game = new RPGGame();
+            game.StartCombatWithRandomEnemyType();
+            enemyTypes.Add(game.EnemyName);
+        }
+
+        // Assert - All 3 enemy types should appear over 100 trials
+        Assert.Contains("Goblin Scout", enemyTypes);
+        Assert.Contains("Goblin Warrior", enemyTypes);
+        Assert.Contains("Goblin Archer", enemyTypes);
+    }
 }
