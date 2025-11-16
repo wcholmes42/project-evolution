@@ -10,13 +10,14 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 3
+## Current State - Generation 4
 
-Combat with enemy AI:
-- Face a goblin warrior with AI
-- Enemy makes random choices (Attack/Defend)
-- Rock-paper-scissors combat system
-- Your choice vs enemy choice determines outcome
+Multi-round combat with health points:
+- Player: 10 HP | Enemy: 3 HP
+- Turn-based combat with multiple rounds
+- Attack deals 1 damage (unless blocked)
+- Defend blocks all incoming damage
+- Fight until someone reaches 0 HP
 
 ## Running the Game
 
@@ -45,7 +46,15 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 3 (Current)
+### Generation 4 (Current)
+- [x] Health point system (Player: 10 HP, Enemy: 3 HP)
+- [x] Multi-round turn-based combat
+- [x] Attack deals 1 damage when not blocked
+- [x] Defend blocks all incoming damage
+- [x] Combat continues until someone dies
+- [x] Victory/defeat based on HP reaching 0
+
+### Generation 3
 - [x] Enemy AI fights back
 - [x] Rock-paper-scissors combat resolution
 - [x] Attack vs Attack = 50/50 chance

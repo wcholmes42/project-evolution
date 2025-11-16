@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 3
+**Current Generation**: 4
 **Status**: ✅ Ready to continue
 
 ## Quick Start
@@ -30,7 +30,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Player chooses: Attack (wins) or Defend (loses)
 - Tests: `Combat_PlayerAttacks_DefeatsWeakEnemy`, `Combat_PlayerDefends_FailsToDefeatEnemy`, `Combat_NotStarted_CannotChooseAction`
 
-#### Generation 3: Enemy AI (Current)
+#### Generation 3: Enemy AI
 - Enemy fights back with random actions
 - Rock-paper-scissors combat:
   - Attack vs Attack = 50/50 coin flip
@@ -39,15 +39,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
   - Defend vs Defend = Draw (player loses)
 - Added CombatLog property for narrative feedback
 - Tests: `CombatWithAI_PlayerAttacks_EnemyDefends_PlayerWins`, `CombatWithAI_PlayerDefends_EnemyAttacks_PlayerLoses`, `CombatWithAI_BothDefend_Draw_PlayerLoses`, `CombatWithAI_BothAttack_CoinFlip_CanWin`, `CombatWithAI_BothAttack_CoinFlip_CanLose`, `CombatWithAI_RandomEnemy_ProducesBothOutcomes`
-- **Current Test Count**: 13 passing
+
+#### Generation 4: Health Points (Current)
+- Player starts with 10 HP
+- Enemy starts with 3 HP
+- Multi-round combat system
+- Attack deals 1 damage (if not blocked)
+- Defend blocks all incoming damage
+- Combat ends when either reaches 0 HP
+- Added properties: PlayerHP, EnemyHP, CombatEnded
+- Tests: `CombatWithHP_PlayerStartsWith10HP`, `CombatWithHP_EnemyStartsWith3HP`, `CombatWithHP_PlayerAttacks_EnemyDefends_EnemyTakesNoDamage`, `CombatWithHP_PlayerAttacks_EnemyAttacks_EnemyTakesDamage`, `CombatWithHP_PlayerDefends_EnemyAttacks_PlayerTakesNoDamage`, `CombatWithHP_DefeatEnemy_PlayerWins`, `CombatWithHP_PlayerHPReaches0_PlayerLoses`, `CombatWithHP_CombatEndsWhenEitherDies`
+- **Current Test Count**: 21 passing
 
 ### 🎯 Next Generations (Planned)
-
-#### Generation 4: Health Points
-- Player HP: 10
-- Enemy HP: 3
-- Combat takes multiple rounds
-- Track damage and death
 
 #### Generation 5: Loot & Rewards
 - Win combat → gain gold
@@ -99,9 +103,21 @@ game.ChooseActionWithRandomEnemy(CombatAction.Attack);
 // or for testing:
 game.ChooseActionAgainstEnemy(CombatAction.Attack, enemyAction: CombatAction.Defend);
 
+// Generation 4
+game.StartCombatWithHP();
+while (!game.CombatEnded)
+{
+    game.ExecuteHPCombatRoundWithRandomEnemy(CombatAction.Attack);
+    // or for testing:
+    // game.ExecuteHPCombatRound(CombatAction.Attack, CombatAction.Defend);
+}
+
 // Check results
 bool won = game.IsWon;
-string log = game.CombatLog;  // Narrative description of what happened
+string log = game.CombatLog;
+int playerHP = game.PlayerHP;
+int enemyHP = game.EnemyHP;
+bool ended = game.CombatEnded;
 ```
 
 ### Design Principles
