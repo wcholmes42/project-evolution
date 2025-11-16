@@ -430,7 +430,7 @@ public class UIRenderer
         Console.Write("║ ");
         Console.ForegroundColor = ConsoleColor.Green;
         string target = autoPlayer.CurrentTarget;
-        if (target.Length > contentWidth) target = target.Substring(0, contentWidth);
+        if (target.Length > contentWidth) target = target.Substring(0, contentWidth - 3) + "...";
         Console.Write(target.PadRight(contentWidth));
         Console.ResetColor();
         Console.Write("║");
@@ -442,7 +442,7 @@ public class UIRenderer
         Console.Write("║ ");
         Console.ForegroundColor = ConsoleColor.Magenta;
         string decision = autoPlayer.LastDecision;
-        if (decision.Length > contentWidth) decision = decision.Substring(0, contentWidth);
+        if (decision.Length > contentWidth) decision = decision.Substring(0, contentWidth - 3) + "...";
         Console.Write(decision.PadRight(contentWidth));
         Console.ResetColor();
         Console.Write("║");

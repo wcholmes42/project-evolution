@@ -2776,10 +2776,16 @@ public class RPGGame
         {
             if (_activeMobs.Count < MaxMobsInWorld)
             {
-                string[] mobNames = { "Goblin Scout", "Orc Wanderer", "Wild Beast", "Bandit", "Skeleton" };
-                string name = mobNames[_random.Next(mobNames.Length)];
+                EnemyType type = (EnemyType)_random.Next(3);
+                string name = type switch
+                {
+                    EnemyType.GoblinScout => "Goblin Scout",
+                    EnemyType.GoblinWarrior => "Goblin Warrior",
+                    EnemyType.GoblinArcher => "Goblin Archer",
+                    _ => "Goblin Scout"
+                };
                 int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-                _activeMobs.Add(new Mob(x, y, name, level));
+                _activeMobs.Add(new Mob(x, y, name, level, type));
             }
         }
 
@@ -2797,10 +2803,16 @@ public class RPGGame
             }
             while ((x == PlayerX && y == PlayerY) || terrain == "Town" || IsMobAt(x, y));
 
-            string[] mobNames = { "Goblin Scout", "Orc Wanderer", "Wild Beast", "Bandit", "Skeleton" };
-            string name = mobNames[_random.Next(mobNames.Length)];
+            EnemyType type = (EnemyType)_random.Next(3);
+            string name = type switch
+            {
+                EnemyType.GoblinScout => "Goblin Scout",
+                EnemyType.GoblinWarrior => "Goblin Warrior",
+                EnemyType.GoblinArcher => "Goblin Archer",
+                _ => "Goblin Scout"
+            };
             int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-            _activeMobs.Add(new Mob(x, y, name, level));
+            _activeMobs.Add(new Mob(x, y, name, level, type));
         }
     }
 
