@@ -13,6 +13,7 @@ Console.WriteLine("║  [C] Continuous Tuning (Infinite - ESC to stop)          
 Console.WriteLine("║  [G] Gradient Descent (Backpropagation - Leaderboard)          ║");
 Console.WriteLine("║  [S] Single-Param Test (No Interference)                       ║");
 Console.WriteLine("║  [R] Random Search (Explore Solution Space)                    ║");
+Console.WriteLine("║  [X] X-MEN MUTATION MODE 🦄 (Find The Unicorn!)                ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -55,6 +56,12 @@ else if (menuChoice == ConsoleKey.R)
 {
     // Run random search
     RandomSearchTuner.RunRandomSearch(50);
+    return;
+}
+else if (menuChoice == ConsoleKey.X)
+{
+    // X-MEN MUTATION MODE!
+    XMenMutationMode.UnleashTheMutants();
     return;
 }
 else if (menuChoice == ConsoleKey.Q)
