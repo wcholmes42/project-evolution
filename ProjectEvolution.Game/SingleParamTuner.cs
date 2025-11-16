@@ -39,7 +39,8 @@ public class SingleParamTuner
         Console.ReadKey(intercept: true);
     }
 
-    private static void TestParameter(string paramName, int min, int max, SimulationConfig baseConfig, double baseAvg)
+    private static (int bestValue, double bestScore) TestParameter(string paramName, int min, int max, SimulationConfig baseConfig,
+        ref SimulationConfig bestOverall, ref double bestOverallScore, ref SimulationStats bestOverallStats)
     {
         Console.WriteLine($"\n{'═',60}");
         Console.WriteLine($"Testing {paramName} ({min}-{max}):");
@@ -66,7 +67,15 @@ public class SingleParamTuner
             var stats = simulator.RunSimulation(200); // Parallel execution
 
             double avgTurns = stats.AverageTurnsPerRun;
-            double score = 100.0 - Math.Abs(avgTurns - 50.0) * 2.0;
+            double score = 100.0 - Math.Abs(avgTurns - 75.0) * 2.0; // Use realistic target!
+
+            // Track best overall config across all parameters
+            if (score > bestOverallScore)
+            {
+                bestOverall = CloneConfig(testConfig);
+                bestOverallScore = score;
+                bestOverallStats = stats;
+            }
 
             // Track best for this parameter
             if (i == min || score > bestScore)
@@ -90,6 +99,8 @@ public class SingleParamTuner
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"\n→ BEST {paramName}: {bestValue} (Score: {bestScore:F1})");
         Console.ResetColor();
+
+        return (bestValue, bestScore);
     }
 
     private static int GetCurrentValue(SimulationConfig config, string paramName)

@@ -36,7 +36,7 @@ public class RandomSearchTuner
             var stats = simulator.RunSimulation(200);
 
             double avgTurns = stats.AverageTurnsPerRun;
-            double score = 100 - Math.Abs(avgTurns - 50) * 2;
+            double score = 100 - Math.Abs(avgTurns - 75) * 2; // Use realistic target!
 
             _allResults.Add((config, score, avgTurns));
 
