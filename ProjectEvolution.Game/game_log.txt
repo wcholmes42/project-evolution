@@ -47,3 +47,57 @@
 [00:23:20] DUMP: 
 [00:23:20] DUMP: ═══════════════════════════════════════════════════════
 [00:23:20] DUMP: 
+[00:25:37] GAME: Project Evolution started!
+[00:25:37] INIT: Player spawned at (10,10)
+[00:25:43] MOVE: South to (10,11) - Grassland
+[00:25:45] MOVE: North to (10,10) - Forest
+[00:25:46] MOVE: North to (10,9) - Grassland
+[00:25:47] MOVE: West to (9,9) - Forest
+[00:25:47] MOVE: West to (8,9) - Grassland
+[00:25:48] MOVE: North to (8,8) - Forest
+[00:25:49] MOVE: West to (7,8) - Forest
+[00:25:49] MOVE: North to (7,7) - Mountain
+[00:25:50] MOVE: West to (6,7) - Forest
+[00:25:50] ENCOUNTER: Random encounter at (6,7)
+[00:25:50] COMBAT: Fighting Goblin Scout [Lvl1] HP:2
+[00:25:51] COMBAT_ROUND: Goblin Scout misses! DEATH! Run ended!
+[00:25:51] DEATH: Killed by Goblin Scout. HP: 0
+[00:25:51] GAME: Game session ended
+[00:25:51] DUMP: 
+[00:25:51] DUMP: ═══════════════════════════════════════════════════════
+[00:25:51] DUMP:           GAME STATE DUMP
+[00:25:51] DUMP: Reason: Player Death (HP reached 0)
+[00:25:51] DUMP: ═══════════════════════════════════════════════════════
+[00:25:51] DUMP: 
+[00:25:51] DUMP: PLAYER STATE:
+[00:25:51] DUMP:   Level: 1
+[00:25:51] DUMP:   HP: 0/10
+[00:25:51] DUMP:   XP: 0/100
+[00:25:51] DUMP:   Gold: 0g
+[00:25:51] DUMP:   Strength: 2
+[00:25:51] DUMP:   Defense: 1
+[00:25:51] DUMP:   Stamina: 11/12
+[00:25:51] DUMP:   Potions: 0
+[00:25:51] DUMP:   Stat Points: 0
+[00:25:51] DUMP: 
+[00:25:51] DUMP: LOCATION:
+[00:25:51] DUMP:   Position: (6, 7)
+[00:25:51] DUMP:   Terrain: Forest
+[00:25:51] DUMP:   In Location: False
+[00:25:51] DUMP:   In Dungeon: False
+[00:25:51] DUMP:   Dungeon Depth: 0
+[00:25:51] DUMP: 
+[00:25:51] DUMP: PROGRESS:
+[00:25:51] DUMP:   Combats Won: 0
+[00:25:51] DUMP:   Deaths: 0
+[00:25:51] DUMP:   Run Ended: True
+[00:25:51] DUMP: 
+[00:25:51] DUMP: COMBAT STATE:
+[00:25:51] DUMP:   In Combat: False
+[00:25:51] DUMP:   Combat Won: False
+[00:25:51] DUMP:   Enemy: Goblin Scout [Lvl 1]
+[00:25:51] DUMP:   Enemy HP: 2
+[00:25:51] DUMP:   Enemy Damage: 1
+[00:25:51] DUMP: 
+[00:25:51] DUMP: ═══════════════════════════════════════════════════════
+[00:25:51] DUMP: 

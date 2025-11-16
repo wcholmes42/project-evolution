@@ -2109,6 +2109,8 @@ public class RPGGame
     {
         PlayerX = 10;
         PlayerY = 10;
+        PlayerHP = MaxPlayerHP; // CRITICAL FIX: Initialize HP!
+        PlayerStamina = 12;
         GenerateWorld();
     }
 
