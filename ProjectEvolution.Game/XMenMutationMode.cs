@@ -42,7 +42,6 @@ public class XMenMutationMode
             var stats = simulator.RunSimulation(500); // BIG sample for rare configs
 
             double avgTurns = stats.AverageTurnsPerRun;
-            double baseScore = 100 - Math.Abs(avgTurns - 75) * 2;
 
             // Track top unicorns
             string mutName = mutationType switch
@@ -54,9 +53,14 @@ public class XMenMutationMode
                 _ => "🎲 CHAOS"
             };
 
-            // DIVERSITY BONUS: Encourage class balance!
-            double diversityBonus = CalculateDiversityBonus(topUnicorns, mutName);
-            double finalScore = baseScore + diversityBonus;
+            // MULTI-OBJECTIVE SCORING: Balance + Diversity!
+            double balanceScore = 100 - Math.Abs(avgTurns - 75) * 2; // How balanced (0-100)
+            double diversityBonus = CalculateDiversityBonus(topUnicorns, mutName); // Class diversity (-8 to +8)
+            double viabilityScore = avgTurns > 30 && avgTurns < 150 ? 10 : 0; // Viable range bonus
+
+            // FINAL SCORE: Balance (60%) + Diversity (30%) + Viability (10%)
+            double finalScore = (balanceScore * 0.6) + ((diversityBonus + 8) * 3.75) + viabilityScore;
+            // Diversity scaled: -8 to +8 → 0 to 60 points contribution
 
             topUnicorns.Add((config, finalScore, avgTurns, mutName));
             topUnicorns = topUnicorns.OrderByDescending(u => u.score).Take(10).ToList();
@@ -199,11 +203,22 @@ public class XMenMutationMode
         Console.WriteLine($"Config: Det={current.MobDetectionRange} Mobs={current.MaxMobs} HP={current.PlayerStartHP} STR={current.PlayerStrength} DEF={current.PlayerDefense}");
         Console.WriteLine($"Result: {stats.AverageTurnsPerRun:F1} turns, Score: {score:F1}");
 
-        // Show class distribution in top 5
-        if (unicorns.Count >= 3)
+        // Show class distribution and DIVERSITY GOAL
+        if (unicorns.Count >= 5)
         {
             var top5Types = unicorns.Take(5).GroupBy(u => u.mutation).Select(g => $"{g.Key}({g.Count()})");
-            Console.WriteLine($"\nTop 5 Diversity: {string.Join(", ", top5Types)}");
+            var uniqueTypes = unicorns.Take(5).Select(u => u.mutation).Distinct().Count();
+
+            Console.ForegroundColor = uniqueTypes >= 4 ? ConsoleColor.Green : uniqueTypes >= 3 ? ConsoleColor.Yellow : ConsoleColor.Red;
+            Console.WriteLine($"\n⚖️ META DIVERSITY: {uniqueTypes}/5 classes in top 5 | {string.Join(", ", top5Types)}");
+            Console.ResetColor();
+
+            if (uniqueTypes >= 4)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("✅ HEALTHY META - All playstyles viable!");
+                Console.ResetColor();
+            }
         }
 
         Console.WriteLine("\n🏆 TOP 10 UNICORNS DISCOVERED:");
