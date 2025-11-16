@@ -1,8 +1,9 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 12 (FINAL - Combat Dynamics Complete!)
-**Status**: ✅ ALL EVOLUTIONS COMPLETE - Ready to test!
+**Current Generation**: 12 (Combat Dynamics Complete!)
+**Status**: ✅ Tagged as v1.0-roguelike-complete - Ready for next cohort!
+**Git Tag**: v1.0-roguelike-complete
 
 ## Quick Start
 ```bash
