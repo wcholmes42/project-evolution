@@ -141,12 +141,12 @@ public class XMenMutationMode
     {
         return new SimulationConfig
         {
-            MobDetectionRange = random.Next(3, 8),
-            MaxMobs = random.Next(60, 101),          // INSANE mob counts!
-            PlayerStartHP = random.Next(8, 13),
+            MobDetectionRange = random.Next(4, 9),     // TUNED: Was 3-8
+            MaxMobs = random.Next(45, 71),             // TUNED: Was 60-100 (too extreme!)
+            PlayerStartHP = random.Next(9, 14),        // TUNED: Was 8-13
             PlayerStrength = random.Next(2, 4),
-            PlayerDefense = random.Next(1, 4),
-            MinMobs = random.Next(20, 31),           // High minimum too!
+            PlayerDefense = random.Next(0, 3),         // TUNED: Was 1-4
+            MinMobs = random.Next(10, 21),             // TUNED: Was 20-30 (too high!)
             ShowVisuals = false
         };
     }
@@ -155,11 +155,11 @@ public class XMenMutationMode
     {
         return new SimulationConfig
         {
-            MobDetectionRange = random.Next(8, 16),  // EXTREME detection!
-            MaxMobs = random.Next(20, 41),
-            PlayerStartHP = random.Next(5, 11),
+            MobDetectionRange = random.Next(6, 11),  // TUNED: Was 8-16 (too extreme!)
+            MaxMobs = random.Next(30, 51),           // TUNED: Was 20-41
+            PlayerStartHP = random.Next(7, 13),      // TUNED: Was 5-11
             PlayerStrength = random.Next(2, 4),
-            PlayerDefense = random.Next(1, 3),
+            PlayerDefense = random.Next(0, 2),       // TUNED: Was 1-3
             MinMobs = 5,
             ShowVisuals = false
         };
@@ -169,11 +169,11 @@ public class XMenMutationMode
     {
         return new SimulationConfig
         {
-            MobDetectionRange = random.Next(5, 11),
-            MaxMobs = random.Next(30, 61),
-            PlayerStartHP = random.Next(15, 26),     // MEGA HP!
+            MobDetectionRange = random.Next(5, 9),   // TUNED: Was 5-11
+            MaxMobs = random.Next(40, 61),           // TUNED: Was 30-61
+            PlayerStartHP = random.Next(12, 19),     // TUNED: Was 15-26 (too tanky!)
             PlayerStrength = random.Next(1, 3),      // Low damage
-            PlayerDefense = random.Next(3, 8),       // MEGA defense!
+            PlayerDefense = random.Next(2, 5),       // TUNED: Was 3-8 (too much!)
             MinMobs = 5,
             ShowVisuals = false
         };
