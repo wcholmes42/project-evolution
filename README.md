@@ -10,16 +10,16 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 10
+## Current State - Generation 11
 
-Enemy Variety + Tactical Adaptation:
-- **3 Enemy Types**: Scout (fast), Warrior (tank), Archer (hard-hitter)
-- **Random Encounters**: Never know what you'll face!
-- **Different Tactics Required**:
-  - Scout: Quick 2 HP fight
-  - Warrior: 5 HP endurance battle (stamina drain!)
-  - Archer: 2 damage = DANGEROUS, kill fast!
-- **Layered Complexity**: Enemy type + Stamina + Crits/Misses = TRUE CHAOS!
+Variable Stats - No Two Fights Alike:
+- **Every enemy has RANDOM stats within ranges**:
+  - Scout: 1-3 HP, 1 dmg
+  - Warrior: 4-6 HP, 1-2 dmg
+  - Archer: 2-4 HP, 1-3 dmg
+- **Maximum Unpredictability**: Same enemy type = different fight!
+- **Terrifying Possibilities**: 4 HP Archer with 3 dmg + crit = 6 damage = INSTANT DEATH!
+- **Reload for completely different experience** every time!
 
 ## Running the Game
 
@@ -48,14 +48,21 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 10 (Current)
+### Generation 11 (Current)
+- [x] Variable stat ranges for every enemy
+- [x] Scout: 1-3 HP, Warrior: 4-6 HP, Archer: 2-4 HP
+- [x] Warrior/Archer have variable damage too
+- [x] Same enemy type = different stats each time
+- [x] True unpredictability achieved
+- [x] **57 tests, all passing**
+
+### Generation 10
 - [x] Three distinct enemy types
 - [x] Goblin Scout: 2 HP, 1 dmg (easy)
 - [x] Goblin Warrior: 5 HP, 1 dmg (stamina drain)
 - [x] Goblin Archer: 3 HP, 2 dmg (deadly)
 - [x] Random enemy selection
 - [x] Tactical diversity required
-- [x] **52 tests, all passing**
 
 ### Generation 9
 - [x] Stamina system (12 stamina per combat)

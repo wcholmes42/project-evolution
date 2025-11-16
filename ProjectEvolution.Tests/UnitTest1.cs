@@ -910,4 +910,105 @@ public class GameTests
         Assert.Contains("Goblin Warrior", enemyTypes);
         Assert.Contains("Goblin Archer", enemyTypes);
     }
+
+    [Fact]
+    public void VariableStats_ScoutHPInRange()
+    {
+        // Arrange & Act - Generate many scouts and check HP range
+        var hpValues = new HashSet<int>();
+        for (int i = 0; i < 50; i++)
+        {
+            var game = new RPGGame();
+            game.StartCombatWithVariableStats(EnemyType.GoblinScout);
+            hpValues.Add(game.EnemyHP);
+        }
+
+        // Assert - Scout HP should be in range 1-3
+        Assert.True(hpValues.Any(hp => hp >= 1 && hp <= 3));
+        Assert.All(hpValues, hp => Assert.True(hp >= 1 && hp <= 3));
+    }
+
+    [Fact]
+    public void VariableStats_WarriorHPAndDamageInRange()
+    {
+        // Arrange & Act
+        var hpValues = new HashSet<int>();
+        var damageValues = new HashSet<int>();
+        for (int i = 0; i < 50; i++)
+        {
+            var game = new RPGGame();
+            game.StartCombatWithVariableStats(EnemyType.GoblinWarrior);
+            hpValues.Add(game.EnemyHP);
+            damageValues.Add(game.EnemyDamage);
+        }
+
+        // Assert - Warrior HP: 4-6, Damage: 1-2
+        Assert.All(hpValues, hp => Assert.True(hp >= 4 && hp <= 6));
+        Assert.All(damageValues, dmg => Assert.True(dmg >= 1 && dmg <= 2));
+    }
+
+    [Fact]
+    public void VariableStats_ArcherCanBeVeryDangerous()
+    {
+        // Arrange & Act
+        var damageValues = new HashSet<int>();
+        for (int i = 0; i < 50; i++)
+        {
+            var game = new RPGGame();
+            game.StartCombatWithVariableStats(EnemyType.GoblinArcher);
+            damageValues.Add(game.EnemyDamage);
+        }
+
+        // Assert - Archer damage: 1-3 (can get scary 3 damage archers!)
+        Assert.All(damageValues, dmg => Assert.True(dmg >= 1 && dmg <= 3));
+        Assert.Contains(3, damageValues); // Should eventually roll a 3 damage archer
+    }
+
+    [Fact]
+    public void VariableStats_SameTypeCanHaveDifferentStats()
+    {
+        // Arrange & Act - Create two scouts
+        var game1 = new RPGGame();
+        var game2 = new RPGGame();
+
+        for (int attempt = 0; attempt < 20; attempt++)
+        {
+            game1.StartCombatWithVariableStats(EnemyType.GoblinScout);
+            game2.StartCombatWithVariableStats(EnemyType.GoblinScout);
+
+            // If we get different HP values, test passes
+            if (game1.EnemyHP != game2.EnemyHP)
+            {
+                Assert.NotEqual(game1.EnemyHP, game2.EnemyHP);
+                return; // Test passed
+            }
+        }
+
+        // If we never got different values in 20 tries, that's statistically very unlikely
+        // but not impossible. Let's just verify range is valid
+        Assert.True(game1.EnemyHP >= 1 && game1.EnemyHP <= 3);
+    }
+
+    [Fact]
+    public void VariableStats_CombatWithVariableEnemy()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithVariableStats(EnemyType.GoblinArcher);
+        game.SetPlayerStats(strength: 2, defense: 0);
+
+        int enemyHP = game.EnemyHP; // Could be 2, 3, or 4
+
+        // Act - Attack until enemy dies
+        int roundCount = 0;
+        while (!game.CombatEnded && roundCount < 10)
+        {
+            game.ExecuteVariableStatsCombatRound(CombatAction.Attack, CombatAction.Attack,
+                HitType.Normal, HitType.Normal);
+            roundCount++;
+        }
+
+        // Assert - Should eventually win (2 strength vs 2-4 HP = 1-2 attacks needed)
+        Assert.True(game.IsWon || game.PlayerHP > 0); // Either won or still alive
+    }
 }

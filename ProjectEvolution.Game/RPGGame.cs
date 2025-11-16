@@ -1001,4 +1001,171 @@ public class RPGGame
             }
         }
     }
+
+    private void InitializeEnemyWithVariableStats(EnemyType enemyType)
+    {
+        switch (enemyType)
+        {
+            case EnemyType.GoblinScout:
+                EnemyHP = _random.Next(1, 4); // 1-3 HP
+                EnemyDamage = 1;
+                EnemyName = "Goblin Scout";
+                break;
+            case EnemyType.GoblinWarrior:
+                EnemyHP = _random.Next(4, 7); // 4-6 HP
+                EnemyDamage = _random.Next(1, 3); // 1-2 damage
+                EnemyName = "Goblin Warrior";
+                break;
+            case EnemyType.GoblinArcher:
+                EnemyHP = _random.Next(2, 5); // 2-4 HP
+                EnemyDamage = _random.Next(1, 4); // 1-3 damage
+                EnemyName = "Goblin Archer";
+                break;
+        }
+    }
+
+    public void StartCombatWithVariableStats(EnemyType enemyType)
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        PlayerStamina = 12;
+        InitializeEnemyWithVariableStats(enemyType);
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // Stats and gold persist
+    }
+
+    public void StartCombatWithRandomVariableEnemy()
+    {
+        EnemyType randomType = (EnemyType)_random.Next(3);
+        StartCombatWithVariableStats(randomType);
+    }
+
+    public void ExecuteVariableStatsCombatRoundWithRandomHits(CombatAction playerAction, CombatAction enemyAction)
+    {
+        HitType playerHit = DetermineHitType();
+        HitType enemyHit = DetermineHitType();
+        ExecuteVariableStatsCombatRound(playerAction, enemyAction, playerHit, enemyHit);
+    }
+
+    public void ExecuteVariableStatsCombatRound(CombatAction playerAction, CombatAction enemyAction,
+        HitType playerHitType, HitType enemyHitType)
+    {
+        // Same as ExecuteEnemyTypeCombatRound - variable stats just affect initialization
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return;
+        }
+
+        CombatLog = string.Empty;
+
+        // Check stamina
+        CombatAction actualPlayerAction = playerAction;
+        if (PlayerStamina < 3 && playerAction == CombatAction.Attack)
+        {
+            actualPlayerAction = CombatAction.Defend;
+            CombatLog += "Not enough stamina! ";
+        }
+
+        // Deduct stamina
+        if (actualPlayerAction == CombatAction.Attack)
+        {
+            PlayerStamina = Math.Max(0, PlayerStamina - 3);
+        }
+        else
+        {
+            PlayerStamina = Math.Max(0, PlayerStamina - 1);
+        }
+
+        bool playerAttacks = actualPlayerAction == CombatAction.Attack;
+        bool playerDefends = actualPlayerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Player damage
+        if (playerAttacks && !enemyDefends)
+        {
+            if (playerHitType == HitType.Miss)
+            {
+                CombatLog += "MISS! ";
+            }
+            else
+            {
+                int baseDamage = PlayerStrength;
+                int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
+                EnemyHP = Math.Max(0, EnemyHP - damage);
+
+                if (playerHitType == HitType.Critical)
+                {
+                    CombatLog += $"CRIT! {damage}! ";
+                }
+                else
+                {
+                    CombatLog += $"Hit {damage}! ";
+                }
+            }
+        }
+
+        // Enemy damage
+        if (enemyAttacks && !playerDefends)
+        {
+            if (enemyHitType == HitType.Miss)
+            {
+                CombatLog += $"{EnemyName} misses! ";
+            }
+            else
+            {
+                int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
+                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+
+                if (enemyHitType == HitType.Critical)
+                {
+                    CombatLog += $"{EnemyName} CRIT {actualDamage}! ";
+                }
+                else
+                {
+                    CombatLog += $"{EnemyName} hits {actualDamage}! ";
+                }
+            }
+        }
+
+        // Combat end
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            PlayerGold += 10;
+            CombatLog += "Victory! +10g!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "Defeated!";
+        }
+        else
+        {
+            if (playerDefends && enemyDefends)
+            {
+                CombatLog += "Both guard.";
+            }
+            else if (playerDefends && enemyAttacks)
+            {
+                CombatLog += "Block!";
+            }
+            else if (enemyDefends && playerAttacks)
+            {
+                CombatLog += $"{EnemyName} blocks!";
+            }
+        }
+    }
 }

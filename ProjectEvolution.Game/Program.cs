@@ -1,24 +1,25 @@
 ﻿using ProjectEvolution.Game;
 
-Console.WriteLine("=== Project Evolution - Generation 10 ===");
-Console.WriteLine("=== ENEMY VARIETY ===");
+Console.WriteLine("=== Project Evolution - Generation 11 ===");
+Console.WriteLine("=== VARIABLE ENEMY STATS ===");
 Console.WriteLine();
-Console.WriteLine("Enemies now come in different types!");
+Console.WriteLine("Every enemy is UNIQUE with random stats!");
 Console.WriteLine();
-Console.WriteLine("  GOBLIN SCOUT:   2 HP, 1 damage (fast & weak)");
-Console.WriteLine("  GOBLIN WARRIOR: 5 HP, 1 damage (tank)");
-Console.WriteLine("  GOBLIN ARCHER:  3 HP, 2 damage (glass cannon)");
+Console.WriteLine("  SCOUT:   1-3 HP, 1 dmg");
+Console.WriteLine("  WARRIOR: 4-6 HP, 1-2 dmg");
+Console.WriteLine("  ARCHER:  2-4 HP, 1-3 dmg (!!)");
 Console.WriteLine();
-Console.WriteLine("You never know which one you'll face!");
-Console.WriteLine("Stamina + Crits/Misses + Enemy Types = CHAOS!");
+Console.WriteLine("Same enemy type = DIFFERENT stats each time!");
+Console.WriteLine("+ Stamina + Crits/Misses = MAXIMUM CHAOS!");
 Console.WriteLine();
 
 var game = new RPGGame();
-game.StartCombatWithRandomEnemyType();
+game.StartCombatWithRandomVariableEnemy();
 game.SetPlayerStats(strength: 2, defense: 1);
 
 Console.WriteLine($"A {game.EnemyName} appears!");
-Console.WriteLine($"Enemy: {game.EnemyHP} HP, {game.EnemyDamage} damage");
+Console.WriteLine($"Stats: {game.EnemyHP} HP, {game.EnemyDamage} damage");
+Console.WriteLine("(These stats are RANDOM - reload for different fight!)");
 Console.WriteLine();
 
 while (!game.CombatEnded)
@@ -47,7 +48,7 @@ while (!game.CombatEnded)
         action = CombatAction.Defend;
     }
 
-    game.ExecuteEnemyTypeCombatRoundWithRandomHits(action, CombatAction.Attack);
+    game.ExecuteVariableStatsCombatRoundWithRandomHits(action, CombatAction.Attack);
 
     Console.WriteLine();
     Console.WriteLine(game.CombatLog);

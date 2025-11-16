@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 10
+**Current Generation**: 11
 **Status**: ✅ Ready to continue - Combat dynamics evolution in progress!
 
 ## Quick Start
@@ -96,7 +96,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Must balance aggression vs conservation
 - Tests: `Stamina_PlayerStartsWith12Stamina`, `Stamina_AttackCosts3Stamina`, `Stamina_DefendCosts1Stamina`, `Stamina_RunOutForcesSamina`, `Stamina_ManageResourceToWin`, `Stamina_CantGoNegative`
 
-#### Generation 10: Enemy Variety (Current)
+#### Generation 10: Enemy Variety
 - Added EnemyType enum and InitializeEnemy() method
 - Three distinct enemy types with different strategies:
   * Goblin Scout: 2 HP, 1 damage (quick fights)
@@ -107,7 +107,18 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Each enemy type requires different tactics
 - Combat log shows enemy name
 - Tests: `EnemyType_GoblinScout_Has2HP`, `EnemyType_GoblinWarrior_Has5HP`, `EnemyType_GoblinArcher_Has3HP2Damage`, `EnemyType_ArcherDealsMoreDamage`, `EnemyType_WarriorTakesLongerToDefeat`, `EnemyType_RandomEncounters_AllTypesCanAppear`
-- **Current Test Count**: 52 passing
+
+#### Generation 11: Variable Enemy Stats (Current)
+- InitializeEnemyWithVariableStats() adds randomness to EVERY enemy
+- Enemy stat ranges:
+  * Scout: 1-3 HP, 1 damage
+  * Warrior: 4-6 HP, 1-2 damage
+  * Archer: 2-4 HP, 1-3 damage (MAX DANGER!)
+- Same enemy type = different stats each spawn
+- Impossible to predict exact fight length
+- Archer with 3 damage + crit = 6 damage in one hit!
+- Tests: `VariableStats_ScoutHPInRange`, `VariableStats_WarriorHPAndDamageInRange`, `VariableStats_ArcherCanBeVeryDangerous`, `VariableStats_SameTypeCanHaveDifferentStats`, `VariableStats_CombatWithVariableEnemy`
+- **Current Test Count**: 57 passing
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
