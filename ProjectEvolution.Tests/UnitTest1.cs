@@ -1436,4 +1436,107 @@ public class GameTests
         Assert.Equal(2, game.PlayerLevel);
         Assert.Equal(100, game.PlayerXP);
     }
+
+    [Fact]
+    public void EnemyLevel_ScalesWithPlayerLevel()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Level up player to level 3
+        game.StartCombatWithLevelScaling();
+        for (int i = 0; i < 20; i++)
+        {
+            if (i > 0) game.StartNewLevelScalingCombat();
+            while (!game.CombatEnded)
+            {
+                game.ExecuteLevelScalingRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            }
+            game.ProcessLevelUp();
+        }
+
+        // Assert - Enemy level should be close to player level
+        Assert.True(game.EnemyLevel >= game.PlayerLevel - 1 && game.EnemyLevel <= game.PlayerLevel + 1);
+    }
+
+    [Fact]
+    public void EnemyLevel_HigherLevel_MoreHP()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act - Spawn level 3 enemy
+        game.StartCombatAtEnemyLevel(EnemyType.GoblinScout, enemyLevel: 3);
+        int level3HP = game.EnemyHP;
+
+        // Spawn level 1 enemy of same type
+        game.StartCombatAtEnemyLevel(EnemyType.GoblinScout, enemyLevel: 1);
+        int level1HP = game.EnemyHP;
+
+        // Assert - Level 3 should have more HP than level 1
+        Assert.True(level3HP > level1HP);
+    }
+
+    [Fact]
+    public void MaxHP_PlayerStartsWith10MaxHP()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartCombatWithMaxHP();
+
+        // Assert
+        Assert.Equal(10, game.MaxPlayerHP);
+        Assert.Equal(10, game.PlayerHP);
+    }
+
+    [Fact]
+    public void MaxHP_LevelUp_IncreasesMaxHP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithMaxHP();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Level up to 2 (defeat 10 enemies)
+        for (int i = 0; i < 10; i++)
+        {
+            if (i > 0) game.StartNewMaxHPCombat();
+            while (!game.CombatEnded)
+            {
+                game.ExecuteMaxHPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            }
+            game.ProcessMaxHPGrowth();
+        }
+
+        // Assert - Max HP should increase (+2 per level = 12 at level 2)
+        Assert.Equal(2, game.PlayerLevel);
+        Assert.Equal(12, game.MaxPlayerHP);
+    }
+
+    [Fact]
+    public void MaxHP_LevelUp_RestoresHP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithMaxHP();
+        game.SetPlayerStats(strength: 2, defense: 0);
+
+        // Take damage
+        game.ExecuteMaxHPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal);
+        int damagedHP = game.PlayerHP; // Should be < 10
+
+        // Act - Gain enough XP to level up
+        while (game.PlayerXP < 100)
+        {
+            if (game.CombatEnded) game.StartNewMaxHPCombat();
+            game.ExecuteMaxHPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+        }
+        game.ProcessMaxHPGrowth();
+
+        // Assert - HP restored to new max
+        Assert.Equal(2, game.PlayerLevel);
+        Assert.Equal(12, game.MaxPlayerHP);
+        Assert.Equal(12, game.PlayerHP); // Fully healed to new max
+    }
 }
