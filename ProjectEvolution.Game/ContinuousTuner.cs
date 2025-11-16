@@ -61,7 +61,14 @@ public class ContinuousTuner
             // Update display
             UpdateDisplay(config, stats, score);
 
-            // LEARNING: Only adjust if we understand the trend
+            // LEARNING: Only adjust if we have a baseline (skip cycle 1)
+            if (_cyclesRun == 1)
+            {
+                _lastScore = score;
+                _lastChange = "Baseline established";
+                continue; // Don't adjust on first cycle!
+            }
+
             bool improved = score > _lastScore;
             bool regressed = score < _lastScore - 5; // Significant regression
 
