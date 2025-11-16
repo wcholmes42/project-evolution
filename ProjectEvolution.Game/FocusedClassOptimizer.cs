@@ -38,30 +38,77 @@ public class FocusedClassOptimizer
             // Determine weakest class (skip if tested 100+ times and still bad!)
             string weakestClass = FindWeakestClass(classes, allResults);
 
-            // ABANDONMENT CHECK: If class tested 100+ times with best < 50, skip it!
+            // VIABILITY BRIDGE: If class tested 100+ times with best < 50, find path to viability!
             var classResults = allResults.Where(r => r.className == weakestClass).ToList();
             if (classResults.Count >= 100)
             {
                 var classBest = classResults.Any() ? classResults.Max(r => r.score) : 0;
                 if (classBest < 50)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\n⚠️  {weakestClass} appears non-viable after {classResults.Count} tests. Skipping...");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"\n🔍 {weakestClass} non-viable after {classResults.Count} tests (best: {classBest:F1})");
+                    Console.WriteLine($"   Finding path to viability by analyzing successful classes...\n");
                     Console.ResetColor();
-                    Thread.Sleep(2000);
 
-                    // Try next weakest
-                    var viableClasses = classes.Where(c =>
+                    // Find best viable class
+                    var viableClasses = classes.Where(c => c != weakestClass).ToList();
+                    var viableResults = allResults.Where(r => viableClasses.Contains(r.className) && r.score > 80).ToList();
+
+                    if (viableResults.Any())
                     {
-                        var results = allResults.Where(r => r.className == c).ToList();
-                        if (results.Count < 100) return true;
-                        var best = results.Max(r => r.score);
-                        return best >= 50;
-                    }).ToArray();
+                        var viableTarget = viableResults.OrderByDescending(r => r.score).First();
+                        var failedConfig = classResults.OrderByDescending(r => r.score).First().config;
 
-                    if (viableClasses.Length == 0) break; // All classes failed!
+                        Console.WriteLine($"   FAILED {weakestClass}: Det={failedConfig.MobDetectionRange} Mobs={failedConfig.MaxMobs} HP={failedConfig.PlayerStartHP} STR={failedConfig.PlayerStrength} DEF={failedConfig.PlayerDefense}");
+                        Console.WriteLine($"   TARGET {viableTarget.className}: Det={viableTarget.config.MobDetectionRange} Mobs={viableTarget.config.MaxMobs} HP={viableTarget.config.PlayerStartHP} STR={viableTarget.config.PlayerStrength} DEF={viableTarget.config.PlayerDefense}");
 
-                    weakestClass = FindWeakestClass(viableClasses, allResults);
+                        // Generate bridge configs (interpolate toward viable)
+                        Console.WriteLine($"\n   Testing 20 BRIDGE configs from {weakestClass} → {viableTarget.className}...\n");
+
+                        for (int b = 0; b < 20; b++)
+                        {
+                            double alpha = b / 20.0; // 0 to 1
+                            var bridgeConfig = new SimulationConfig
+                            {
+                                MobDetectionRange = (int)(failedConfig.MobDetectionRange * (1 - alpha) + viableTarget.config.MobDetectionRange * alpha),
+                                MaxMobs = (int)(failedConfig.MaxMobs * (1 - alpha) + viableTarget.config.MaxMobs * alpha),
+                                PlayerStartHP = (int)(failedConfig.PlayerStartHP * (1 - alpha) + viableTarget.config.PlayerStartHP * alpha),
+                                PlayerStrength = (int)(failedConfig.PlayerStrength * (1 - alpha) + viableTarget.config.PlayerStrength * alpha),
+                                PlayerDefense = (int)(failedConfig.PlayerDefense * (1 - alpha) + viableTarget.config.PlayerDefense * alpha),
+                                MinMobs = 5,
+                                ShowVisuals = false
+                            };
+
+                            var sim = new GameSimulator(bridgeConfig);
+                            var bridgeStats = sim.RunSimulation(200);
+                            double bridgeScore = 100 - Math.Abs(bridgeStats.AverageTurnsPerRun - 110) * 2;
+
+                            allResults.Add((bridgeConfig, bridgeScore, bridgeStats.AverageTurnsPerRun, weakestClass));
+
+                            if (bridgeScore > classBest)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"   ✅ Bridge {b}/20: {bridgeScore:F1} (improved from {classBest:F1}!)");
+                                Console.ResetColor();
+                                classBest = bridgeScore;
+
+                                if (bridgeScore > 80)
+                                {
+                                    ConfigPersistence.SaveOptimalConfig(bridgeConfig, bridgeStats, bridgeScore, totalMutations * 300);
+                                    Console.WriteLine($"   💾 Viable {weakestClass} config found!");
+                                }
+                            }
+                            else
+                            {
+                                Console.Write($"\r   Bridge {b}/20: {bridgeScore:F1}");
+                            }
+                        }
+
+                        Console.WriteLine($"\n\n   Bridge search complete. Best {weakestClass}: {classBest:F1}");
+                        Thread.Sleep(2000);
+
+                        // Continue with this class using improved ranges
+                    }
                 }
             }
 

@@ -1,12 +1,12 @@
 {
-  "MobDetectionRange": 5,
-  "MaxMobs": 62,
-  "MinMobs": 20,
-  "PlayerStartHP": 12,
-  "PlayerStrength": 3,
+  "MobDetectionRange": 7,
+  "MaxMobs": 41,
+  "MinMobs": 5,
+  "PlayerStartHP": 11,
+  "PlayerStrength": 2,
   "PlayerDefense": 0,
-  "Score": 89.73333333333332,
-  "AvgTurns": 115.13333333333334,
-  "TotalGamesSimulated": 10800,
-  "Discovered": "2025-11-16T15:25:37.7132655-08:00"
+  "Score": 99.33333333333334,
+  "AvgTurns": 109.66666666666667,
+  "TotalGamesSimulated": 200700,
+  "Discovered": "2025-11-16T15:34:19.658278-08:00"
 }
