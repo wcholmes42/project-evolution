@@ -42,7 +42,7 @@ public class XMenMutationMode
             var stats = simulator.RunSimulation(500); // BIG sample for rare configs
 
             double avgTurns = stats.AverageTurnsPerRun;
-            double score = 100 - Math.Abs(avgTurns - 75) * 2;
+            double baseScore = 100 - Math.Abs(avgTurns - 75) * 2;
 
             // Track top unicorns
             string mutName = mutationType switch
@@ -54,7 +54,11 @@ public class XMenMutationMode
                 _ => "🎲 CHAOS"
             };
 
-            topUnicorns.Add((config, score, avgTurns, mutName));
+            // DIVERSITY BONUS: Encourage class balance!
+            double diversityBonus = CalculateDiversityBonus(topUnicorns, mutName);
+            double finalScore = baseScore + diversityBonus;
+
+            topUnicorns.Add((config, finalScore, avgTurns, mutName));
             topUnicorns = topUnicorns.OrderByDescending(u => u.score).Take(10).ToList();
 
             // Display
@@ -62,10 +66,10 @@ public class XMenMutationMode
             DrawUnicornDisplay(mutations, topUnicorns, config, stats, score, mutName);
 
             // Save if unicorn found!
-            if (score > bestScore)
+            if (finalScore > bestScore)
             {
-                bestScore = score;
-                ConfigPersistence.SaveOptimalConfig(config, stats, score, mutations * 500);
+                bestScore = finalScore;
+                ConfigPersistence.SaveOptimalConfig(config, stats, finalScore, mutations * 500);
 
                 Console.SetCursorPosition(2, 20);
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -85,6 +89,30 @@ public class XMenMutationMode
 
         Console.Clear();
         PrintUnicornSummary(topUnicorns, mutations);
+    }
+
+    private static double CalculateDiversityBonus(List<(SimulationConfig config, double score, double turns, string mutation)> topConfigs, string newMutationType)
+    {
+        if (topConfigs.Count < 3) return 0; // Not enough data yet
+
+        // Count how many of each type in top 5
+        var top5 = topConfigs.Take(5).ToList();
+        var typeCounts = top5.GroupBy(u => u.mutation).ToDictionary(g => g.Key, g => g.Count());
+
+        // If this type is underrepresented, give bonus!
+        int currentTypeCount = typeCounts.ContainsKey(newMutationType) ? typeCounts[newMutationType] : 0;
+
+        // Diversity bonus: fewer of this type = higher bonus
+        double bonus = currentTypeCount switch
+        {
+            0 => 8.0,  // Not in top 5 at all! Big bonus!
+            1 => 4.0,  // Only 1 in top 5, good diversity
+            2 => 0.0,  // Balanced representation
+            3 => -4.0, // Overrepresented, penalize
+            _ => -8.0  // Dominated top 5, big penalty!
+        };
+
+        return bonus;
     }
 
     private static SimulationConfig GenerateGlassCannon(Random random)
@@ -170,6 +198,13 @@ public class XMenMutationMode
         Console.WriteLine($"\nCurrent Mutant: {mutName}");
         Console.WriteLine($"Config: Det={current.MobDetectionRange} Mobs={current.MaxMobs} HP={current.PlayerStartHP} STR={current.PlayerStrength} DEF={current.PlayerDefense}");
         Console.WriteLine($"Result: {stats.AverageTurnsPerRun:F1} turns, Score: {score:F1}");
+
+        // Show class distribution in top 5
+        if (unicorns.Count >= 3)
+        {
+            var top5Types = unicorns.Take(5).GroupBy(u => u.mutation).Select(g => $"{g.Key}({g.Count()})");
+            Console.WriteLine($"\nTop 5 Diversity: {string.Join(", ", top5Types)}");
+        }
 
         Console.WriteLine("\n🏆 TOP 10 UNICORNS DISCOVERED:");
         Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
