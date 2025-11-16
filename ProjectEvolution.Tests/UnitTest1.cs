@@ -1136,4 +1136,97 @@ public class GameTests
             Assert.True(true); // Test passes either way - we tested the happy path in other tests
         }
     }
+
+    [Fact]
+    public void XP_PlayerStartsAtLevel1With0XP()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartCombatWithXP();
+
+        // Assert
+        Assert.Equal(1, game.PlayerLevel);
+        Assert.Equal(0, game.PlayerXP);
+    }
+
+    [Fact]
+    public void XP_DefeatEnemy_Grants10XP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithXP();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Defeat enemy
+        game.ExecuteXPCombatRound(CombatAction.Attack, CombatAction.Attack,
+            HitType.Critical, HitType.Miss);
+
+        // Assert
+        Assert.True(game.IsWon);
+        Assert.Equal(10, game.PlayerXP);
+    }
+
+    [Fact]
+    public void XP_Reach100XP_LevelUpTo2()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithXP();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Defeat 10 enemies to get 100 XP
+        for (int i = 0; i < 10; i++)
+        {
+            game.StartNewXPCombat();
+            game.ExecuteXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            game.ProcessXPGain();
+        }
+
+        // Assert
+        Assert.Equal(2, game.PlayerLevel);
+        Assert.Equal(100, game.PlayerXP);
+    }
+
+    [Fact]
+    public void XP_Reach300XP_LevelUpTo4()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithXP();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Defeat 30 enemies to get 300 XP
+        for (int i = 0; i < 30; i++)
+        {
+            if (i > 0) game.StartNewXPCombat();
+            game.ExecuteXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            game.ProcessXPGain();
+        }
+
+        // Assert - Level 1->2 at 100, 2->3 at 200, 3->4 at 300
+        Assert.Equal(4, game.PlayerLevel);
+        Assert.Equal(300, game.PlayerXP);
+    }
+
+    [Fact]
+    public void XP_LevelProgress_TracksXPToNextLevel()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithXP();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - Gain 50 XP (halfway to level 2)
+        for (int i = 0; i < 5; i++)
+        {
+            if (i > 0) game.StartNewXPCombat();
+            game.ExecuteXPCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Critical, HitType.Miss);
+            game.ProcessXPGain();
+        }
+
+        // Assert
+        Assert.Equal(1, game.PlayerLevel);
+        Assert.Equal(50, game.PlayerXP);
+        Assert.Equal(100, game.XPForNextLevel); // Need 100 total for level 2
+    }
 }

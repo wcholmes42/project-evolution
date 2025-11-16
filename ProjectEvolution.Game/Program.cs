@@ -1,24 +1,25 @@
 ﻿using ProjectEvolution.Game;
 
 Console.WriteLine("╔═══════════════════════════════════════╗");
-Console.WriteLine("║  PROJECT EVOLUTION - GENERATION 12    ║");
-Console.WriteLine("║        PERMADEATH MODE                ║");
+Console.WriteLine("║  PROJECT EVOLUTION - GENERATION 13    ║");
+Console.WriteLine("║    EXPERIENCE & LEVELING SYSTEM       ║");
 Console.WriteLine("╚═══════════════════════════════════════╝");
 Console.WriteLine();
-Console.WriteLine("THE ULTIMATE CHALLENGE:");
-Console.WriteLine("  ⚔️  Random enemies with variable stats");
-Console.WriteLine("  🎲  15% miss | 15% crit | 70% normal");
-Console.WriteLine("  ⚡  12 stamina (Attack=3, Defend=1)");
-Console.WriteLine("  💀  DIE = Lose current gold!");
-Console.WriteLine("  💰  WIN = Gold becomes permanent!");
+Console.WriteLine("CHARACTER PROGRESSION!");
+Console.WriteLine("  ⭐  Defeat enemies → Earn 10 XP");
+Console.WriteLine("  📈  Level up at 100/200/300 XP...");
+Console.WriteLine("  🎯  Track your growth!");
+Console.WriteLine();
+Console.WriteLine("PLUS all previous systems:");
+Console.WriteLine("  Variable enemies | Crits/Misses | Stamina");
 Console.WriteLine();
 
 var game = new RPGGame();
 game.SetPlayerStats(strength: 2, defense: 1);
-game.StartPermadeathMode();
+game.StartCombatWithXP();
 
-Console.WriteLine($"🏦 PERMANENT GOLD: {game.PermanentGold}g");
-Console.WriteLine($"💀 DEATHS: {game.DeathCount}");
+Console.WriteLine($"⭐ LEVEL {game.PlayerLevel} | XP: {game.PlayerXP}/{game.XPForNextLevel}");
+Console.WriteLine($"💰 Gold: {game.PlayerGold}g");
 Console.WriteLine();
 Console.WriteLine($"⚔️  A {game.EnemyName} appears!");
 Console.WriteLine($"    Stats: {game.EnemyHP} HP, {game.EnemyDamage} damage");
@@ -50,10 +51,20 @@ while (!game.CombatEnded)
         action = CombatAction.Defend;
     }
 
-    game.ExecutePermadeathRoundWithRandomHits(action, CombatAction.Attack);
+    game.ExecuteXPCombatRoundWithRandomHits(action, CombatAction.Attack);
 
     Console.WriteLine();
     Console.WriteLine(game.CombatLog);
+
+    if (game.CombatEnded)
+    {
+        game.ProcessXPGain();
+        if (game.CombatLog.Contains("LEVEL UP"))
+        {
+            Console.WriteLine(game.CombatLog); // Show level up message
+        }
+    }
+
     Console.WriteLine();
 
     if (!game.CombatEnded)
@@ -67,30 +78,28 @@ Console.WriteLine();
 Console.WriteLine("╔═══════════════════════════════════════╗");
 if (game.IsWon)
 {
-    game.CommitGoldOnVictory();
     Console.WriteLine("║           ⭐ VICTORY! ⭐              ║");
     Console.WriteLine("╚═══════════════════════════════════════╝");
     Console.WriteLine($"The {game.EnemyName} falls defeated!");
     Console.WriteLine();
-    Console.WriteLine($"💰 Gold Earned This Run: {game.PlayerGold}g");
-    Console.WriteLine($"🏦 PERMANENT GOLD: {game.PermanentGold}g");
-    Console.WriteLine($"💚 HP Remaining: {game.PlayerHP}/10");
-    Console.WriteLine($"⚡ Stamina Left: {game.PlayerStamina}/12");
+    Console.WriteLine($"⭐ LEVEL: {game.PlayerLevel}");
+    Console.WriteLine($"📊 XP: {game.PlayerXP}/{game.XPForNextLevel}");
+    Console.WriteLine($"💰 Gold: {game.PlayerGold}g");
+    Console.WriteLine($"💚 HP: {game.PlayerHP}/10");
+    Console.WriteLine($"⚡ Stamina: {game.PlayerStamina}/12");
     Console.WriteLine();
-    Console.WriteLine("Your gold is now SAFE! Play again or cash out.");
+    Console.WriteLine("You grow stronger with each victory!");
 }
 else
 {
-    game.HandlePermadeath();
     Console.WriteLine("║           💀 DEATH 💀                 ║");
     Console.WriteLine("╚═══════════════════════════════════════╝");
     Console.WriteLine($"The {game.EnemyName} has slain you!");
     Console.WriteLine();
-    Console.WriteLine($"💀 Total Deaths: {game.DeathCount}");
-    Console.WriteLine($"📉 Current Run Gold: LOST");
-    Console.WriteLine($"🏦 Permanent Gold: {game.PermanentGold}g (safe)");
+    Console.WriteLine($"⭐ Reached Level: {game.PlayerLevel}");
+    Console.WriteLine($"💰 Gold Earned: {game.PlayerGold}g");
     Console.WriteLine();
-    Console.WriteLine("Your permanent gold is safe. Try again?");
+    Console.WriteLine("Experience is the best teacher... even in death.");
 }
 
 Console.WriteLine();
