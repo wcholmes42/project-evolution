@@ -8,7 +8,8 @@ Console.WriteLine("╠═══════════════════�
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("║  [P] Play Game (Normal Mode)                                   ║");
 Console.WriteLine("║  [T] Manual Testing & Tuning (Interactive)                     ║");
-Console.WriteLine("║  [A] Automated Tuning (10 Cycles - Self-Optimizing)            ║");
+Console.WriteLine("║  [A] Automated Tuning (10 Cycles)                              ║");
+Console.WriteLine("║  [C] Continuous Tuning (Infinite - ESC to stop)                ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -27,6 +28,12 @@ else if (menuChoice == ConsoleKey.A)
 {
     // Run automated tuning
     AutoTuner.RunAutoTuning(10);
+    return;
+}
+else if (menuChoice == ConsoleKey.C)
+{
+    // Run continuous tuning
+    ContinuousTuner.RunContinuousTuning();
     return;
 }
 else if (menuChoice == ConsoleKey.Q)
