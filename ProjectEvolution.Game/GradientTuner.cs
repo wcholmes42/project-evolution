@@ -8,7 +8,7 @@ public class GradientTuner
     private static double _momentumFactor = 0.3; // REDUCED: Less smoothing initially
     private static List<double> _scoreHistory = new List<double>();
     private static int _cyclesRun = 0;
-    private static double _targetScore = 50.0; // Target: 50 turns average
+    private static double _targetScore = 75.0; // ADJUSTED: Realistic target based on 100K+ games!
     private static double _bestScore = 0;
     private static int _cyclesSinceImprovement = 0;
     private static double _mutationVariance = 1.0; // Adaptive exploration strength
@@ -348,7 +348,7 @@ public class GradientTuner
         Console.WriteLine("║         GRADIENT DESCENT OPTIMIZATION - BACKPROPAGATION STYLE              ║");
         Console.WriteLine("║                    Press ESC to stop                                       ║");
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
-        Console.WriteLine("║ CYCLE:           ERROR:           TARGET: 50 turns                         ║");
+        Console.WriteLine("║ CYCLE:           ERROR:           TARGET: 75 turns (realistic!)            ║");
         Console.WriteLine("║ CURRENT CONFIG:                                                            ║");
         Console.WriteLine("║ RESULTS:                                                                   ║");
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
@@ -375,7 +375,7 @@ public class GradientTuner
     {
         // Cycle and error
         Console.SetCursorPosition(2, 4);
-        Console.Write($"CYCLE: {_cyclesRun,4}    ERROR: {error,+6:F1} turns    TARGET: 50 turns                    ");
+        Console.Write($"CYCLE: {_cyclesRun,4}    ERROR: {error,+6:F1} turns    TARGET: 75 turns (realistic!)             ");
 
         // Config
         Console.SetCursorPosition(2, 5);
@@ -405,7 +405,7 @@ public class GradientTuner
         };
 
         Console.ForegroundColor = errorColor;
-        Console.Write($"{errorLabel} Avg {stats.AverageTurnsPerRun:F1} turns (Target:50) Error:{error,+6:F1}                    ");
+        Console.Write($"{errorLabel} Avg {stats.AverageTurnsPerRun:F1} turns (Target:75) Error:{error,+6:F1}                    ");
         Console.ResetColor();
 
         // Draw leaderboard
