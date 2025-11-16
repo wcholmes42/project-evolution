@@ -220,30 +220,29 @@ public class AutoPlayer
 
     private bool ShouldEngageMob(Mob mob)
     {
-        // Risk vs Reward evaluation
+        // Risk vs Reward evaluation (MORE AGGRESSIVE!)
         double hpPercent = (double)_game.PlayerHP / _game.MaxPlayerHP;
 
-        // Always engage if very strong
-        if (hpPercent > 0.8 && _game.PlayerLevel >= mob.Level)
+        // Always engage if HP > 50% (much more aggressive!)
+        if (hpPercent > 0.5)
         {
             return true;
         }
 
-        // Engage weaker mobs if decent HP
-        if (hpPercent > 0.5 && _game.PlayerLevel > mob.Level)
+        // Engage if HP > 30% and we're equal or higher level
+        if (hpPercent > 0.3 && _game.PlayerLevel >= mob.Level)
         {
             return true;
         }
 
-        // Need XP for level up? Take calculated risk
-        bool closeToLevelUp = _game.PlayerXP >= _game.XPForNextLevel * 0.8;
-        if (closeToLevelUp && hpPercent > 0.4 && _game.PlayerLevel >= mob.Level)
+        // Only avoid if very low HP or much higher level enemy
+        if (hpPercent < 0.3 || mob.Level > _game.PlayerLevel + 1)
         {
-            return true;
+            return false;
         }
 
-        // Otherwise avoid
-        return false;
+        // Default to engaging (aggressive!)
+        return true;
     }
 
     private void NavigateToNearestTown()
@@ -309,9 +308,8 @@ public class AutoPlayer
 
     private void ExploreIntelligently()
     {
-        // Prefer unexplored areas
-        // For now, just random with slight bias toward center/points of interest
-        var nearbyMobs = _game.GetMobsInRange(3);
+        // When exploring, still look for mobs to engage!
+        var nearbyMobs = _game.GetMobsInRange(5);
 
         // If mobs nearby, evaluate whether to engage
         if (nearbyMobs.Count > 0)
@@ -320,15 +318,28 @@ public class AutoPlayer
                 .OrderBy(m => Math.Abs(m.X - _game.PlayerX) + Math.Abs(m.Y - _game.PlayerY))
                 .First();
 
+            int distance = Math.Abs(nearestMob.X - _game.PlayerX) + Math.Abs(nearestMob.Y - _game.PlayerY);
+
+            // ALWAYS engage nearby mobs when exploring (not just if "favorable")
+            // This makes AI more aggressive
             if (ShouldEngageMob(nearestMob))
             {
-                // Move toward mob to engage!
+                CurrentTarget = $"{nearestMob.Name} [Lvl{nearestMob.Level}] @ ({nearestMob.X},{nearestMob.Y}) - {distance} tiles";
+                LastDecision = $"Spotted {nearestMob.Name} while exploring - engaging!";
                 MoveToward(nearestMob.X, nearestMob.Y);
                 return;
+            }
+            else
+            {
+                // Avoid this mob, it's too dangerous
+                CurrentTarget = "Avoiding dangerous mob";
+                LastDecision = $"{nearestMob.Name} too strong - avoiding";
             }
         }
 
         // Random exploration
+        CurrentTarget = "No suitable targets";
+        LastDecision = "Random exploration";
         MoveRandomly();
     }
 

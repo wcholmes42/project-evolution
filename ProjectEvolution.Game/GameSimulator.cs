@@ -178,6 +178,47 @@ public class GameSimulator
                 autoPlayer.PlayTurn();
                 turns++;
 
+                // CHECK FOR MOB ENCOUNTERS after movement!
+                if (!game.InDungeon)
+                {
+                    var mob = game.GetMobAt(game.PlayerX, game.PlayerY);
+
+                    if (mob != null)
+                    {
+                        // Walked into a mob - trigger encounter!
+                        if (_config.ShowVisuals)
+                        {
+                            _ui.AddMessage($"⚔️ AI walked into {mob.Name} [Lvl{mob.Level}]!");
+                            Thread.Sleep(_config.SimulationSpeed * 2);
+                        }
+
+                        game.TriggerMobEncounter(mob);
+
+                        if (_config.ShowVisuals)
+                        {
+                            _ui.RenderStatusBar(game);
+                            _ui.RenderDebugPanel(game, autoPlayer);
+                        }
+
+                        // Combat will be handled on next loop iteration
+                        continue;
+                    }
+                    // Also check for random encounters
+                    else if (game.RollForEncounter())
+                    {
+                        game.TriggerEncounter();
+
+                        if (_config.ShowVisuals)
+                        {
+                            _ui.AddMessage($"💥 Ambush! {game.EnemyName}!");
+                            _ui.RenderStatusBar(game);
+                            Thread.Sleep(_config.SimulationSpeed * 2);
+                        }
+
+                        continue;
+                    }
+                }
+
                 if (_config.ShowVisuals)
                 {
                     _ui.RenderStatusBar(game);
