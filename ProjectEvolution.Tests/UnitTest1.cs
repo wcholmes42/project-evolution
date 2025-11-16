@@ -1981,4 +1981,83 @@ public class GameTests
         Assert.Equal(0, game.PotionCount);
         Assert.Equal(10, game.PlayerHP); // 5 + 5 healing
     }
+
+    [Fact]
+    public void Dungeon_EnterStartsAtDepth1()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        // Assert
+        Assert.Equal(1, game.DungeonDepth);
+        Assert.True(game.InDungeon);
+    }
+
+    [Fact]
+    public void Dungeon_RollRoom_ReturnsRoomType()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        // Act
+        var roomType = game.RollForRoom();
+
+        // Assert
+        Assert.Contains(roomType, new[] { "Empty", "Monster", "Treasure" });
+    }
+
+    [Fact]
+    public void Dungeon_DescendDeeper_IncreasesDepth()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        // Act
+        game.DescendDungeon();
+
+        // Assert
+        Assert.Equal(2, game.DungeonDepth);
+    }
+
+    [Fact]
+    public void Dungeon_DeeperLevels_HarderEnemies()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+        game.SetPlayerStats(strength: 10, defense: 0);
+
+        // Descend to depth 3
+        game.DescendDungeon();
+        game.DescendDungeon();
+
+        // Act - Trigger monster room
+        game.TriggerDungeonCombat();
+
+        // Assert - Enemies at depth 3 should be tougher
+        Assert.True(game.EnemyLevel >= 2); // Scaled with depth
+    }
+
+    [Fact]
+    public void Dungeon_ExitDungeon_ReturnsToWorld()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        // Act
+        game.ExitDungeon();
+
+        // Assert
+        Assert.False(game.InDungeon);
+        Assert.Equal(0, game.DungeonDepth);
+    }
 }

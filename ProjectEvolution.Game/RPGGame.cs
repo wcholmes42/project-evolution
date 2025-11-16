@@ -37,6 +37,8 @@ public class RPGGame
     public bool InLocation { get; private set; } = false;
     public string CurrentLocation { get; private set; } = null;
     public int PotionCount { get; private set; } = 0;
+    public bool InDungeon { get; private set; } = false;
+    public int DungeonDepth { get; private set; } = 0;
 
     public void Start()
     {
@@ -2246,4 +2248,46 @@ public class RPGGame
     // Test helpers
     public void SetGoldForTesting(int gold) => PlayerGold = gold;
     public void SetHPForTesting(int hp) => PlayerHP = hp;
+
+    public void EnterDungeon()
+    {
+        InDungeon = true;
+        DungeonDepth = 1;
+    }
+
+    public void ExitDungeon()
+    {
+        InDungeon = false;
+        DungeonDepth = 0;
+    }
+
+    public void DescendDungeon()
+    {
+        if (InDungeon)
+        {
+            DungeonDepth++;
+        }
+    }
+
+    public string RollForRoom()
+    {
+        // Warhammer Quest style room table
+        int roll = _random.Next(100);
+        if (roll < 50) return "Empty";      // 50% empty
+        if (roll < 85) return "Monster";    // 35% monster
+        return "Treasure";                   // 15% treasure
+    }
+
+    public void TriggerDungeonCombat()
+    {
+        // Combat in dungeons uses depth for enemy scaling
+        _combatStarted = true;
+        _hpCombat = true;
+        PlayerStamina = 12;
+        int enemyLevel = Math.Max(1, PlayerLevel + DungeonDepth); // Depth makes enemies harder!
+        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = $"A monster lurks in the darkness (Depth {DungeonDepth})!";
+    }
 }

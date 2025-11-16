@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 22 (Town Services Active!)
+**Current Generation**: 23 (Dungeons Active!)
 **Status**: ✅ Building Warhammer Quest + Ultima IV fusion!
 
 ## 🏆 LINE IN THE SAND - What We've Built
@@ -187,13 +187,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Towns: 0% (safe zones)
 - **Test Count**: 100 passing
 
-#### Generation 22: Town Services (CURRENT) 🏪
-- VisitInn() - heal to full for 10 gold
-- BuyPotion() - 5 gold, +5 HP when used
-- UsePotion() - consume from inventory
-- PotionCount property tracks inventory
-- Gold-based economy
-- **Test Count**: 104 passing ✅
+#### Generation 22: Town Services 🏪
+- Inn & Shop services
+- Potions for healing
+- **Test Count**: 104 passing
+
+#### Generation 23: Dungeon Generation (CURRENT) ⚔️
+- EnterDungeon() / ExitDungeon()
+- DungeonDepth tracking
+- DescendDungeon() go deeper
+- RollForRoom() - Warhammer Quest tables (Empty/Monster/Treasure)
+- TriggerDungeonCombat() - depth-scaled enemies
+- Deeper = harder (enemy level += depth)
+- **Test Count**: 109 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
