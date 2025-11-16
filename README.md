@@ -10,11 +10,11 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 0
+## Current State - Generation 1
 
-The simplest possible game:
-- You start the game
-- You win
+A game of chance:
+- Flip a coin
+- Heads you win, tails you lose
 
 ## Running the Game
 
@@ -41,8 +41,13 @@ To reach Ultima IV level of:
 - Graphics (ASCII art evolving to tile-based)
 - Engagement (story, character development, combat)
 
-## Current Features
+## Evolution History
 
+### Generation 1 (Current)
+- [x] Random coin flip determines outcome
+- [x] Can win or lose
+
+### Generation 0
 - [x] Game starts
 - [x] Game is immediately won
 
