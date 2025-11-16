@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 8
+**Current Generation**: 9
 **Status**: ✅ Ready to continue - Combat dynamics evolution in progress!
 
 ## Quick Start
@@ -77,7 +77,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Default stats: Strength 1, Defense 0 (backward compatible)
 - Tests: `Stats_PlayerStartsWithDefaultStats`, `Stats_HigherStrength_DealsMoreDamage`, `Stats_Defense_ReducesDamageTaken`, `Stats_DefeatEnemyWithHighStrength_Faster`, `Stats_MultiEnemyWithStats_GoldAndHP`
 
-#### Generation 8: Critical Hits & Misses (Current)
+#### Generation 8: Critical Hits & Misses
 - Added HitType enum (Normal, Critical, Miss)
 - 15% chance to miss (no damage dealt)
 - 15% chance to critical hit (2x damage!)
@@ -85,7 +85,17 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - DetermineHitType() handles RNG
 - Combat is now unpredictable - same fight can end differently
 - Tests: `CriticalHit_DoesDoubleDamage`, `Miss_DealsNoDamage`, `NormalHit_DealsNormalDamage`, `BothMiss_NoDamageDealt`, `CriticalHit_RandomRNG_CanOccur`
-- **Current Test Count**: 40 passing
+
+#### Generation 9: Stamina Resource System (Current)
+- Added PlayerStamina property (starts at 12)
+- Attack costs 3 stamina
+- Defend costs 1 stamina
+- Running out of stamina forces defend action
+- Can't attack if stamina < 3
+- Adds strategic resource management to combat
+- Must balance aggression vs conservation
+- Tests: `Stamina_PlayerStartsWith12Stamina`, `Stamina_AttackCosts3Stamina`, `Stamina_DefendCosts1Stamina`, `Stamina_RunOutForcesSamina`, `Stamina_ManageResourceToWin`, `Stamina_CantGoNegative`
+- **Current Test Count**: 46 passing
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 

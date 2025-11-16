@@ -714,4 +714,109 @@ public class GameTests
         Assert.True(missCount > 10 && missCount < 60); // ~30 expected
         Assert.True(normalCount > 100); // ~140 expected
     }
+
+    [Fact]
+    public void Stamina_PlayerStartsWith12Stamina()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithStamina();
+
+        // Assert
+        Assert.Equal(12, game.PlayerStamina);
+    }
+
+    [Fact]
+    public void Stamina_AttackCosts3Stamina()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStamina();
+
+        // Act
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend,
+            HitType.Normal, HitType.Normal);
+
+        // Assert
+        Assert.Equal(9, game.PlayerStamina); // 12 - 3 = 9
+    }
+
+    [Fact]
+    public void Stamina_DefendCosts1Stamina()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStamina();
+
+        // Act
+        game.ExecuteStaminaCombatRound(CombatAction.Defend, CombatAction.Attack,
+            HitType.Normal, HitType.Normal);
+
+        // Assert
+        Assert.Equal(11, game.PlayerStamina); // 12 - 1 = 11
+    }
+
+    [Fact]
+    public void Stamina_RunOutForcesSamina()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStamina();
+
+        // Act - Attack 4 times to use all stamina (4 * 3 = 12)
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 9
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 6
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 3
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 0
+
+        // Assert
+        Assert.Equal(0, game.PlayerStamina);
+
+        // Next action should be forced to defend even if we try to attack
+        int hpBefore = game.PlayerHP;
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal);
+
+        // If forced to defend, we block the attack and take no damage
+        Assert.Equal(hpBefore, game.PlayerHP); // HP unchanged because we defended
+        Assert.Equal(0, game.PlayerStamina); // Still 0, defend costs 1 but can't go negative
+    }
+
+    [Fact]
+    public void Stamina_ManageResourceToWin()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStamina();
+        game.SetPlayerStats(strength: 2, defense: 0);
+
+        // Act - Kill enemy (3 HP) with 2 attacks, managing stamina
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal); // E:1, S:9
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Attack, HitType.Normal, HitType.Normal); // E:0 (dead), S:6
+
+        // Assert
+        Assert.True(game.IsWon);
+        Assert.Equal(6, game.PlayerStamina); // Still have stamina left
+    }
+
+    [Fact]
+    public void Stamina_CantGoNegative()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStamina();
+
+        // Act - Use all stamina
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 9
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 6
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 3
+        game.ExecuteStaminaCombatRound(CombatAction.Attack, CombatAction.Defend, HitType.Normal, HitType.Normal); // 0
+
+        // Try to defend (costs 1 but at 0)
+        game.ExecuteStaminaCombatRound(CombatAction.Defend, CombatAction.Attack, HitType.Normal, HitType.Normal);
+
+        // Assert
+        Assert.Equal(0, game.PlayerStamina); // Can't go below 0
+    }
 }

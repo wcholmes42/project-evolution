@@ -1,31 +1,33 @@
 ﻿using ProjectEvolution.Game;
 
-Console.WriteLine("=== Project Evolution - Generation 8 ===");
-Console.WriteLine("=== CRITICAL HITS & MISSES ===");
+Console.WriteLine("=== Project Evolution - Generation 9 ===");
+Console.WriteLine("=== STAMINA RESOURCE MANAGEMENT ===");
 Console.WriteLine();
-Console.WriteLine("Combat is now UNPREDICTABLE!");
-Console.WriteLine("  15% chance to MISS (no damage)");
-Console.WriteLine("  15% chance to CRIT (2x damage!)");
-Console.WriteLine("  70% chance for normal hit");
+Console.WriteLine("You now have LIMITED STAMINA!");
+Console.WriteLine("  Attack costs 3 stamina");
+Console.WriteLine("  Defend costs 1 stamina");
+Console.WriteLine("  Run out? Forced to defend!");
+Console.WriteLine();
+Console.WriteLine("PLUS: Crits & Misses still active!");
 Console.WriteLine();
 Console.WriteLine("Your Character:");
-Console.WriteLine("  Strength: 2 | Defense: 1 | HP: 10");
+Console.WriteLine("  STR: 2 | DEF: 1 | HP: 10 | STAMINA: 12");
 Console.WriteLine();
 Console.WriteLine("A goblin warrior challenges you!");
-Console.WriteLine("Every attack is a gamble... good luck!");
+Console.WriteLine("Manage your stamina wisely... or die!");
 Console.WriteLine();
 
 var game = new RPGGame();
-game.StartCombatWithCrits();
+game.StartCombatWithStamina();
 game.SetPlayerStats(strength: 2, defense: 1);
 
 while (!game.CombatEnded)
 {
-    Console.WriteLine($"STR:{game.PlayerStrength} DEF:{game.PlayerDefense}  |  Gold:{game.PlayerGold}g  |  Your HP:{game.PlayerHP}/10  |  Goblin HP:{game.EnemyHP}/3");
+    Console.WriteLine($"STAMINA:{game.PlayerStamina}/12  |  HP:{game.PlayerHP}/10  |  Gold:{game.PlayerGold}g  |  Goblin HP:{game.EnemyHP}/3");
     Console.WriteLine();
     Console.WriteLine("What will you do?");
-    Console.WriteLine("1. Attack (pray for crit!)");
-    Console.WriteLine("2. Defend");
+    Console.WriteLine("1. Attack (-3 stamina)");
+    Console.WriteLine("2. Defend (-1 stamina)");
     Console.Write("> ");
 
     var choice = Console.ReadLine();
@@ -45,7 +47,7 @@ while (!game.CombatEnded)
         action = CombatAction.Defend;
     }
 
-    game.ExecuteCritCombatRoundWithRandomHits(action, CombatAction.Attack);
+    game.ExecuteStaminaCombatRoundWithRandomHits(action, CombatAction.Attack);
 
     Console.WriteLine();
     Console.WriteLine(game.CombatLog);

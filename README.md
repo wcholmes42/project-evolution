@@ -10,15 +10,15 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 8
+## Current State - Generation 9
 
-RNG-Based Combat - Every Fight is Different:
-- **15% Miss Chance** - Attacks can whiff completely!
-- **15% Critical Hit** - 2x damage when RNG blesses you!
-- **70% Normal Hits** - Standard damage
-- **True Unpredictability**: Same fight, different outcome every time
-- **High Risk**: Miss twice? You might die. Crit twice? Easy victory!
-- The game is no longer a foregone conclusion!
+Resource Management + RNG Chaos:
+- **Limited Stamina**: 12 stamina per fight
+- **Attack costs 3**, Defend costs 1
+- **Run out? Forced to defend!**
+- **Strategic Choices**: Spam attacks and risk exhaustion? Or pace yourself?
+- **Combined with Crits/Misses**: Miss an attack = wasted 3 stamina!
+- **Every decision matters** - stamina + RNG = nail-biting combat!
 
 ## Running the Game
 
@@ -47,13 +47,21 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 8 (Current)
+### Generation 9 (Current)
+- [x] Stamina system (12 stamina per combat)
+- [x] Attack costs 3 stamina
+- [x] Defend costs 1 stamina
+- [x] Run out of stamina = forced defend
+- [x] Strategic resource management layer
+- [x] Combines with crit/miss for high stakes
+- [x] **46 tests, all passing**
+
+### Generation 8
 - [x] Critical hit system (15% chance, 2x damage)
 - [x] Miss system (15% chance, no damage)
 - [x] RNG makes combat unpredictable
 - [x] HitType enum for combat outcomes
 - [x] Same fight can go completely different ways
-- [x] **40 tests, all passing**
 
 ### Generation 7
 - [x] Character stats: Strength and Defense
