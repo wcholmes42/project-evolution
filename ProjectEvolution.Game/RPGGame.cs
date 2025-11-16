@@ -29,6 +29,11 @@ public class RPGGame
     public int MaxPlayerHP { get; private set; } = 10;
     public int CombatsWon { get; private set; } = 0;
     public bool RunEnded { get; private set; } = false;
+    public int PlayerX { get; private set; } = 10;
+    public int PlayerY { get; private set; } = 10;
+    public int WorldWidth { get; private set; } = 20;
+    public int WorldHeight { get; private set; } = 20;
+    private string[,] _worldMap;
 
     public void Start()
     {
@@ -2070,5 +2075,80 @@ public class RPGGame
             CombatsWon++;
             ProcessMaxHPGrowth(); // Check for level up
         }
+    }
+
+    private void GenerateWorld()
+    {
+        _worldMap = new string[WorldWidth, WorldHeight];
+        string[] terrains = { "Grassland", "Forest", "Mountain", "Grassland", "Grassland", "Forest" }; // Weighted
+
+        for (int x = 0; x < WorldWidth; x++)
+        {
+            for (int y = 0; y < WorldHeight; y++)
+            {
+                // Procedural generation with consistent seed
+                int seed = x * 1000 + y;
+                var localRandom = new Random(seed);
+                _worldMap[x, y] = terrains[localRandom.Next(terrains.Length)];
+            }
+        }
+
+        // Place special locations
+        _worldMap[5, 5] = "Town";
+        _worldMap[15, 15] = "Town";
+        _worldMap[10, 5] = "Dungeon";
+        _worldMap[10, 15] = "Dungeon";
+    }
+
+    public void StartWorldExploration()
+    {
+        PlayerX = 10;
+        PlayerY = 10;
+        GenerateWorld();
+    }
+
+    public bool MoveNorth()
+    {
+        if (PlayerY > 0)
+        {
+            PlayerY--;
+            return true;
+        }
+        return false;
+    }
+
+    public bool MoveSouth()
+    {
+        if (PlayerY < WorldHeight - 1)
+        {
+            PlayerY++;
+            return true;
+        }
+        return false;
+    }
+
+    public bool MoveEast()
+    {
+        if (PlayerX < WorldWidth - 1)
+        {
+            PlayerX++;
+            return true;
+        }
+        return false;
+    }
+
+    public bool MoveWest()
+    {
+        if (PlayerX > 0)
+        {
+            PlayerX--;
+            return true;
+        }
+        return false;
+    }
+
+    public string GetCurrentTerrain()
+    {
+        return _worldMap[PlayerX, PlayerY];
     }
 }

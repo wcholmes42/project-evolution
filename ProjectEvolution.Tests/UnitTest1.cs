@@ -1601,4 +1601,128 @@ public class GameTests
         Assert.Equal(2, game.PlayerLevel); // Should have leveled up
         Assert.Equal(10, game.CombatsWon);
     }
+
+    [Fact]
+    public void World_PlayerStartsAtPosition()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.Equal(10, game.PlayerX); // Start at center of 20x20 map
+        Assert.Equal(10, game.PlayerY);
+    }
+
+    [Fact]
+    public void World_MoveNorth_DecreasesY()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.MoveNorth();
+
+        // Assert
+        Assert.Equal(9, game.PlayerY); // North = Y - 1
+        Assert.Equal(10, game.PlayerX);
+    }
+
+    [Fact]
+    public void World_MoveSouth_IncreasesY()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.MoveSouth();
+
+        // Assert
+        Assert.Equal(11, game.PlayerY); // South = Y + 1
+    }
+
+    [Fact]
+    public void World_MoveEast_IncreasesX()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.MoveEast();
+
+        // Assert
+        Assert.Equal(11, game.PlayerX); // East = X + 1
+    }
+
+    [Fact]
+    public void World_MoveWest_DecreasesX()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.MoveWest();
+
+        // Assert
+        Assert.Equal(9, game.PlayerX); // West = X - 1
+    }
+
+    [Fact]
+    public void World_CannotMoveOutOfBounds()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Move to north edge
+        for (int i = 0; i < 10; i++)
+        {
+            game.MoveNorth();
+        }
+
+        // Act - Try to move further north
+        bool canMove = game.MoveNorth();
+
+        // Assert
+        Assert.False(canMove);
+        Assert.Equal(0, game.PlayerY); // Stayed at edge
+    }
+
+    [Fact]
+    public void World_HasTerrainTypes()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        var terrain = game.GetCurrentTerrain();
+
+        // Assert
+        Assert.NotNull(terrain);
+        Assert.Contains(terrain, new[] { "Grassland", "Forest", "Mountain", "Water", "Town", "Dungeon" });
+    }
+
+    [Fact]
+    public void World_DifferentPositionsHaveDifferentTerrain()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Check multiple positions
+        var terrains = new List<string>();
+        for (int i = 0; i < 5; i++)
+        {
+            terrains.Add(game.GetCurrentTerrain());
+            game.MoveEast();
+        }
+
+        // Assert - Should have at least some variety
+        Assert.True(terrains.Distinct().Count() >= 2);
+    }
 }
