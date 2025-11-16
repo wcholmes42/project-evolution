@@ -3,11 +3,12 @@ using ProjectEvolution.Game;
 // Main menu
 Console.Clear();
 Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
-Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 32                 ║");
+Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 33                 ║");
 Console.WriteLine("╠════════════════════════════════════════════════════════════════╣");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("║  [P] Play Game (Normal Mode)                                   ║");
-Console.WriteLine("║  [T] Automated Testing & Tuning (Simulation Mode)              ║");
+Console.WriteLine("║  [T] Manual Testing & Tuning (Interactive)                     ║");
+Console.WriteLine("║  [A] Automated Tuning (10 Cycles - Self-Optimizing)            ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -20,6 +21,12 @@ if (menuChoice == ConsoleKey.T)
 {
     // Run simulation/tuning mode
     SimulationRunner.RunInteractiveTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.A)
+{
+    // Run automated tuning
+    AutoTuner.RunAutoTuning(10);
     return;
 }
 else if (menuChoice == ConsoleKey.Q)

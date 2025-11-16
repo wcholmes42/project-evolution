@@ -74,19 +74,32 @@ public class GameSimulator
         _ui = new UIRenderer();
     }
 
+    private bool _abortAll = false;
+
     public SimulationStats RunSimulation(int numberOfRuns)
     {
         Console.WriteLine($"\n🎮 Starting {numberOfRuns} automated game runs...\n");
+        _abortAll = false;
 
         for (int run = 0; run < numberOfRuns; run++)
         {
-            RunSingleGame(run + 1, numberOfRuns);
+            if (_abortAll)
+            {
+                Console.WriteLine($"\n⚠️ Aborted after {run} runs.");
+                break;
+            }
+
+            bool aborted = RunSingleGame(run + 1, numberOfRuns);
+            if (aborted)
+            {
+                _abortAll = true;
+            }
         }
 
         return _stats;
     }
 
-    private void RunSingleGame(int runNumber, int totalRuns)
+    private bool RunSingleGame(int runNumber, int totalRuns)
     {
         var game = new RPGGame();
         game.SetPlayerStats(_config.PlayerStrength, _config.PlayerDefense);
@@ -124,13 +137,13 @@ public class GameSimulator
                     if (_config.ShowVisuals)
                     {
                         _ui.AddMessage("⚠️ Combat stalemate - both disengage!");
+                        Thread.Sleep(_config.SimulationSpeed * 2);
                     }
                     combatRounds = 0;
-                    continue;
+                    // DON'T continue here - let it process victory/defeat
                 }
-
-                // In combat
-                if (autoPlayer.ShouldUsePotion())
+                // In combat - execute actions
+                else if (autoPlayer.ShouldUsePotion())
                 {
                     game.UsePotion();
                     if (_config.ShowVisuals)
@@ -138,6 +151,8 @@ public class GameSimulator
                         _ui.AddMessage("🤖 Used potion!");
                         Thread.Sleep(_config.SimulationSpeed);
                     }
+                    // Potion use doesn't count as a combat round
+                    combatRounds--;
                 }
                 else if (autoPlayer.ShouldFlee())
                 {
@@ -148,9 +163,10 @@ public class GameSimulator
                         _ui.AddMessage(fled ? "🤖 Fled successfully!" : "🤖 Failed to flee!");
                         Thread.Sleep(_config.SimulationSpeed);
                     }
-                    if (!fled && game.PlayerHP <= 0)
+                    if (fled || game.PlayerHP <= 0)
                     {
-                        break;
+                        combatRounds = 0;
+                        if (game.PlayerHP <= 0) break;
                     }
                 }
                 else
@@ -177,16 +193,17 @@ public class GameSimulator
 
                         Thread.Sleep(_config.SimulationSpeed);
                     }
+                }
 
-                    if (game.CombatEnded)
+                // Check if combat ended (after all actions)
+                if (game.CombatEnded)
+                {
+                    game.ProcessGameLoopVictory();
+                    if (game.IsWon)
                     {
-                        game.ProcessGameLoopVictory();
-                        if (game.IsWon)
-                        {
-                            autoPlayer.CombatsWon++;
-                        }
-                        combatRounds = 0; // Reset for next combat
+                        autoPlayer.CombatsWon++;
                     }
+                    combatRounds = 0; // Reset for next combat
                 }
             }
             else
@@ -273,7 +290,7 @@ public class GameSimulator
             {
                 _ui.Cleanup();
             }
-            return;
+            return true; // Signal abort
         }
 
         // Collect stats
@@ -301,5 +318,7 @@ public class GameSimulator
             Thread.Sleep(_config.SimulationSpeed * 2);
             _ui.Cleanup();
         }
+
+        return false; // Not aborted
     }
 }
