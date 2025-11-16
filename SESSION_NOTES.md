@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 26 (DEMOSCENE ASCII UI!) 🎨
+**Current Generation**: 27 (Logging & Transparency!) 📊
 **Status**: ✅ Production-quality roguelike with ultimate presentation!
 
 ## 🏆 LINE IN THE SAND - What We've Built
@@ -11,7 +11,8 @@
   - v2.0-progression-complete (Gen 13-17: Character Progression)
   - v2.1-endless-mode (Gen 18: Game Loop)
   - v3.0-world-exploration (Gen 19-25: Warhammer Quest Fusion)
-  - v3.1-demoscene-ui (Gen 26: Ultimate ASCII UI) ⭐ **CURRENT**
+  - v3.1-demoscene-ui (Gen 26: Ultimate ASCII UI)
+  - v3.2-logging (Gen 27: Comprehensive Logging) ⭐ **CURRENT**
 
 **Test Coverage**: 114 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
@@ -211,16 +212,20 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - TriggerDiscovery() - bonus gold or XP
 - **Test Count**: 114 passing
 
-#### Generation 26: Demoscene ASCII UI (CURRENT) 🎨
-- UIRenderer class with cursor positioning
-- Static layout (no scrolling!)
-- Box drawing characters (╔═╗║╚╝)
-- ANSI colors for status/terrain/messages
-- Map view (7x7 grid, player @ symbol)
-- Terrain symbols (♣ Forest, ▲ Mountain, ■ Town, Ω Dungeon)
-- Scrolling message log (4 lines)
-- In-place updates (GUI-like experience)
-- Color-coded messages (green=good, red=bad, yellow=levelup)
+#### Generation 26: Demoscene ASCII UI 🎨
+- UIRenderer with static layout
+- Box drawing, ANSI colors, map view
+- **Test Count**: 114 passing
+
+#### Generation 27: Comprehensive Logging (CURRENT) 📊
+- GameLogger class with timestamped events
+- DumpGameState() - complete internal state on exit
+- ShowRecentEvents() - last N events displayed
+- game_log.txt file logging
+- HP damage tracking
+- Death cause identification
+- Movement/encounter/combat logging
+- FULL TRANSPARENCY into why game ended
 - **Test Count**: 114 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
