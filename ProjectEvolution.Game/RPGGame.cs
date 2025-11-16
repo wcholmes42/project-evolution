@@ -2642,6 +2642,10 @@ public class RPGGame
 
     public void TriggerMobEncounter(Mob mob)
     {
+        // CRITICAL: Set combat flags!
+        _combatStarted = true;
+        _hpCombat = true;
+
         // Initialize combat with the mob (use random enemy type for stats)
         EnemyType randomType = (EnemyType)_random.Next(3);
         InitializeEnemyWithVariableStats(randomType);
@@ -2658,6 +2662,7 @@ public class RPGGame
         EnemyDamage = Math.Max(1, baseDamage + ((mob.Level - 1) / 2));
 
         CombatEnded = false;
+        IsWon = false;
         PlayerStamina = 999; // Infinite stamina for encounters
         CombatLog = $"Encountered {mob.Name} [Level {mob.Level}]!";
     }

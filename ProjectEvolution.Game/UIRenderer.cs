@@ -452,11 +452,14 @@ public class UIRenderer
         Console.Write("║ PROGRESS:                         ║");
 
         Console.SetCursorPosition(debugX, startY + 13);
-        Console.Write($"║ Level: {game.PlayerLevel}/{autoPlayer.Goals.TargetLevel}                            ║");
+        string levelProg = $"Level: {game.PlayerLevel}/{autoPlayer.Goals.TargetLevel}".PadRight(35);
+        Console.Write($"║ {levelProg}║");
         Console.SetCursorPosition(debugX, startY + 14);
-        Console.Write($"║ Gold: {game.PlayerGold}/{autoPlayer.Goals.TargetGold}                         ║");
+        string goldProg = $"Gold: {game.PlayerGold}/{autoPlayer.Goals.TargetGold}".PadRight(35);
+        Console.Write($"║ {goldProg}║");
         Console.SetCursorPosition(debugX, startY + 15);
-        Console.Write($"║ Dungeons: {autoPlayer.Goals.DungeonsExplored}/{autoPlayer.Goals.TargetDungeons}                        ║");
+        string dungProg = $"Dungeons: {autoPlayer.Goals.DungeonsExplored}/{autoPlayer.Goals.TargetDungeons}".PadRight(35);
+        Console.Write($"║ {dungProg}║");
 
         // Stats
         Console.SetCursorPosition(debugX, startY + 16);
@@ -464,11 +467,14 @@ public class UIRenderer
         Console.SetCursorPosition(debugX, startY + 17);
         Console.Write("║ SESSION STATS:                    ║");
         Console.SetCursorPosition(debugX, startY + 18);
-        Console.Write($"║ Turns: {autoPlayer.TurnsSurvived,4}                          ║");
+        string turnsStat = $"Turns: {autoPlayer.TurnsSurvived}".PadRight(35);
+        Console.Write($"║ {turnsStat}║");
         Console.SetCursorPosition(debugX, startY + 19);
-        Console.Write($"║ Combats Won: {autoPlayer.CombatsWon,3}                    ║");
+        string combatsStat = $"Combats Won: {autoPlayer.CombatsWon}".PadRight(35);
+        Console.Write($"║ {combatsStat}║");
         Console.SetCursorPosition(debugX, startY + 20);
-        Console.Write($"║ Fled: {autoPlayer.CombatsFled,3}                         ║");
+        string fledStat = $"Fled: {autoPlayer.CombatsFled}".PadRight(35);
+        Console.Write($"║ {fledStat}║");
 
         // Footer
         Console.SetCursorPosition(debugX, startY + 21);
