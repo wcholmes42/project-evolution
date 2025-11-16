@@ -8,6 +8,10 @@ public class ContinuousTuner
     private static int _cyclesRun = 0;
     private static List<double> _scoreHistory = new List<double>();
     private static int _bestCycleNumber = 0;
+    private static double _lastScore = 0;
+    private static string _lastChange = "Initial";
+    private static int _improvementStreak = 0;
+    private static int _regressionCount = 0;
 
     public static void RunContinuousTuning()
     {
@@ -57,8 +61,31 @@ public class ContinuousTuner
             // Update display
             UpdateDisplay(config, stats, score);
 
-            // Auto-adjust for next cycle
-            AdjustConfig(config, stats);
+            // LEARNING: Only adjust if we understand the trend
+            bool improved = score > _lastScore;
+            bool regressed = score < _lastScore - 5; // Significant regression
+
+            if (improved)
+            {
+                _improvementStreak++;
+                _regressionCount = 0;
+                // Keep going in same direction!
+                AdjustConfigSmart(config, stats, "continue");
+            }
+            else if (regressed)
+            {
+                _regressionCount++;
+                _improvementStreak = 0;
+                // Reverse last change or try different approach
+                AdjustConfigSmart(config, stats, "reverse");
+            }
+            else
+            {
+                // Stable - try small perturbation
+                AdjustConfigSmart(config, stats, "explore");
+            }
+
+            _lastScore = score;
 
             // Check for ESC
             if (Console.KeyAvailable)
@@ -105,6 +132,7 @@ public class ContinuousTuner
         Console.WriteLine("║ TRENDING:                                                                  ║");
         Console.WriteLine("║   Direction:                                                               ║");
         Console.WriteLine("║   Progress:                                                                ║");
+        Console.WriteLine("║   Learning:                                                                ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════╝");
     }
 
@@ -152,7 +180,11 @@ public class ContinuousTuner
         Console.Write($"Direction: {direction}                                                        ");
 
         Console.SetCursorPosition(4, 24);
-        Console.Write($"Progress: {_cyclesRun} cycles completed, {_cyclesRun * 20} total games                    ");
+        Console.Write($"Progress: {_cyclesRun} cycles, {_cyclesRun * 20} games | Last: {_lastChange}                               ");
+
+        // Show learning stats
+        Console.SetCursorPosition(4, 25);
+        Console.Write($"Learning: {_improvementStreak} improvements, {_regressionCount} regressions                    ");
     }
 
     private static void DrawTrendingGraph()
@@ -255,33 +287,119 @@ public class ContinuousTuner
         return "❌ TOO EASY";
     }
 
-    private static void AdjustConfig(SimulationConfig config, SimulationStats stats)
+    private static void AdjustConfigSmart(SimulationConfig config, SimulationStats stats, string strategy)
     {
         double avgTurns = stats.AverageTurnsPerRun;
+        var random = new Random();
 
-        // Too hard - make easier
-        if (avgTurns < 30)
+        if (strategy == "reverse")
         {
-            if (avgTurns < 15)
+            // Last change made things worse - try opposite!
+            if (_lastChange.Contains("HP +"))
             {
-                config.PlayerStartHP += 5;
-                config.PlayerDefense += 1;
+                config.PlayerStartHP = Math.Max(5, config.PlayerStartHP - 2);
+                _lastChange = "HP -2 (reversing)";
+            }
+            else if (_lastChange.Contains("Detection +"))
+            {
                 config.MobDetectionRange = Math.Max(2, config.MobDetectionRange - 1);
+                _lastChange = "Detection -1 (reversing)";
             }
             else
             {
-                config.PlayerStartHP += 2;
+                // Try random adjustment
+                int adjust = random.Next(3);
+                if (adjust == 0)
+                {
+                    config.PlayerStartHP += 1;
+                    _lastChange = "HP +1 (exploring)";
+                }
+                else if (adjust == 1)
+                {
+                    config.PlayerDefense += 1;
+                    _lastChange = "DEF +1 (exploring)";
+                }
+                else
+                {
+                    config.MobDetectionRange = Math.Max(2, config.MobDetectionRange - 1);
+                    _lastChange = "Detection -1 (exploring)";
+                }
             }
         }
-        // Too easy - make harder
-        else if (avgTurns > 100)
+        else if (strategy == "continue")
         {
-            config.MobDetectionRange = Math.Min(6, config.MobDetectionRange + 1);
-            config.MaxMobs = Math.Min(30, config.MaxMobs + 3);
+            // Last change helped - do more of the same!
+            if (_lastChange.Contains("HP"))
+            {
+                if (_lastChange.Contains("+"))
+                {
+                    config.PlayerStartHP += 1;
+                    _lastChange = "HP +1 (continuing success)";
+                }
+                else
+                {
+                    config.PlayerStartHP = Math.Max(5, config.PlayerStartHP - 1);
+                    _lastChange = "HP -1 (continuing success)";
+                }
+            }
+            else if (_lastChange.Contains("Detection"))
+            {
+                if (_lastChange.Contains("+"))
+                {
+                    config.MobDetectionRange = Math.Min(6, config.MobDetectionRange + 1);
+                    _lastChange = "Detection +1 (continuing success)";
+                }
+                else
+                {
+                    config.MobDetectionRange = Math.Max(2, config.MobDetectionRange - 1);
+                    _lastChange = "Detection -1 (continuing success)";
+                }
+            }
+            else
+            {
+                // Initial success, pick direction based on results
+                if (avgTurns < 45)
+                {
+                    config.PlayerStartHP += 1;
+                    _lastChange = "HP +1 (below target)";
+                }
+                else if (avgTurns > 55)
+                {
+                    config.MobDetectionRange = Math.Min(6, config.MobDetectionRange + 1);
+                    _lastChange = "Detection +1 (above target)";
+                }
+            }
         }
-        else if (avgTurns > 80)
+        else // "explore"
         {
-            config.MobDetectionRange = Math.Min(5, config.MobDetectionRange + 1);
+            // Stable score - try small perturbations to find improvements
+            // Hill climbing: try one change at a time
+            if (_cyclesRun % 5 == 0)
+            {
+                config.PlayerStartHP += 1;
+                _lastChange = "HP +1 (exploring)";
+            }
+            else if (_cyclesRun % 5 == 1)
+            {
+                config.PlayerStartHP = Math.Max(5, config.PlayerStartHP - 1);
+                _lastChange = "HP -1 (exploring)";
+            }
+            else if (_cyclesRun % 5 == 2)
+            {
+                config.MobDetectionRange = Math.Min(6, config.MobDetectionRange + 1);
+                _lastChange = "Detection +1 (exploring)";
+            }
+            else if (_cyclesRun % 5 == 3)
+            {
+                config.MobDetectionRange = Math.Max(2, config.MobDetectionRange - 1);
+                _lastChange = "Detection -1 (exploring)";
+            }
+            else
+            {
+                config.MaxMobs = config.MaxMobs + random.Next(-2, 3);
+                config.MaxMobs = Math.Clamp(config.MaxMobs, 10, 30);
+                _lastChange = "MaxMobs adjust (exploring)";
+            }
         }
     }
 
