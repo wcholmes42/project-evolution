@@ -129,7 +129,8 @@ public class GameSimulator
         {
             // Headless mode - PARALLEL EXECUTION!
             int cores = Environment.ProcessorCount;
-            Console.Write($"\r🚀 Parallel mode: {cores} cores × {numberOfRuns} runs... ");
+            int completed = 0;
+            var startTime = DateTime.Now;
 
             // Thread-safe stats collection
             var threadLocalStats = new object();
@@ -205,6 +206,16 @@ public class GameSimulator
                 lock (threadLocalStats)
                 {
                     _stats.TotalRuns++;
+                    completed++;
+
+                    // Update progress display
+                    if (completed % 10 == 0 || completed == numberOfRuns)
+                    {
+                        double elapsed = (DateTime.Now - startTime).TotalSeconds;
+                        double rate = completed / elapsed;
+                        Console.Write($"\r🚀 {cores} cores: {completed}/{numberOfRuns} ({rate:F0} games/sec) ");
+                    }
+
                     if (game.PlayerHP <= 0)
                     {
                         _stats.Deaths++;
@@ -218,7 +229,8 @@ public class GameSimulator
                 }
             });
 
-            Console.WriteLine("✅ Done!");
+            double totalElapsed = (DateTime.Now - startTime).TotalSeconds;
+            Console.WriteLine($"✅ Done in {totalElapsed:F1}s!");
         }
 
         return _stats;
