@@ -10,7 +10,9 @@ Console.WriteLine("║  [P] Play Game (Normal Mode)                             
 Console.WriteLine("║  [T] Manual Testing & Tuning (Interactive)                     ║");
 Console.WriteLine("║  [A] Automated Tuning (10 Cycles)                              ║");
 Console.WriteLine("║  [C] Continuous Tuning (Infinite - ESC to stop)                ║");
-Console.WriteLine("║  [G] Gradient Descent (Backpropagation - FAST!)                ║");
+Console.WriteLine("║  [G] Gradient Descent (Backpropagation - Leaderboard)          ║");
+Console.WriteLine("║  [S] Single-Param Test (No Interference)                       ║");
+Console.WriteLine("║  [R] Random Search (Explore Solution Space)                    ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -41,6 +43,18 @@ else if (menuChoice == ConsoleKey.G)
 {
     // Run gradient descent tuning
     GradientTuner.RunGradientTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.S)
+{
+    // Run single-parameter tuning
+    SingleParamTuner.RunSingleParamOptimization();
+    return;
+}
+else if (menuChoice == ConsoleKey.R)
+{
+    // Run random search
+    RandomSearchTuner.RunRandomSearch(50);
     return;
 }
 else if (menuChoice == ConsoleKey.Q)

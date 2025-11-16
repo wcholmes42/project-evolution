@@ -49,8 +49,9 @@ public class GradientTuner
             _cyclesRun++;
 
             // Run simulation (PARALLEL for speed!)
+            // FIX #1: MUCH larger sample size for stable gradients
             var simulator = new GameSimulator(config.ToSimConfig());
-            var stats = simulator.RunSimulation(100); // INCREASED: More samples, runs parallel!
+            var stats = simulator.RunSimulation(300); // TRIPLED: Reduce variance!
 
             double avgTurns = stats.AverageTurnsPerRun;
             double error = avgTurns - _targetScore; // How far from ideal?
