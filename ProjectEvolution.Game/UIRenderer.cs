@@ -236,6 +236,63 @@ public class UIRenderer
         Console.ResetColor();
     }
 
+    public void RenderCombat(RPGGame game)
+    {
+        // Render "across the table" combat view
+        int startRow = StatusBarHeight + 1;
+
+        Console.SetCursorPosition(2, startRow);
+        Console.Write(new string(' ', 76));
+        Console.SetCursorPosition(2, startRow);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("════════════════════ ⚔️  COMBAT ⚔️  ════════════════════");
+        Console.ResetColor();
+
+        // Player side
+        Console.SetCursorPosition(2, startRow + 2);
+        Console.Write(new string(' ', 76));
+        Console.SetCursorPosition(2, startRow + 2);
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write("YOU:");
+        Console.ResetColor();
+        Console.SetCursorPosition(2, startRow + 3);
+        Console.Write(new string(' ', 76));
+        Console.SetCursorPosition(2, startRow + 3);
+        Console.Write($"  ❤️  HP: {game.PlayerHP,3}/{game.MaxPlayerHP,-3}");
+        Console.SetCursorPosition(2, startRow + 4);
+        Console.Write(new string(' ', 76));
+        Console.SetCursorPosition(2, startRow + 4);
+        Console.Write($"  ⚡ STA: {game.PlayerStamina,3}/12");
+        Console.SetCursorPosition(2, startRow + 5);
+        Console.Write(new string(' ', 76));
+        Console.SetCursorPosition(2, startRow + 5);
+        Console.Write($"  💪 ATK: {game.PlayerStrength}  🛡️  DEF: {game.PlayerDefense}");
+
+        // VS
+        Console.SetCursorPosition(35, startRow + 3);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("VS");
+        Console.ResetColor();
+
+        // Enemy side
+        Console.SetCursorPosition(45, startRow + 2);
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Write($"{game.EnemyName} [Lvl {game.EnemyLevel}]");
+        Console.ResetColor();
+        Console.SetCursorPosition(45, startRow + 3);
+        Console.Write($"❤️  HP: {game.EnemyHP}");
+        Console.SetCursorPosition(45, startRow + 4);
+        Console.Write($"⚔️  DMG: {game.EnemyDamage}");
+
+        // Combat options
+        Console.SetCursorPosition(2, startRow + 7);
+        Console.Write(new string(' ', 76));
+        Console.SetCursorPosition(2, startRow + 7);
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("[A] Attack  [D] Defend  [P] Potion  [F] Flee (50% chance)");
+        Console.ResetColor();
+    }
+
     public void Cleanup()
     {
         Console.Clear();
@@ -243,3 +300,4 @@ public class UIRenderer
         Console.ResetColor();
     }
 }
+

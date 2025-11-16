@@ -130,8 +130,7 @@ while (playing)
                 // Combat
                 while (!game.CombatEnded && playing)
                 {
-                    ui.AddMessage($"⚔️  {game.EnemyName} [Lvl{game.EnemyLevel}] {game.EnemyHP}HP");
-                    ui.AddMessage("[A]ttack [D]efend [P]otion");
+                    ui.RenderCombat(game);
 
                     var combatKey = Console.ReadKey(intercept: true).Key;
 
@@ -139,6 +138,27 @@ while (playing)
                     {
                         ui.AddMessage("🧪 Potion! +5 HP");
                         ui.RenderStatusBar(game);
+                        ui.RenderCombat(game);
+                        continue;
+                    }
+
+                    if (combatKey == ConsoleKey.F)
+                    {
+                        bool fled = game.AttemptFlee();
+                        logger.LogEvent("FLEE", fled ? "Successfully fled!" : "Failed to flee, took damage");
+                        ui.AddMessage(game.CombatLog);
+                        ui.RenderStatusBar(game);
+                        if (fled)
+                        {
+                            ui.RenderMap(game); // Return to map view
+                            break;
+                        }
+                        if (game.PlayerHP <= 0)
+                        {
+                            ui.AddMessage("💀 DIED WHILE FLEEING!");
+                            playing = false;
+                            break;
+                        }
                         continue;
                     }
 
@@ -194,7 +214,7 @@ while (playing)
 
                 while (!game.CombatEnded && playing)
                 {
-                    ui.AddMessage($"[A]ttack [D]efend [P]otion");
+                    ui.RenderCombat(game);
                     var combatKey = Console.ReadKey(intercept: true).Key;
 
                     if (combatKey == ConsoleKey.P && game.UsePotion())

@@ -101,3 +101,67 @@
 [00:25:51] DUMP: 
 [00:25:51] DUMP: ═══════════════════════════════════════════════════════
 [00:25:51] DUMP: 
+[00:28:27] GAME: Project Evolution started!
+[00:28:27] INIT: Player spawned at (10,10)
+[00:28:30] MOVE: South to (10,11) - Grassland
+[00:28:31] MOVE: West to (9,11) - Forest
+[00:28:31] ENCOUNTER: Random encounter at (9,11)
+[00:28:31] COMBAT: Fighting Goblin Warrior [Lvl1] HP:5
+[00:28:31] COMBAT_ROUND: Goblin Warrior misses! 
+[00:28:32] COMBAT_ROUND: Goblin Warrior misses! 
+[00:28:33] COMBAT_ROUND: Goblin Warrior misses! 
+[00:28:34] COMBAT_ROUND: Goblin Warrior misses! 
+[00:28:43] COMBAT_ROUND: Hit 2! Goblin Warrior misses! 
+[00:28:47] COMBAT_ROUND: Hit 2! Goblin Warrior misses! 
+[00:28:49] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:50] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:53] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:53] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:54] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:54] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:54] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:28:58] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:00] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:02] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:03] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:03] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:04] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:04] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:05] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:05] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:06] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:07] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:07] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:08] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:08] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:08] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:09] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:10] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:10] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:11] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:11] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:11] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:11] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:11] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:12] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:12] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:12] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:12] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:13] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:14] COMBAT_ROUND: Goblin Warrior misses! 
+[00:29:15] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:29:15] COMBAT_ROUND: No stamina! Goblin Warrior misses! 

@@ -2211,12 +2211,40 @@ public class RPGGame
         // Start combat with level-scaled enemy
         _combatStarted = true;
         _hpCombat = true;
-        PlayerStamina = 12;
+        PlayerStamina = 999; // ENCOUNTERS DON'T USE STAMINA (unlimited for random fights)
         int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
         InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = "You are ambushed!";
+    }
+
+    public bool AttemptFlee()
+    {
+        // 50% chance to escape
+        bool escaped = _random.Next(2) == 0;
+        if (escaped)
+        {
+            CombatEnded = true;
+            IsWon = false; // Didn't win, but didn't die either
+            CombatLog = "You fled from combat!";
+            return true;
+        }
+        else
+        {
+            // Failed to flee, enemy gets free hit!
+            int damage = Math.Max(1, EnemyDamage - PlayerDefense);
+            PlayerHP = Math.Max(0, PlayerHP - damage);
+            CombatLog = $"Failed to flee! {EnemyName} hits you for {damage} damage!";
+
+            if (PlayerHP <= 0)
+            {
+                CombatEnded = true;
+                RunEnded = true;
+                IsWon = false;
+            }
+            return false;
+        }
     }
 
     public bool VisitInn()
