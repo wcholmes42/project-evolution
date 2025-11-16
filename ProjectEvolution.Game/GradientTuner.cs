@@ -319,8 +319,8 @@ public class GradientTuner
         Console.WriteLine("║ CURRENT CONFIG:                                                            ║");
         Console.WriteLine("║ RESULTS:                                                                   ║");
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
-        Console.WriteLine("║ 🏆 TOP 10 LEADERBOARD (Best Balanced Configs):                            ║");
-        Console.WriteLine("║ #  Cycle  Score   AvgTurns  Det Mobs HP Def  Combats                      ║");
+        Console.WriteLine("║ 🏆 TOP 10 LEADERBOARD (🎯Perfect ✅Excellent 👍Good ⚠️Ok ❌Poor):           ║");
+        Console.WriteLine("║ #  Cycle    Score    Turns  ↗️ Dt Mob HP Df  Combat                       ║");
         for (int i = 0; i < 10; i++)
         {
             Console.WriteLine("║                                                                            ║");
@@ -347,10 +347,31 @@ public class GradientTuner
         Console.SetCursorPosition(2, 5);
         Console.Write($"CURRENT CONFIG: Det={config.MobDetectionRange:F1} MaxMobs={config.MaxMobs:F0} HP={config.PlayerStartHP:F0} DEF={config.PlayerDefense:F1}                ");
 
-        // Results
+        // Results with CLEAR LABELS and COLORS
         Console.SetCursorPosition(2, 6);
-        Console.ForegroundColor = Math.Abs(error) < 10 ? ConsoleColor.Green : Math.Abs(error) < 20 ? ConsoleColor.Yellow : ConsoleColor.Red;
-        Console.Write($"RESULTS: Avg {stats.AverageTurnsPerRun:F1} turns, {stats.AverageCombatsWon:F1} combats                                ");
+
+        double absError = Math.Abs(error);
+        string errorLabel = absError switch
+        {
+            < 3 => "🎯 PERFECT",
+            < 8 => "✅ EXCELLENT",
+            < 15 => "👍 GOOD",
+            < 25 => "⚠️  ACCEPTABLE",
+            < 40 => "❌ POOR",
+            _ => "💀 TERRIBLE"
+        };
+
+        ConsoleColor errorColor = absError switch
+        {
+            < 8 => ConsoleColor.Green,
+            < 15 => ConsoleColor.DarkGreen,
+            < 25 => ConsoleColor.Yellow,
+            < 40 => ConsoleColor.Red,
+            _ => ConsoleColor.DarkRed
+        };
+
+        Console.ForegroundColor = errorColor;
+        Console.Write($"{errorLabel} Avg {stats.AverageTurnsPerRun:F1} turns (Target:50) Error:{error,+6:F1}                    ");
         Console.ResetColor();
 
         // Draw leaderboard
@@ -409,15 +430,32 @@ public class GradientTuner
 
                 string rank = (i + 1).ToString().PadLeft(2);
                 string cycle = entry.Cycle.ToString().PadLeft(5);
-                string score = entry.Score.ToString("F1").PadLeft(6);
-                string turns = entry.AvgTurns.ToString("F1").PadLeft(8);
-                string det = entry.Config.MobDetectionRange.ToString("F0").PadLeft(3);
-                string mobs = entry.Config.MaxMobs.ToString("F0").PadLeft(4);
-                string hp = entry.Config.PlayerStartHP.ToString("F0").PadLeft(2);
-                string def = entry.Config.PlayerDefense.ToString("F0").PadLeft(3);
-                string combats = entry.Combats.ToString().PadLeft(7);
 
-                Console.Write($"{rank} {cycle} {score}  {turns}   {det} {mobs} {hp}  {def}  {combats}                  ");
+                // Score with label and trend
+                double scoreVal = entry.Score;
+                string scoreLabel = scoreVal switch
+                {
+                    >= 92 => "🎯",
+                    >= 85 => "✅",
+                    >= 70 => "👍",
+                    >= 50 => "⚠️ ",
+                    _ => "❌"
+                };
+
+                string score = $"{scoreLabel}{scoreVal:F1}".PadLeft(9);
+                string turns = entry.AvgTurns.ToString("F1").PadLeft(6);
+
+                // Trend arrow (compare to next entry)
+                string trend = i < _leaderboard.Count - 1 ?
+                    (entry.Score > _leaderboard[i + 1].Score ? "↗️" : "↘️") : "  ";
+
+                string det = entry.Config.MobDetectionRange.ToString("F0").PadLeft(2);
+                string mobs = entry.Config.MaxMobs.ToString("F0").PadLeft(3);
+                string hp = entry.Config.PlayerStartHP.ToString("F0").PadLeft(2);
+                string def = entry.Config.PlayerDefense.ToString("F0").PadLeft(2);
+                string combats = entry.Combats.ToString().PadLeft(5);
+
+                Console.Write($"{rank} {cycle} {score} {turns}t {trend} {det} {mobs} {hp} {def} {combats}c              ");
                 Console.ResetColor();
             }
             else
