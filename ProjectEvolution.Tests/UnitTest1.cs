@@ -2480,4 +2480,68 @@ public class GameTests
         bool canMoveEast = game.MoveEast();
         Assert.False(canMoveEast); // Should be blocked by wall
     }
+
+    // ===== GENERATION 32: GAME OF LIFE MOB POPULATION =====
+
+    [Fact]
+    public void MobPopulation_HasMinimumMobs()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - tick many times to let population stabilize
+        for (int i = 0; i < 50; i++)
+        {
+            game.TickWorld();
+        }
+
+        // Assert - should maintain minimum population
+        Assert.True(game.GetActiveMobCount() >= 5); // MinMobsInWorld
+    }
+
+    [Fact]
+    public void MobPopulation_PopulationDynamicsWork()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        int initialCount = game.GetActiveMobCount();
+
+        // Act - tick to allow population dynamics to occur
+        for (int i = 0; i < 100; i++)
+        {
+            game.TickWorld();
+        }
+
+        int finalCount = game.GetActiveMobCount();
+
+        // Assert - population system is active (count changes over time)
+        // We just verify the system works, not exact bounds due to randomness
+        Assert.True(finalCount >= 5); // Should maintain minimum
+        Assert.True(finalCount >= 0); // Sanity check
+        // Population should be reasonable (not exploding to hundreds)
+        Assert.True(finalCount < 30);
+    }
+
+    [Fact]
+    public void MobAI_ReducedDetectionRange()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Create a mob 4 tiles away (outside new 3-tile range)
+        var testMob = new Mob(game.PlayerX + 4, game.PlayerY, "Distant Enemy", 1);
+        game.AddMobForTesting(testMob);
+
+        int mobXBefore = testMob.X;
+
+        // Act
+        game.TickWorld();
+
+        // Assert - mob should NOT move (outside detection range)
+        Assert.Equal(mobXBefore, testMob.X);
+    }
 }

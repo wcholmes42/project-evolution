@@ -384,3 +384,82 @@
 [09:50:42] MOVE: West to (10,13) - Grassland (-1 turns)
 [09:50:42] MOVE: South to (10,14) - Forest (-2 turns)
 [09:50:44] MOVE: South to (10,15) - Dungeon (-1 turns)
+[09:57:17] GAME: Project Evolution started!
+[09:57:17] INIT: Player spawned at (10,10)
+[09:57:19] MOVE: East to (11,10) - Grassland (-1 turns)
+[09:57:21] MOVE: South to (11,11) - Grassland (-1 turns)
+[09:57:22] MOVE: South to (11,12) - Grassland (-1 turns)
+[09:57:22] MOVE: South to (11,13) - Forest (-2 turns)
+[09:57:24] MOVE: West to (10,13) - Grassland (-1 turns)
+[09:57:25] MOVE: East to (11,13) - Forest (-2 turns)
+[09:57:26] MOVE: East to (12,13) - Grassland (-1 turns)
+[09:57:27] MOVE: East to (13,13) - Grassland (-1 turns)
+[09:57:28] MOVE: East to (14,13) - Mountain (-3 turns)
+[09:57:28] ENCOUNTER: Random encounter at (14,13)
+[09:57:29] COMBAT: Fighting Goblin Warrior [Lvl1] HP:5
+[09:57:33] DAMAGE: Player took 1 damage. HP: 9/10
+[09:57:33] COMBAT_ROUND: CRIT 4! Goblin Warrior 1! 
+[09:57:36] DAMAGE: Player took 1 damage. HP: 8/10
+[09:57:36] COMBAT_ROUND: MISS! Goblin Warrior 1! 
+[09:57:37] DAMAGE: Player took 1 damage. HP: 7/10
+[09:57:37] COMBAT_ROUND: Hit 2! Goblin Warrior CRIT 1! Victory! +10g +25xp!
+[09:57:38] VICTORY: Defeated Goblin Warrior. XP: 25
+[09:57:41] MOVE: East to (15,13) - Forest (-2 turns)
+[09:57:42] MOVE: East to (16,13) - Forest (-2 turns)
+[09:57:43] MOVE: East to (17,13) - Grassland (-1 turns)
+[09:57:43] ENCOUNTER: Random encounter at (17,13)
+[09:57:43] COMBAT: Fighting Goblin Warrior [Lvl1] HP:4
+[09:57:45] DAMAGE: Player took 1 damage. HP: 6/10
+[09:57:45] COMBAT_ROUND: Hit 2! Goblin Warrior 1! 
+[09:57:46] DAMAGE: Player took 1 damage. HP: 5/10
+[09:57:46] COMBAT_ROUND: Hit 2! Goblin Warrior 1! Victory! +10g +25xp!
+[09:57:46] VICTORY: Defeated Goblin Warrior. XP: 50
+[09:57:49] MOVE: North to (17,12) - Forest (-2 turns)
+[09:57:49] ENCOUNTER: Mob encounter: Bandit at (17,12)
+[09:57:50] COMBAT: Fighting Bandit [Lvl1] HP:6
+[09:57:51] DAMAGE: Player took 1 damage. HP: 4/10
+[09:57:51] COMBAT_ROUND: MISS! Bandit 1! 
+[09:57:52] DAMAGE: Player took 1 damage. HP: 3/10
+[09:57:52] COMBAT_ROUND: Hit 2! Bandit 1! 
+[09:57:53] DAMAGE: Player took 3 damage. HP: 0/10
+[09:57:53] COMBAT_ROUND: Hit 2! Bandit CRIT 3! DEATH! Run ended!
+[09:57:54] DEATH: Killed by Bandit. HP: 0
+[09:57:55] GAME: Game session ended
+[09:57:55] DUMP: 
+[09:57:55] DUMP: ═══════════════════════════════════════════════════════
+[09:57:55] DUMP:           GAME STATE DUMP
+[09:57:55] DUMP: Reason: Player Death (HP reached 0)
+[09:57:55] DUMP: ═══════════════════════════════════════════════════════
+[09:57:55] DUMP: 
+[09:57:55] DUMP: PLAYER STATE:
+[09:57:55] DUMP:   Level: 1
+[09:57:55] DUMP:   HP: 0/10
+[09:57:55] DUMP:   XP: 50/100
+[09:57:55] DUMP:   Gold: 20g
+[09:57:55] DUMP:   Strength: 2
+[09:57:55] DUMP:   Defense: 1
+[09:57:55] DUMP:   Stamina: 990/12
+[09:57:55] DUMP:   Potions: 0
+[09:57:55] DUMP:   Stat Points: 0
+[09:57:55] DUMP: 
+[09:57:55] DUMP: LOCATION:
+[09:57:55] DUMP:   Position: (17, 12)
+[09:57:55] DUMP:   Terrain: Forest
+[09:57:55] DUMP:   In Location: False
+[09:57:55] DUMP:   In Dungeon: False
+[09:57:55] DUMP:   Dungeon Depth: 0
+[09:57:55] DUMP: 
+[09:57:55] DUMP: PROGRESS:
+[09:57:55] DUMP:   Combats Won: 2
+[09:57:55] DUMP:   Deaths: 0
+[09:57:55] DUMP:   Run Ended: True
+[09:57:55] DUMP: 
+[09:57:55] DUMP: COMBAT STATE:
+[09:57:55] DUMP:   In Combat: False
+[09:57:55] DUMP:   Combat Won: False
+[09:57:55] DUMP:   Enemy: Bandit [Lvl 1]
+[09:57:55] DUMP:   Enemy HP: 2
+[09:57:55] DUMP:   Enemy Damage: 2
+[09:57:55] DUMP: 
+[09:57:55] DUMP: ═══════════════════════════════════════════════════════
+[09:57:55] DUMP: 

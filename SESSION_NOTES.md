@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-16
-**Current Generation**: 31 (AI, Fog & Dungeons!) 🗺️
-**Status**: ✅ Mob AI, fog of war, and real dungeon maps!
+**Current Generation**: 32 (Balanced Populations!) ⚖️
+**Status**: ✅ Game of Life mob dynamics - less murder, more balance!
 
 ## 📝 TODO for Next Session
 
@@ -30,9 +30,10 @@
   - v3.3-combat-overhaul (Gen 28: Combat Fixes)
   - v3.4-pacing (Gen 29: Game Feel & Pacing)
   - v3.5-turn-based (Gen 30: Turn-Based World)
-  - v4.0-ai-fog-dungeons (Gen 31: AI, Fog, Dungeons) ⭐ **CURRENT**
+  - v4.0-ai-fog-dungeons (Gen 31: AI, Fog, Dungeons)
+  - v4.1-balanced-populations (Gen 32: Game of Life Mobs) ⭐ **CURRENT**
 
-**Test Coverage**: 134 passing tests (100% coverage maintained)
+**Test Coverage**: 137 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
 
 ## Quick Start
@@ -308,7 +309,28 @@ dotnet run --project ProjectEvolution.Game  # Play the game
   - Updated legends for each mode
 - **Test Count**: 134 passing ✅ (+10 new tests!)
 
-### 🎉 Major milestone: Living, breathing world with AI and exploration!
+#### Generation 32: Game of Life Population Control (CURRENT) ⚖️
+- **BALANCE PATCH**: Mobs were too aggressive!
+- **Reduced detection range**: 5 tiles → 3 tiles (less relentless pursuit)
+- **Random despawn**: 2% chance per tick (mobs can wander off)
+- **Game of Life dynamics**:
+  - Overpopulation (4+ neighbors): 30% despawn chance (flee crowding)
+  - Isolation (0 neighbors): 10% despawn chance (no pack support)
+  - Sweet spot (2-3 neighbors): 5% spawn chance (reproduction!)
+  - CountNearbyMobs(4-tile radius) determines population pressure
+- **Population bounds**:
+  - Minimum: 5 mobs (always some threats)
+  - Maximum: 20 mobs (prevent overwhelming swarms)
+  - Auto-spawn when below minimum
+  - Reproduction respects maximum cap
+- **Emergent behavior**:
+  - Mobs cluster in "packs" (2-3 creates stable populations)
+  - Overcrowded areas self-regulate
+  - Isolated mobs tend to die off
+  - Dynamic, living ecosystem!
+- **Test Count**: 137 passing ✅ (+3 new tests!)
+
+### 🎉 Balanced world: Strategic challenge without frustration!
 
 The game has evolved from "start and win" to a full RPG combat system with:
 - Turn-based combat

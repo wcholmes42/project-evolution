@@ -42,8 +42,10 @@ public class RPGGame
     public int WorldTurn { get; private set; } = 0;
     private List<Mob> _activeMobs = new List<Mob>();
     private bool[,] _exploredTiles;
-    private const int MobDetectionRange = 5; // Mobs detect player within 5 tiles
+    private const int MobDetectionRange = 3; // Mobs detect player within 3 tiles (reduced!)
     private const int PlayerVisionRange = 3; // Player can see 3 tiles around
+    private const int MaxMobsInWorld = 20; // Cap on total mobs
+    private const int MinMobsInWorld = 5;  // Minimum viable population
     private string[,] _dungeonMap;
     private int _dungeonWidth = 30;
     private int _dungeonHeight = 30;
@@ -2703,7 +2705,107 @@ public class RPGGame
                     }
                 }
             }
+
+            // Random despawn chance (2% per tick) - mobs can wander off
+            if (_random.Next(100) < 2)
+            {
+                _activeMobs.Remove(mob);
+            }
         }
+
+        // Game of Life style population control
+        ApplyMobPopulationRules();
+    }
+
+    private void ApplyMobPopulationRules()
+    {
+        // Check each mob for overpopulation/underpopulation
+        var mobsToRemove = new List<Mob>();
+        var spawnLocations = new List<(int x, int y)>();
+
+        foreach (var mob in _activeMobs.ToList())
+        {
+            int neighborsCount = CountNearbyMobs(mob.X, mob.Y, 4); // 4-tile radius
+
+            // Game of Life rules adapted for mobs:
+            // Overpopulation: 4+ neighbors = 30% chance to despawn (flee crowding)
+            if (neighborsCount >= 4 && _random.Next(100) < 30)
+            {
+                mobsToRemove.Add(mob);
+            }
+            // Isolation: 0 neighbors = 10% chance to despawn (no pack support)
+            else if (neighborsCount == 0 && _random.Next(100) < 10)
+            {
+                mobsToRemove.Add(mob);
+            }
+            // Reproduction: 2-3 neighbors = ideal, 5% chance to spawn nearby
+            else if (neighborsCount >= 2 && neighborsCount <= 3 && _random.Next(100) < 5)
+            {
+                // Try to spawn near this mob
+                int spawnX = mob.X + _random.Next(-2, 3);
+                int spawnY = mob.Y + _random.Next(-2, 3);
+
+                if (spawnX >= 0 && spawnX < WorldWidth && spawnY >= 0 && spawnY < WorldHeight &&
+                    !IsMobAt(spawnX, spawnY) && GetTerrainAt(spawnX, spawnY) != "Town")
+                {
+                    spawnLocations.Add((spawnX, spawnY));
+                }
+            }
+        }
+
+        // Apply removals
+        foreach (var mob in mobsToRemove)
+        {
+            _activeMobs.Remove(mob);
+        }
+
+        // Apply spawns (respect population limits)
+        foreach (var (x, y) in spawnLocations)
+        {
+            if (_activeMobs.Count < MaxMobsInWorld)
+            {
+                string[] mobNames = { "Goblin Scout", "Orc Wanderer", "Wild Beast", "Bandit", "Skeleton" };
+                string name = mobNames[_random.Next(mobNames.Length)];
+                int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
+                _activeMobs.Add(new Mob(x, y, name, level));
+            }
+        }
+
+        // Minimum population maintenance
+        if (_activeMobs.Count < MinMobsInWorld)
+        {
+            // Spawn a new mob somewhere random
+            int x, y;
+            string terrain;
+            do
+            {
+                x = _random.Next(WorldWidth);
+                y = _random.Next(WorldHeight);
+                terrain = _worldMap[x, y];
+            }
+            while ((x == PlayerX && y == PlayerY) || terrain == "Town" || IsMobAt(x, y));
+
+            string[] mobNames = { "Goblin Scout", "Orc Wanderer", "Wild Beast", "Bandit", "Skeleton" };
+            string name = mobNames[_random.Next(mobNames.Length)];
+            int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
+            _activeMobs.Add(new Mob(x, y, name, level));
+        }
+    }
+
+    private int CountNearbyMobs(int centerX, int centerY, int radius)
+    {
+        int count = 0;
+        foreach (var mob in _activeMobs)
+        {
+            if (mob.X == centerX && mob.Y == centerY) continue; // Don't count self
+
+            int distance = Math.Abs(mob.X - centerX) + Math.Abs(mob.Y - centerY);
+            if (distance <= radius)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     public bool IsTileExplored(int x, int y)
