@@ -35,8 +35,36 @@ public class FocusedClassOptimizer
         {
             round++;
 
-            // Determine weakest class
+            // Determine weakest class (skip if tested 100+ times and still bad!)
             string weakestClass = FindWeakestClass(classes, allResults);
+
+            // ABANDONMENT CHECK: If class tested 100+ times with best < 50, skip it!
+            var classResults = allResults.Where(r => r.className == weakestClass).ToList();
+            if (classResults.Count >= 100)
+            {
+                var classBest = classResults.Any() ? classResults.Max(r => r.score) : 0;
+                if (classBest < 50)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"\n⚠️  {weakestClass} appears non-viable after {classResults.Count} tests. Skipping...");
+                    Console.ResetColor();
+                    Thread.Sleep(2000);
+
+                    // Try next weakest
+                    var viableClasses = classes.Where(c =>
+                    {
+                        var results = allResults.Where(r => r.className == c).ToList();
+                        if (results.Count < 100) return true;
+                        var best = results.Max(r => r.score);
+                        return best >= 50;
+                    }).ToArray();
+
+                    if (viableClasses.Length == 0) break; // All classes failed!
+
+                    weakestClass = FindWeakestClass(viableClasses, allResults);
+                }
+            }
+
             _currentFocusClass = weakestClass;
             _currentMutationInRound = 0;
 
@@ -186,12 +214,12 @@ public class FocusedClassOptimizer
 
             "🛡️ TANK" => new SimulationConfig
             {
-                MobDetectionRange = random.Next(5, 9),
-                MaxMobs = random.Next(40, 61),
-                PlayerStartHP = random.Next(12, 19),
+                MobDetectionRange = random.Next(6, 11),  // HIGHER to compensate for tankiness!
+                MaxMobs = random.Next(50, 71),            // MORE mobs to challenge tank!
+                PlayerStartHP = random.Next(10, 15),      // REDUCED: Was 12-19 (too tanky!)
                 PlayerStrength = random.Next(1, 3),
-                PlayerDefense = random.Next(2, 5),
-                MinMobs = 5,
+                PlayerDefense = random.Next(1, 4),        // REDUCED: Was 2-5 (too much armor!)
+                MinMobs = random.Next(8, 16),             // Higher baseline threat!
                 ShowVisuals = false
             },
 
