@@ -32,6 +32,19 @@ public class GradientTuner
 
         // Load saved optimal config or use defaults
         var savedConfig = ConfigPersistence.LoadOptimalConfig();
+
+        // CRITICAL: Initialize _bestScore from saved config!
+        if (savedConfig != null && File.Exists("optimal_config.json"))
+        {
+            var savedOptimal = System.Text.Json.JsonSerializer.Deserialize<OptimalConfig>(File.ReadAllText("optimal_config.json"));
+            if (savedOptimal != null)
+            {
+                _bestScore = savedOptimal.Score;
+                Console.WriteLine($"📊 Previous best score: {_bestScore:F1} - must beat this to save!");
+                Thread.Sleep(2000);
+            }
+        }
+
         var config = savedConfig != null ? new FloatConfig
         {
             MobDetectionRange = savedConfig.MobDetectionRange,
@@ -122,11 +135,20 @@ public class GradientTuner
             _leaderboard.Add(entry);
             _leaderboard = _leaderboard.OrderByDescending(e => e.Score).Take(10).ToList();
 
-            // Save if new best overall
-            if (score > _bestScore || _bestScore == 0)
+            // Save ONLY if truly better than previous best!
+            if (score > _bestScore)
             {
+                var oldBest = _bestScore;
                 _bestScore = score;
+
+                Console.SetCursorPosition(2, 25);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write($"💾 NEW RECORD! {oldBest:F1} → {score:F1} - SAVING...                                      ");
+                Console.ResetColor();
+
                 ConfigPersistence.SaveOptimalConfig(config.ToSimConfig(), stats, score, _cyclesRun * 300);
+
+                Thread.Sleep(1000); // Let user see the save
             }
 
             // Update display with progress metrics
@@ -311,6 +333,7 @@ public class GradientTuner
         Console.WriteLine("║   PlayerDef:                                                               ║");
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
         Console.WriteLine("║ PROGRESS TRACKING:                                                         ║");
+        Console.WriteLine("║ SAVE STATUS:                                                               ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════╝");
     }
 
