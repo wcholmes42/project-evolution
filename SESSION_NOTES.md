@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 2
+**Current Generation**: 3
 **Status**: ✅ Ready to continue
 
 ## Quick Start
@@ -29,17 +29,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Combat with weak goblin
 - Player chooses: Attack (wins) or Defend (loses)
 - Tests: `Combat_PlayerAttacks_DefeatsWeakEnemy`, `Combat_PlayerDefends_FailsToDefeatEnemy`, `Combat_NotStarted_CannotChooseAction`
-- **Current Test Count**: 7 passing
 
-### 🎯 Next Generations (Planned)
-
-#### Generation 3: Enemy AI
+#### Generation 3: Enemy AI (Current)
 - Enemy fights back with random actions
-- Rock-paper-scissors style:
-  - Attack vs Attack = 50/50
+- Rock-paper-scissors combat:
+  - Attack vs Attack = 50/50 coin flip
   - Attack vs Defend = Attacker wins
   - Defend vs Attack = Attacker wins
   - Defend vs Defend = Draw (player loses)
+- Added CombatLog property for narrative feedback
+- Tests: `CombatWithAI_PlayerAttacks_EnemyDefends_PlayerWins`, `CombatWithAI_PlayerDefends_EnemyAttacks_PlayerLoses`, `CombatWithAI_BothDefend_Draw_PlayerLoses`, `CombatWithAI_BothAttack_CoinFlip_CanWin`, `CombatWithAI_BothAttack_CoinFlip_CanLose`, `CombatWithAI_RandomEnemy_ProducesBothOutcomes`
+- **Current Test Count**: 13 passing
+
+### 🎯 Next Generations (Planned)
 
 #### Generation 4: Health Points
 - Player HP: 10
@@ -90,7 +92,16 @@ game.StartWithRandomCoinFlip();       // Random
 // Generation 2
 game.StartCombat();
 game.ChooseAction(CombatAction.Attack);  // or CombatAction.Defend
+
+// Generation 3
+game.StartCombatWithAI();
+game.ChooseActionWithRandomEnemy(CombatAction.Attack);
+// or for testing:
+game.ChooseActionAgainstEnemy(CombatAction.Attack, enemyAction: CombatAction.Defend);
+
+// Check results
 bool won = game.IsWon;
+string log = game.CombatLog;  // Narrative description of what happened
 ```
 
 ### Design Principles

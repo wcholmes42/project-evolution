@@ -10,12 +10,13 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 2
+## Current State - Generation 3
 
-Simple combat with player choice:
-- Face a weak goblin in combat
-- Choose to Attack or Defend
-- Attack defeats the enemy, Defend lets it escape
+Combat with enemy AI:
+- Face a goblin warrior with AI
+- Enemy makes random choices (Attack/Defend)
+- Rock-paper-scissors combat system
+- Your choice vs enemy choice determines outcome
 
 ## Running the Game
 
@@ -44,7 +45,15 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 2 (Current)
+### Generation 3 (Current)
+- [x] Enemy AI fights back
+- [x] Rock-paper-scissors combat resolution
+- [x] Attack vs Attack = 50/50 chance
+- [x] Attack vs Defend = Attacker wins
+- [x] Defend vs Defend = Draw (player loses)
+- [x] Combat log for narrative feedback
+
+### Generation 2
 - [x] Combat encounter with a weak goblin
 - [x] Player choice: Attack or Defend
 - [x] Attack = win, Defend = lose

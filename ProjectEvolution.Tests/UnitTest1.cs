@@ -100,4 +100,92 @@ public class GameTests
         );
         Assert.Equal("Combat has not been started", exception.Message);
     }
+
+    [Fact]
+    public void CombatWithAI_PlayerAttacks_EnemyDefends_PlayerWins()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithAI();
+        game.ChooseActionAgainstEnemy(CombatAction.Attack, enemyAction: CombatAction.Defend);
+
+        // Assert
+        Assert.True(game.IsWon);
+    }
+
+    [Fact]
+    public void CombatWithAI_PlayerDefends_EnemyAttacks_PlayerLoses()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithAI();
+        game.ChooseActionAgainstEnemy(CombatAction.Defend, enemyAction: CombatAction.Attack);
+
+        // Assert
+        Assert.False(game.IsWon);
+    }
+
+    [Fact]
+    public void CombatWithAI_BothDefend_Draw_PlayerLoses()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithAI();
+        game.ChooseActionAgainstEnemy(CombatAction.Defend, enemyAction: CombatAction.Defend);
+
+        // Assert - Draw means player didn't defeat enemy, so loses
+        Assert.False(game.IsWon);
+    }
+
+    [Fact]
+    public void CombatWithAI_BothAttack_CoinFlip_CanWin()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithAI();
+        game.ChooseActionAgainstEnemy(CombatAction.Attack, enemyAction: CombatAction.Attack, coinFlipPlayerWins: true);
+
+        // Assert
+        Assert.True(game.IsWon);
+    }
+
+    [Fact]
+    public void CombatWithAI_BothAttack_CoinFlip_CanLose()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithAI();
+        game.ChooseActionAgainstEnemy(CombatAction.Attack, enemyAction: CombatAction.Attack, coinFlipPlayerWins: false);
+
+        // Assert
+        Assert.False(game.IsWon);
+    }
+
+    [Fact]
+    public void CombatWithAI_RandomEnemy_ProducesBothOutcomes()
+    {
+        // Arrange & Act
+        var results = new List<bool>();
+        for (int i = 0; i < 100; i++)
+        {
+            var game = new RPGGame();
+            game.StartCombatWithAI();
+            game.ChooseActionWithRandomEnemy(CombatAction.Attack);
+            results.Add(game.IsWon);
+        }
+
+        // Assert - with random enemy actions, we should see both wins and losses
+        Assert.Contains(true, results);
+        Assert.Contains(false, results);
+    }
 }

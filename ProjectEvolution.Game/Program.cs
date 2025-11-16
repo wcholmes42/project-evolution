@@ -1,12 +1,12 @@
 ﻿using ProjectEvolution.Game;
 
-Console.WriteLine("=== Project Evolution - Generation 2 ===");
+Console.WriteLine("=== Project Evolution - Generation 3 ===");
 Console.WriteLine();
-Console.WriteLine("A weak goblin appears before you!");
+Console.WriteLine("A goblin warrior appears, ready for battle!");
 Console.WriteLine();
 
 var game = new RPGGame();
-game.StartCombat();
+game.StartCombatWithAI();
 
 Console.WriteLine("What will you do?");
 Console.WriteLine("1. Attack");
@@ -26,25 +26,28 @@ else if (choice == "2")
 {
     action = CombatAction.Defend;
     Console.WriteLine();
-    Console.WriteLine("You raise your shield defensively...");
+    Console.WriteLine("You raise your shield...");
 }
 else
 {
     Console.WriteLine();
-    Console.WriteLine("Confused, you hesitate...");
-    action = CombatAction.Defend; // Default to defend on invalid input
+    Console.WriteLine("Confused, you hesitate and raise your shield...");
+    action = CombatAction.Defend;
 }
 
-game.ChooseAction(action);
+game.ChooseActionWithRandomEnemy(action);
 
 Console.WriteLine();
+Console.WriteLine(game.CombatLog);
+Console.WriteLine();
+
 if (game.IsWon)
 {
-    Console.WriteLine("The goblin falls! Victory is yours!");
+    Console.WriteLine("Victory! The goblin falls defeated!");
 }
 else
 {
-    Console.WriteLine("The goblin escapes! You failed to defeat it.");
+    Console.WriteLine("Defeat! The goblin bested you in combat!");
 }
 
 Console.WriteLine();
