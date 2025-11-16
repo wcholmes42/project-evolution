@@ -3,6 +3,7 @@ using ProjectEvolution.Game;
 var ui = new UIRenderer();
 var game = new RPGGame();
 var logger = new GameLogger();
+var _random = new Random();
 
 logger.LogEvent("GAME", "Project Evolution started!");
 game.SetPlayerStats(strength: 2, defense: 1);
@@ -97,6 +98,7 @@ while (playing)
                 game.EnterDungeon();
                 ui.AddMessage("⚔️  Entered Dungeon! Depth 1 - Danger awaits!");
                 ui.RenderStatusBar(game);
+                ui.RenderMap(game); // Show the dungeon map!
                 ui.RenderCommandBar(true);
                 Thread.Sleep(600); // Ominous pause before adventure
             }
@@ -252,111 +254,41 @@ while (playing)
             }
         }
     }
-    else // In dungeon
+    else // In dungeon - use movement-based exploration!
     {
-        if (key == ConsoleKey.R)
+        bool dungeonMoved = false;
+        string dungeonDirection = "";
+
+        // Same movement keys work in dungeons
+        if (key == ConsoleKey.N || key == ConsoleKey.UpArrow)
         {
-            var roomType = game.RollForRoom();
-            ui.AddMessage($"🎲 Rolled: {roomType} Room");
-            Thread.Sleep(500); // Suspenseful pause for roll result
-
-            if (roomType == "Monster")
-            {
-                game.TriggerDungeonCombat();
-                ui.AddMessage($"👹 Monster appears! {game.EnemyName} [Lvl{game.EnemyLevel}]");
-                Thread.Sleep(800); // Build tension before combat starts
-
-                while (!game.CombatEnded && playing)
-                {
-                    ui.RenderCombat(game);
-                    var combatKey = Console.ReadKey(intercept: true).Key;
-
-                    if (combatKey == ConsoleKey.P && game.UsePotion())
-                    {
-                        ui.AddMessage("🧪 +5 HP");
-                        ui.RenderStatusBar(game);
-                        Thread.Sleep(600); // Let player see the healing
-                        continue;
-                    }
-
-                    if (combatKey == ConsoleKey.F)
-                    {
-                        bool fled = game.AttemptFlee();
-                        ui.AddMessage(game.CombatLog);
-                        ui.RenderStatusBar(game);
-                        Thread.Sleep(fled ? 600 : 800);
-                        if (fled) break;
-                        if (game.PlayerHP <= 0)
-                        {
-                            ui.AddMessage("💀 DIED WHILE FLEEING!");
-                            Thread.Sleep(1200);
-                            playing = false;
-                            break;
-                        }
-                        continue;
-                    }
-
-                    var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
-                    game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
-                    ui.AddMessage(game.CombatLog);
-                    Thread.Sleep(900); // Pause to read combat results
-
-                    if (game.CombatEnded)
-                    {
-                        game.ProcessGameLoopVictory();
-                        if (game.IsWon)
-                        {
-                            ui.AddMessage("✅ Victory!");
-                            ui.RenderStatusBar(game);
-                            Thread.Sleep(1000); // Celebrate victory!
-                        }
-                        else
-                        {
-                            ui.AddMessage("💀 GAME OVER!");
-                            Thread.Sleep(1500);
-                            playing = false;
-                        }
-                    }
-                    ui.RenderStatusBar(game);
-                }
-            }
-            else if (roomType == "Treasure")
-            {
-                int gold = game.RollForTreasure(game.DungeonDepth);
-                ui.AddMessage($"💎 TREASURE! Found {gold} gold!");
-                ui.RenderStatusBar(game);
-                Thread.Sleep(800); // Let player appreciate the loot!
-            }
-            else // Empty room - check for events
-            {
-                var eventType = game.RollForEvent();
-                if (eventType == "Trap")
-                {
-                    int dmg = game.TriggerTrap();
-                    ui.AddMessage($"💥 TRAP! Took {dmg} damage!");
-                    ui.RenderStatusBar(game);
-                    Thread.Sleep(900); // Ouch! Let that sink in
-                }
-                else if (eventType == "Discovery")
-                {
-                    var bonus = game.TriggerDiscovery();
-                    ui.AddMessage($"✨ Discovery! {bonus}");
-                    ui.RenderStatusBar(game);
-                    Thread.Sleep(700); // Nice find!
-                }
-                else
-                {
-                    ui.AddMessage("Empty room. Nothing here.");
-                    Thread.Sleep(400); // Brief pause
-                }
-            }
+            dungeonMoved = game.MoveNorth();
+            dungeonDirection = "North";
         }
-        else if (key == ConsoleKey.D)
+        else if (key == ConsoleKey.S || key == ConsoleKey.DownArrow)
         {
-            game.DescendDungeon();
-            ui.AddMessage($"⬇️  Descended to Depth {game.DungeonDepth}!");
-            ui.RenderStatusBar(game);
-            Thread.Sleep(600); // Going deeper...
+            dungeonMoved = game.MoveSouth();
+            dungeonDirection = "South";
+        }
+        else if (key == ConsoleKey.E || key == ConsoleKey.RightArrow)
+        {
+            dungeonMoved = game.MoveEast();
+            dungeonDirection = "East";
+        }
+        else if (key == ConsoleKey.W || key == ConsoleKey.LeftArrow)
+        {
+            dungeonMoved = game.MoveWest();
+            dungeonDirection = "West";
+        }
+        else if (key == ConsoleKey.P)
+        {
+            if (game.UsePotion())
+            {
+                ui.AddMessage("🧪 Used potion! +5 HP");
+                ui.RenderStatusBar(game);
+                Thread.Sleep(600);
+            }
+            else ui.AddMessage("No potions!");
         }
         else if (key == ConsoleKey.X)
         {
@@ -365,7 +297,108 @@ while (playing)
             ui.RenderStatusBar(game);
             ui.RenderMap(game);
             ui.RenderCommandBar(false);
-            Thread.Sleep(500); // Return to surface
+            Thread.Sleep(500);
+        }
+
+        if (dungeonMoved)
+        {
+            ui.AddMessage($"Explored {dungeonDirection}");
+            ui.RenderStatusBar(game);
+            ui.RenderMap(game); // Update dungeon view
+
+            // Check for encounters/events in dungeons
+            int eventRoll = _random.Next(100);
+            if (eventRoll < 30) // 30% chance for something to happen
+            {
+                int encounterType = _random.Next(3);
+                if (encounterType == 0) // Monster
+                {
+                    game.TriggerDungeonCombat();
+                    ui.AddMessage($"👹 {game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
+                    Thread.Sleep(800);
+
+                    while (!game.CombatEnded && playing)
+                    {
+                        ui.RenderCombat(game);
+                        var combatKey = Console.ReadKey(intercept: true).Key;
+
+                        if (combatKey == ConsoleKey.P && game.UsePotion())
+                        {
+                            ui.AddMessage("🧪 +5 HP");
+                            ui.RenderStatusBar(game);
+                            Thread.Sleep(600);
+                            continue;
+                        }
+
+                        if (combatKey == ConsoleKey.F)
+                        {
+                            bool fled = game.AttemptFlee();
+                            ui.AddMessage(game.CombatLog);
+                            ui.RenderStatusBar(game);
+                            Thread.Sleep(fled ? 600 : 800);
+                            if (fled)
+                            {
+                                ui.RenderMap(game);
+                                break;
+                            }
+                            if (game.PlayerHP <= 0)
+                            {
+                                ui.AddMessage("💀 GAME OVER!");
+                                Thread.Sleep(1200);
+                                playing = false;
+                                break;
+                            }
+                            continue;
+                        }
+
+                        var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
+                        game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
+                        ui.AddMessage(game.CombatLog);
+                        Thread.Sleep(900);
+
+                        if (game.CombatEnded)
+                        {
+                            game.ProcessGameLoopVictory();
+                            if (game.IsWon)
+                            {
+                                ui.AddMessage("✅ Victory!");
+                                ui.RenderStatusBar(game);
+                                Thread.Sleep(1000);
+                                ui.RenderMap(game);
+                            }
+                            else
+                            {
+                                ui.AddMessage("💀 GAME OVER!");
+                                Thread.Sleep(1500);
+                                playing = false;
+                            }
+                        }
+                        ui.RenderStatusBar(game);
+                    }
+                }
+                else if (encounterType == 1) // Treasure
+                {
+                    int gold = game.RollForTreasure(game.DungeonDepth);
+                    ui.AddMessage($"💎 TREASURE! Found {gold} gold!");
+                    ui.RenderStatusBar(game);
+                    Thread.Sleep(800);
+                }
+                else // Trap
+                {
+                    int dmg = game.TriggerTrap();
+                    ui.AddMessage($"💥 TRAP! Took {dmg} damage!");
+                    ui.RenderStatusBar(game);
+                    Thread.Sleep(900);
+                }
+            }
+        }
+        else if (key == ConsoleKey.N || key == ConsoleKey.S || key == ConsoleKey.E || key == ConsoleKey.W ||
+                 key == ConsoleKey.UpArrow || key == ConsoleKey.DownArrow ||
+                 key == ConsoleKey.LeftArrow || key == ConsoleKey.RightArrow)
+        {
+            // Tried to move but hit a wall
+            ui.AddMessage("🧱 Wall blocks your path!");
+            Thread.Sleep(300);
         }
     }
 }

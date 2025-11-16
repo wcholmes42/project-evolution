@@ -463,3 +463,20 @@
 [09:57:55] DUMP: 
 [09:57:55] DUMP: ═══════════════════════════════════════════════════════
 [09:57:55] DUMP: 
+[10:12:16] GAME: Project Evolution started!
+[10:12:16] INIT: Player spawned at (10,10)
+[10:12:22] MOVE: East to (11,10) - Grassland (-1 turns)
+[10:12:22] MOVE: South to (11,11) - Grassland (-1 turns)
+[10:12:24] MOVE: South to (11,12) - Grassland (-1 turns)
+[10:12:25] MOVE: South to (11,13) - Forest (-2 turns)
+[10:12:25] ENCOUNTER: Random encounter at (11,13)
+[10:12:26] COMBAT: Fighting Goblin Warrior [Lvl1] HP:6
+[10:12:30] DAMAGE: Player took 1 damage. HP: 9/10
+[10:12:30] COMBAT_ROUND: Hit 2! Goblin Warrior CRIT 1! 
+[10:12:32] DAMAGE: Player took 1 damage. HP: 8/10
+[10:12:32] COMBAT_ROUND: Hit 2! Goblin Warrior 1! 
+[10:12:33] COMBAT_ROUND: Hit 2! Goblin Warrior misses! Victory! +10g +25xp!
+[10:12:34] VICTORY: Defeated Goblin Warrior. XP: 25
+[10:12:36] MOVE: West to (10,13) - Grassland (-1 turns)
+[10:12:36] MOVE: South to (10,14) - Forest (-2 turns)
+[10:12:38] MOVE: South to (10,15) - Dungeon (-1 turns)

@@ -318,7 +318,7 @@ public class UIRenderer
         else
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write("[R] Roll Room  [D] Descend  [X] Exit Dungeon  [P] Use Potion");
+            Console.Write("[N/S/E/W] Move  [X] Exit Dungeon  [P] Use Potion  [Q] Quit");
         }
         Console.ResetColor();
     }
