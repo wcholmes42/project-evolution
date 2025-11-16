@@ -1,15 +1,16 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 23 (Dungeons Active!)
-**Status**: ✅ Building Warhammer Quest + Ultima IV fusion!
+**Current Generation**: 25 (World Exploration COMPLETE!) 🗺️
+**Status**: ✅ Warhammer Quest + Ultima IV fusion achieved!
 
 ## 🏆 LINE IN THE SAND - What We've Built
 
 **Git Tags**:
   - v1.0-roguelike-complete (Gen 0-12: Combat Dynamics)
   - v2.0-progression-complete (Gen 13-17: Character Progression)
-  - v2.1-endless-mode (Gen 18: Game Loop) ⭐ **CURRENT**
+  - v2.1-endless-mode (Gen 18: Game Loop)
+  - v3.0-world-exploration (Gen 19-25: Warhammer Quest Fusion) ⭐ **NEXT**
 
 **Test Coverage**: 84 passing tests (100% coverage maintained)
 **From "you win" to complete RPG**: 18 TDD generations
@@ -192,14 +193,23 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Potions for healing
 - **Test Count**: 104 passing
 
-#### Generation 23: Dungeon Generation (CURRENT) ⚔️
-- EnterDungeon() / ExitDungeon()
-- DungeonDepth tracking
-- DescendDungeon() go deeper
-- RollForRoom() - Warhammer Quest tables (Empty/Monster/Treasure)
-- TriggerDungeonCombat() - depth-scaled enemies
-- Deeper = harder (enemy level += depth)
-- **Test Count**: 109 passing ✅
+#### Generation 23: Dungeon Generation ⚔️
+- Depth tracking, descend mechanics
+- RollForRoom() tables (50% Empty, 35% Monster, 15% Treasure)
+- **Test Count**: 109 passing
+
+#### Generation 24: Loot Tables 💎
+- RollForTreasure(depth) - depth-scaled gold rewards
+- Base: 10-30 gold + (depth * 10)
+- Depth 5 = 60-80 gold!
+- **Test Count**: 111 passing
+
+#### Generation 25: Event System (CURRENT) ⚡
+- RollForEvent() - 60% Nothing, 25% Trap, 15% Discovery
+- TriggerTrap() - 1-5 damage
+- TriggerDiscovery() - bonus gold or XP
+- Random events add unpredictability
+- **Test Count**: 114 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 

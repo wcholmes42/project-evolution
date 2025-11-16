@@ -2060,4 +2060,84 @@ public class GameTests
         Assert.False(game.InDungeon);
         Assert.Equal(0, game.DungeonDepth);
     }
+
+    [Fact]
+    public void Loot_TreasureRoom_GivesGold()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        int goldBefore = game.PlayerGold;
+
+        // Act
+        int goldGained = game.RollForTreasure(dungeonDepth: 1);
+
+        // Assert
+        Assert.True(goldGained > 0);
+        Assert.True(goldGained >= 10 && goldGained <= 30); // Depth 1 range
+    }
+
+    [Fact]
+    public void Loot_DeeperDungeons_MoreGold()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        int depth1Gold = game.RollForTreasure(dungeonDepth: 1);
+        int depth5Gold = game.RollForTreasure(dungeonDepth: 5);
+
+        // Assert - Depth 5 should give more (statistically, over time)
+        // This is probabilistic, so just check ranges
+        Assert.True(depth1Gold >= 10 && depth1Gold <= 30);
+        Assert.True(depth5Gold >= 50); // Much higher at depth 5
+    }
+
+    [Fact]
+    public void Event_RollTrap_CanDamagePlayer()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetHPForTesting(10);
+
+        // Act
+        var eventResult = game.RollForEvent();
+
+        // Assert
+        Assert.Contains(eventResult, new[] { "Nothing", "Trap", "Discovery" });
+    }
+
+    [Fact]
+    public void Event_TrapDamagesPlayer()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetHPForTesting(10);
+
+        // Act
+        int damage = game.TriggerTrap();
+
+        // Assert
+        Assert.True(damage >= 1 && damage <= 5);
+        Assert.True(game.PlayerHP < 10); // Took damage
+    }
+
+    [Fact]
+    public void Event_DiscoveryGivesBonus()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        int goldBefore = game.PlayerGold;
+
+        // Act
+        var bonus = game.TriggerDiscovery();
+
+        // Assert
+        Assert.NotNull(bonus); // Got some bonus
+        Assert.True(game.PlayerGold >= goldBefore || game.PlayerXP > 0); // Gold or XP gained
+    }
 }

@@ -2290,4 +2290,48 @@ public class RPGGame
         CombatEnded = false;
         CombatLog = $"A monster lurks in the darkness (Depth {DungeonDepth})!";
     }
+
+    public int RollForTreasure(int dungeonDepth)
+    {
+        // Loot tables - deeper dungeons give more gold
+        int baseGold = 10 + (_random.Next(3) * 10); // 10-30 base
+        int depthBonus = dungeonDepth * 10; // +10 per depth
+        int totalGold = baseGold + depthBonus;
+        PlayerGold += totalGold;
+        return totalGold;
+    }
+
+    public string RollForEvent()
+    {
+        // Event table
+        int roll = _random.Next(100);
+        if (roll < 60) return "Nothing";    // 60% nothing
+        if (roll < 85) return "Trap";       // 25% trap
+        return "Discovery";                  // 15% discovery
+    }
+
+    public int TriggerTrap()
+    {
+        int damage = _random.Next(1, 6); // 1-5 damage
+        PlayerHP = Math.Max(0, PlayerHP - damage);
+        return damage;
+    }
+
+    public string TriggerDiscovery()
+    {
+        // Discovery can give gold or XP
+        int roll = _random.Next(2);
+        if (roll == 0)
+        {
+            int goldFound = _random.Next(10, 31); // 10-30 gold
+            PlayerGold += goldFound;
+            return $"Found {goldFound} gold!";
+        }
+        else
+        {
+            int xpGained = _random.Next(10, 21); // 10-20 XP
+            PlayerXP += xpGained;
+            return $"Gained {xpGained} XP!";
+        }
+    }
 }
