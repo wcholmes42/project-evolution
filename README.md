@@ -10,11 +10,12 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 1
+## Current State - Generation 2
 
-A game of chance:
-- Flip a coin
-- Heads you win, tails you lose
+Simple combat with player choice:
+- Face a weak goblin in combat
+- Choose to Attack or Defend
+- Attack defeats the enemy, Defend lets it escape
 
 ## Running the Game
 
@@ -43,7 +44,13 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 1 (Current)
+### Generation 2 (Current)
+- [x] Combat encounter with a weak goblin
+- [x] Player choice: Attack or Defend
+- [x] Attack = win, Defend = lose
+- [x] First player agency in the game
+
+### Generation 1
 - [x] Random coin flip determines outcome
 - [x] Can win or lose
 
