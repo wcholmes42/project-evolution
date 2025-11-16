@@ -526,4 +526,94 @@ public class GameTests
         Assert.False(game.IsWon);
         Assert.Equal(0, game.PlayerHP);
     }
+
+    [Fact]
+    public void Stats_PlayerStartsWithDefaultStats()
+    {
+        // Arrange
+        var game = new RPGGame();
+
+        // Act
+        game.StartCombatWithStats();
+
+        // Assert
+        Assert.Equal(1, game.PlayerStrength);
+        Assert.Equal(0, game.PlayerDefense);
+    }
+
+    [Fact]
+    public void Stats_HigherStrength_DealsMoreDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStats();
+        game.SetPlayerStats(strength: 3, defense: 0);
+
+        // Act
+        game.ExecuteStatsCombatRound(CombatAction.Attack, CombatAction.Attack);
+
+        // Assert - Enemy should take 3 damage instead of 1
+        Assert.Equal(0, game.EnemyHP); // 3 HP - 3 damage = 0
+    }
+
+    [Fact]
+    public void Stats_Defense_ReducesDamageTaken()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStats();
+        game.SetPlayerStats(strength: 1, defense: 2);
+
+        // Act - Enemy attacks, player has 2 defense
+        game.ExecuteStatsCombatRound(CombatAction.Defend, CombatAction.Attack);
+
+        // Assert - Player defended so takes 0 damage
+        Assert.Equal(10, game.PlayerHP);
+
+        // Now player doesn't defend
+        game.ExecuteStatsCombatRound(CombatAction.Attack, CombatAction.Attack);
+
+        // Enemy deals 1 damage, player has 2 defense = max(1, 1-2) = 1 minimum damage
+        Assert.Equal(9, game.PlayerHP); // Still takes at least 1 damage
+    }
+
+    [Fact]
+    public void Stats_DefeatEnemyWithHighStrength_Faster()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithStats();
+        game.SetPlayerStats(strength: 5, defense: 0);
+
+        // Act - One attack should kill enemy (5 damage > 3 HP)
+        game.ExecuteStatsCombatRound(CombatAction.Attack, CombatAction.Attack);
+
+        // Assert
+        Assert.Equal(0, game.EnemyHP);
+        Assert.True(game.CombatEnded);
+        Assert.True(game.IsWon);
+    }
+
+    [Fact]
+    public void Stats_MultiEnemyWithStats_GoldAndHP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartMultiEnemyCombatWithStats(enemyCount: 2);
+        game.SetPlayerStats(strength: 2, defense: 1);
+
+        // Act - Defeat both enemies
+        // Enemy 1: 3 HP, player 2 strength = 2 attacks needed
+        game.ExecuteStatsMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // E:1, P:9 (1 damage after 1 defense)
+        game.ExecuteStatsMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // E:0->3 (next enemy), P:8
+
+        // Enemy 2
+        game.ExecuteStatsMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // E:1, P:7
+        game.ExecuteStatsMultiEnemyRound(CombatAction.Attack, CombatAction.Attack); // E:0, P:6
+
+        // Assert
+        Assert.True(game.IsWon);
+        Assert.Equal(20, game.PlayerGold); // 2 enemies * 10 gold
+        Assert.Equal(6, game.PlayerHP); // Took 4 damage total (1 per round)
+    }
 }

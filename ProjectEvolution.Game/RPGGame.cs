@@ -14,6 +14,8 @@ public class RPGGame
     public bool CombatEnded { get; private set; }
     public int PlayerGold { get; private set; }
     public int RemainingEnemies { get; private set; }
+    public int PlayerStrength { get; private set; } = 1;
+    public int PlayerDefense { get; private set; } = 0;
 
     public void Start()
     {
@@ -370,6 +372,196 @@ public class RPGGame
             else if (enemyDefends && playerAttacks)
             {
                 CombatLog += "The goblin blocks your attack!";
+            }
+        }
+    }
+
+    public void SetPlayerStats(int strength, int defense)
+    {
+        PlayerStrength = strength;
+        PlayerDefense = defense;
+    }
+
+    public void StartCombatWithStats()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        EnemyHP = 3;
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // Stats and gold persist
+    }
+
+    public void ExecuteStatsCombatRoundWithRandomEnemy(CombatAction playerAction)
+    {
+        CombatAction enemyAction = _random.Next(2) == 0 ? CombatAction.Attack : CombatAction.Defend;
+        ExecuteStatsCombatRound(playerAction, enemyAction);
+    }
+
+    public void ExecuteStatsCombatRound(CombatAction playerAction, CombatAction enemyAction)
+    {
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return;
+        }
+
+        CombatLog = string.Empty;
+
+        bool playerAttacks = playerAction == CombatAction.Attack;
+        bool playerDefends = playerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Player deals damage based on Strength
+        if (playerAttacks && !enemyDefends)
+        {
+            int damage = PlayerStrength;
+            EnemyHP = Math.Max(0, EnemyHP - damage);
+            CombatLog += $"You strike for {damage} damage! ";
+        }
+
+        // Enemy deals damage, reduced by player Defense
+        if (enemyAttacks && !playerDefends)
+        {
+            int enemyDamage = 1; // Enemy base damage
+            int actualDamage = Math.Max(1, enemyDamage - PlayerDefense); // Minimum 1 damage
+            PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+            CombatLog += $"The goblin strikes for {actualDamage} damage! ";
+        }
+
+        // Check combat end
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            PlayerGold += 10;
+            CombatLog += "Victory! +10 gold!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "You have been defeated!";
+        }
+        else
+        {
+            if (playerDefends && enemyDefends)
+            {
+                CombatLog += "Both fighters guard.";
+            }
+            else if (playerDefends && enemyAttacks)
+            {
+                CombatLog += "You block the attack!";
+            }
+            else if (enemyDefends && playerAttacks)
+            {
+                CombatLog += "The goblin blocks!";
+            }
+        }
+    }
+
+    public void StartMultiEnemyCombatWithStats(int enemyCount)
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        RemainingEnemies = enemyCount;
+        EnemyHP = 3;
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // Stats and gold persist
+    }
+
+    public void ExecuteStatsMultiEnemyRoundWithRandomEnemy(CombatAction playerAction)
+    {
+        CombatAction enemyAction = _random.Next(2) == 0 ? CombatAction.Attack : CombatAction.Defend;
+        ExecuteStatsMultiEnemyRound(playerAction, enemyAction);
+    }
+
+    public void ExecuteStatsMultiEnemyRound(CombatAction playerAction, CombatAction enemyAction)
+    {
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return;
+        }
+
+        CombatLog = string.Empty;
+
+        bool playerAttacks = playerAction == CombatAction.Attack;
+        bool playerDefends = playerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Player deals damage based on Strength
+        if (playerAttacks && !enemyDefends)
+        {
+            int damage = PlayerStrength;
+            EnemyHP = Math.Max(0, EnemyHP - damage);
+            CombatLog += $"You strike for {damage} damage! ";
+        }
+
+        // Enemy deals damage, reduced by player Defense
+        if (enemyAttacks && !playerDefends)
+        {
+            int enemyDamage = 1;
+            int actualDamage = Math.Max(1, enemyDamage - PlayerDefense);
+            PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+            CombatLog += $"The goblin strikes for {actualDamage} damage! ";
+        }
+
+        // Check if current enemy defeated
+        if (EnemyHP <= 0)
+        {
+            PlayerGold += 10;
+            RemainingEnemies--;
+            CombatLog += $"Goblin defeated! +10 gold! ";
+
+            if (RemainingEnemies > 0)
+            {
+                EnemyHP = 3;
+                CombatLog += $"Next goblin appears! ({RemainingEnemies} remaining)";
+            }
+            else
+            {
+                IsWon = true;
+                CombatEnded = true;
+                CombatLog += "All enemies defeated! Victory!";
+            }
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "You have been defeated!";
+        }
+        else
+        {
+            if (playerDefends && enemyDefends)
+            {
+                CombatLog += "Both guard.";
+            }
+            else if (playerDefends && enemyAttacks)
+            {
+                CombatLog += "You block!";
+            }
+            else if (enemyDefends && playerAttacks)
+            {
+                CombatLog += "Goblin blocks!";
             }
         }
     }
