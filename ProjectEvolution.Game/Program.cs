@@ -10,6 +10,7 @@ Console.WriteLine("║  [P] Play Game (Normal Mode)                             
 Console.WriteLine("║  [T] Manual Testing & Tuning (Interactive)                     ║");
 Console.WriteLine("║  [A] Automated Tuning (10 Cycles)                              ║");
 Console.WriteLine("║  [C] Continuous Tuning (Infinite - ESC to stop)                ║");
+Console.WriteLine("║  [G] Gradient Descent (Backpropagation - FAST!)                ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -34,6 +35,12 @@ else if (menuChoice == ConsoleKey.C)
 {
     // Run continuous tuning
     ContinuousTuner.RunContinuousTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.G)
+{
+    // Run gradient descent tuning
+    GradientTuner.RunGradientTuning();
     return;
 }
 else if (menuChoice == ConsoleKey.Q)

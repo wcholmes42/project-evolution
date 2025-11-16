@@ -3,14 +3,40 @@ namespace ProjectEvolution.Game;
 public class SimulationConfig
 {
     public int MobDetectionRange { get; set; } = 3;
-    public int MaxMobs { get; set; } = 20;
+    public int MaxMobs { get; set; } = 29; // AI-optimized
     public int MinMobs { get; set; } = 5;
-    public int PlayerStartHP { get; set; } = 10;
+    public int PlayerStartHP { get; set; } = 9; // AI-optimized
     public int PlayerStrength { get; set; } = 2;
     public int PlayerDefense { get; set; } = 1;
     public int EncounterRateMultiplier { get; set; } = 100; // Percentage
     public int SimulationSpeed { get; set; } = 100; // ms delay per turn
     public bool ShowVisuals { get; set; } = true;
+}
+
+// Floating point config for gradient descent
+public class FloatConfig
+{
+    public double MobDetectionRange { get; set; } = 3.0;
+    public double MaxMobs { get; set; } = 29.0;
+    public double MinMobs { get; set; } = 5.0;
+    public double PlayerStartHP { get; set; } = 9.0;
+    public double PlayerStrength { get; set; } = 2.0;
+    public double PlayerDefense { get; set; } = 1.0;
+
+    public SimulationConfig ToSimConfig()
+    {
+        return new SimulationConfig
+        {
+            MobDetectionRange = (int)Math.Round(MobDetectionRange),
+            MaxMobs = (int)Math.Round(MaxMobs),
+            MinMobs = (int)Math.Round(MinMobs),
+            PlayerStartHP = (int)Math.Round(PlayerStartHP),
+            PlayerStrength = (int)Math.Round(PlayerStrength),
+            PlayerDefense = (int)Math.Round(PlayerDefense),
+            ShowVisuals = false,
+            SimulationSpeed = 0
+        };
+    }
 }
 
 public class SimulationStats
