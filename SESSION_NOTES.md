@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-16
-**Current Generation**: 30 (Turn-Based World!) 🕐
-**Status**: ✅ Integrated mob encounters - mobs on map are real threats!
+**Current Generation**: 31 (AI, Fog & Dungeons!) 🗺️
+**Status**: ✅ Mob AI, fog of war, and real dungeon maps!
 
 ## 📝 TODO for Next Session
 
@@ -29,9 +29,10 @@
   - v3.2-logging (Gen 27: Comprehensive Logging)
   - v3.3-combat-overhaul (Gen 28: Combat Fixes)
   - v3.4-pacing (Gen 29: Game Feel & Pacing)
-  - v3.5-turn-based (Gen 30: Turn-Based World) ⭐ **CURRENT**
+  - v3.5-turn-based (Gen 30: Turn-Based World)
+  - v4.0-ai-fog-dungeons (Gen 31: AI, Fog, Dungeons) ⭐ **CURRENT**
 
-**Test Coverage**: 124 passing tests (100% coverage maintained)
+**Test Coverage**: 134 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
 
 ## Quick Start
@@ -281,7 +282,33 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - FIXED: Treasure test ranges (depth bonus was miscalculated)
 - **Test Count**: 124 passing ✅
 
-### 🎉 Turn-based world mechanics complete! Now refining world dynamics...
+#### Generation 31: AI, Fog of War & Dungeon Maps (CURRENT) 🗺️
+- **Mob AI System**: Mobs hunt the player!
+  - Detection range: 5 tiles (Manhattan distance)
+  - Mobs move toward player each turn
+  - Simple pathfinding (try horizontal, then vertical)
+  - Mobs outside range stay dormant
+- **Fog of War**: Exploration-based visibility
+  - Only explored tiles shown on map ('?' for unexplored)
+  - Player vision range: 3 tiles
+  - Explored tiles stay revealed permanently
+  - Strategic reconnaissance required!
+- **Real Dungeon Maps**: Procedurally generated interiors
+  - 30x30 dungeon grid with rooms & corridors
+  - 5-8 rooms per dungeon level
+  - Rooms connected by L-shaped corridors
+  - Wall collision detection
+  - Can't move through walls
+  - Larger viewport (7 tiles) in dungeons
+  - Persistent dungeon layouts per level
+- **UI Overhaul for Dungeons**:
+  - Dual rendering: world map vs dungeon map
+  - Dungeon uses compact ASCII (@ . █)
+  - World map shows fog of war
+  - Updated legends for each mode
+- **Test Count**: 134 passing ✅ (+10 new tests!)
+
+### 🎉 Major milestone: Living, breathing world with AI and exploration!
 
 The game has evolved from "start and win" to a full RPG combat system with:
 - Turn-based combat

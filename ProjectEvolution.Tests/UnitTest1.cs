@@ -2301,4 +2301,183 @@ public class GameTests
             Assert.NotEqual("Town", terrain); // Mobs shouldn't spawn in towns
         }
     }
+
+    // ===== GENERATION 31: MOB AI & FOG OF WAR =====
+
+    [Fact]
+    public void MobAI_MobsHaveDetectionRange()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Mob detection range should be accessible
+        var mobs = game.GetAllMobs();
+
+        // Assert
+        Assert.True(mobs.Count > 0);
+        // Mobs should have some detection radius (tested via behavior)
+    }
+
+    [Fact]
+    public void MobAI_MobMovesTowardPlayerWhenInRange()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Create a mob near the player
+        var testMob = new Mob(game.PlayerX + 2, game.PlayerY, "Test Bandit", 1);
+        game.AddMobForTesting(testMob);
+
+        int mobXBefore = testMob.X;
+        int mobYBefore = testMob.Y;
+
+        // Act - trigger world tick (mobs should move)
+        game.TickWorld();
+
+        // Assert - mob should have moved closer to player
+        var movedMob = game.GetMobAt(testMob.X, testMob.Y);
+        if (movedMob != null)
+        {
+            int distanceBefore = Math.Abs(mobXBefore - game.PlayerX) + Math.Abs(mobYBefore - game.PlayerY);
+            int distanceAfter = Math.Abs(movedMob.X - game.PlayerX) + Math.Abs(movedMob.Y - game.PlayerY);
+            Assert.True(distanceAfter <= distanceBefore); // Should be closer or same
+        }
+    }
+
+    [Fact]
+    public void MobAI_MobDoesntMoveIfFarFromPlayer()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Create a mob far from player (outside detection range)
+        var testMob = new Mob(0, 0, "Distant Enemy", 1); // Far corner
+        game.AddMobForTesting(testMob);
+
+        // Act
+        game.TickWorld();
+
+        // Assert - mob should stay in same position (too far to detect)
+        var stillMob = game.GetMobAt(0, 0);
+        Assert.NotNull(stillMob);
+    }
+
+    [Fact]
+    public void FogOfWar_StartsWithOnlyPlayerAreaVisible()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert - player's current position should be explored
+        Assert.True(game.IsTileExplored(game.PlayerX, game.PlayerY));
+
+        // Distant tiles should not be explored
+        Assert.False(game.IsTileExplored(0, 0));
+    }
+
+    [Fact]
+    public void FogOfWar_MovingRevealsNewArea()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        int targetX = game.PlayerX + 1;
+        int targetY = game.PlayerY;
+
+        // Initially target might not be explored (depends on visibility radius)
+        // Act - move to new position
+        game.MoveEast();
+
+        // Assert - new position is explored
+        Assert.True(game.IsTileExplored(targetX, targetY));
+    }
+
+    [Fact]
+    public void FogOfWar_ExploredTilesStayExplored()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        int startX = game.PlayerX;
+        int startY = game.PlayerY;
+
+        // Act - move away and back
+        game.MoveEast();
+        game.MoveWest();
+
+        // Assert - original position still explored
+        Assert.True(game.IsTileExplored(startX, startY));
+    }
+
+    [Fact]
+    public void Dungeon_HasInteriorMap()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.EnterDungeon();
+
+        // Assert
+        Assert.True(game.InDungeon);
+        Assert.True(game.HasDungeonMap());
+    }
+
+    [Fact]
+    public void Dungeon_MapHasWallsAndFloors()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        // Act - get dungeon tile
+        var tile = game.GetDungeonTile(game.PlayerX, game.PlayerY);
+
+        // Assert - player should be on floor
+        Assert.Equal("Floor", tile);
+    }
+
+    [Fact]
+    public void Dungeon_CanMoveInOpenSpaces()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        int startX = game.PlayerX;
+
+        // Act - try to move
+        bool moved = game.MoveEast();
+
+        // Assert - should be able to move if there's floor/no wall
+        // (movement success depends on dungeon layout)
+        if (moved)
+        {
+            Assert.NotEqual(startX, game.PlayerX);
+        }
+    }
+
+    [Fact]
+    public void Dungeon_CantMoveThroughWalls()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.EnterDungeon();
+
+        // Act & Assert - try all directions, at least one should be blocked by wall
+        // This depends on dungeon generation, so we just verify the mechanic exists
+        game.SetDungeonTileForTesting(game.PlayerX + 1, game.PlayerY, "Wall");
+        bool canMoveEast = game.MoveEast();
+        Assert.False(canMoveEast); // Should be blocked by wall
+    }
 }

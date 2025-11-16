@@ -120,6 +120,18 @@ public class UIRenderer
 
     public void RenderMap(RPGGame game)
     {
+        if (game.InDungeon)
+        {
+            RenderDungeonMap(game);
+        }
+        else
+        {
+            RenderWorldMap(game);
+        }
+    }
+
+    private void RenderWorldMap(RPGGame game)
+    {
         const int viewRadius = 3;
         int startRow = StatusBarHeight + 1;
 
@@ -137,9 +149,14 @@ public class UIRenderer
 
                 if (worldX < 0 || worldX >= game.WorldWidth || worldY < 0 || worldY >= game.WorldHeight)
                 {
-                    Console.Write("   "); // Out of bounds
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write(" · "); // Out of bounds
+                    Console.ResetColor();
                     continue;
                 }
+
+                // Fog of war - only show explored tiles
+                bool explored = game.IsTileExplored(worldX, worldY);
 
                 // Center is player
                 if (dx == 0 && dy == 0)
@@ -148,14 +165,14 @@ public class UIRenderer
                     Console.Write(" @ ");
                     Console.ResetColor();
                 }
-                // Check for mob
-                else if (game.IsMobAt(worldX, worldY))
+                // Check for mob (only if visible/explored)
+                else if (explored && game.IsMobAt(worldX, worldY))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write(" M ");
                     Console.ResetColor();
                 }
-                else
+                else if (explored)
                 {
                     // Get terrain at this position
                     string terrain = GetTerrainAtPosition(game, worldX, worldY);
@@ -173,12 +190,69 @@ public class UIRenderer
                     Console.Write($" {symbol} ");
                     Console.ResetColor();
                 }
+                else
+                {
+                    // Unexplored - fog of war
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write(" ? ");
+                    Console.ResetColor();
+                }
             }
         }
 
         // Legend
         Console.SetCursorPosition(2, startRow + 8);
-        Console.Write("Legend: @ = You  M = Mob  ■ = Town  Ω = Dungeon  ♣ = Forest  ▲ = Mountain");
+        Console.Write("Legend: @ = You  M = Mob  ? = Unexplored  ■ = Town  Ω = Dungeon          ");
+    }
+
+    private void RenderDungeonMap(RPGGame game)
+    {
+        const int viewRadius = 7; // Larger view in dungeons
+        int startRow = StatusBarHeight + 1;
+
+        for (int dy = -viewRadius; dy <= viewRadius; dy++)
+        {
+            int screenY = startRow + (dy + viewRadius);
+            if (screenY >= StatusBarHeight + MapViewHeight + 1) break;
+
+            Console.SetCursorPosition(2, screenY);
+            Console.Write(new string(' ', 76)); // Clear line
+            Console.SetCursorPosition(2, screenY);
+
+            for (int dx = -viewRadius; dx <= viewRadius; dx++)
+            {
+                int dungeonX = game.PlayerX + dx;
+                int dungeonY = game.PlayerY + dy;
+
+                // Center is player
+                if (dx == 0 && dy == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("@");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    string tile = game.GetDungeonTile(dungeonX, dungeonY);
+
+                    (char symbol, ConsoleColor color) = tile switch
+                    {
+                        "Floor" => ('.', ConsoleColor.DarkGray),
+                        "Wall" => ('█', ConsoleColor.Gray),
+                        "OutOfBounds" => (' ', ConsoleColor.Black),
+                        _ => (' ', ConsoleColor.Black)
+                    };
+
+                    Console.ForegroundColor = color;
+                    Console.Write(symbol);
+                    Console.ResetColor();
+                }
+            }
+        }
+
+        // Legend
+        Console.SetCursorPosition(2, startRow + 8);
+        Console.Write("Dungeon: @ = You  . = Floor  █ = Wall  [X] Exit                      ");
     }
 
     private string GetTerrainAtPosition(RPGGame game, int x, int y)

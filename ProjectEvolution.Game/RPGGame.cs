@@ -41,6 +41,12 @@ public class RPGGame
     public int DungeonDepth { get; private set; } = 0;
     public int WorldTurn { get; private set; } = 0;
     private List<Mob> _activeMobs = new List<Mob>();
+    private bool[,] _exploredTiles;
+    private const int MobDetectionRange = 5; // Mobs detect player within 5 tiles
+    private const int PlayerVisionRange = 3; // Player can see 3 tiles around
+    private string[,] _dungeonMap;
+    private int _dungeonWidth = 30;
+    private int _dungeonHeight = 30;
 
     public void Start()
     {
@@ -2116,14 +2122,54 @@ public class RPGGame
         WorldTurn = 0;
         GenerateWorld();
         SpawnMobs();
+        InitializeFogOfWar();
+        RevealAreaAroundPlayer();
+    }
+
+    private void InitializeFogOfWar()
+    {
+        _exploredTiles = new bool[WorldWidth, WorldHeight];
+        // All tiles start unexplored
+        for (int x = 0; x < WorldWidth; x++)
+        {
+            for (int y = 0; y < WorldHeight; y++)
+            {
+                _exploredTiles[x, y] = false;
+            }
+        }
+    }
+
+    private void RevealAreaAroundPlayer()
+    {
+        // Reveal area around player based on vision range
+        for (int dx = -PlayerVisionRange; dx <= PlayerVisionRange; dx++)
+        {
+            for (int dy = -PlayerVisionRange; dy <= PlayerVisionRange; dy++)
+            {
+                int x = PlayerX + dx;
+                int y = PlayerY + dy;
+
+                if (x >= 0 && x < WorldWidth && y >= 0 && y < WorldHeight)
+                {
+                    _exploredTiles[x, y] = true;
+                }
+            }
+        }
     }
 
     public bool MoveNorth()
     {
+        if (InDungeon)
+        {
+            return MoveDungeon(0, -1);
+        }
+
         if (PlayerY > 0)
         {
             PlayerY--;
             AdvanceTurnsByTerrain();
+            RevealAreaAroundPlayer();
+            TickWorld(); // Mobs move after player
             return true;
         }
         return false;
@@ -2131,10 +2177,17 @@ public class RPGGame
 
     public bool MoveSouth()
     {
+        if (InDungeon)
+        {
+            return MoveDungeon(0, 1);
+        }
+
         if (PlayerY < WorldHeight - 1)
         {
             PlayerY++;
             AdvanceTurnsByTerrain();
+            RevealAreaAroundPlayer();
+            TickWorld();
             return true;
         }
         return false;
@@ -2142,10 +2195,17 @@ public class RPGGame
 
     public bool MoveEast()
     {
+        if (InDungeon)
+        {
+            return MoveDungeon(1, 0);
+        }
+
         if (PlayerX < WorldWidth - 1)
         {
             PlayerX++;
             AdvanceTurnsByTerrain();
+            RevealAreaAroundPlayer();
+            TickWorld();
             return true;
         }
         return false;
@@ -2153,13 +2213,38 @@ public class RPGGame
 
     public bool MoveWest()
     {
+        if (InDungeon)
+        {
+            return MoveDungeon(-1, 0);
+        }
+
         if (PlayerX > 0)
         {
             PlayerX--;
             AdvanceTurnsByTerrain();
+            RevealAreaAroundPlayer();
+            TickWorld();
             return true;
         }
         return false;
+    }
+
+    private bool MoveDungeon(int dx, int dy)
+    {
+        int newX = PlayerX + dx;
+        int newY = PlayerY + dy;
+
+        if (newX < 0 || newX >= _dungeonWidth || newY < 0 || newY >= _dungeonHeight)
+            return false;
+
+        string tile = _dungeonMap[newX, newY];
+        if (tile == "Wall")
+            return false;
+
+        PlayerX = newX;
+        PlayerY = newY;
+        WorldTurn++;
+        return true;
     }
 
     private void AdvanceTurnsByTerrain()
@@ -2314,12 +2399,97 @@ public class RPGGame
     {
         InDungeon = true;
         DungeonDepth = 1;
+        GenerateDungeonMap();
+
+        // Place player on first floor tile (guaranteed to exist)
+        for (int x = 0; x < _dungeonWidth; x++)
+        {
+            for (int y = 0; y < _dungeonHeight; y++)
+            {
+                if (_dungeonMap[x, y] == "Floor")
+                {
+                    PlayerX = x;
+                    PlayerY = y;
+                    return;
+                }
+            }
+        }
+    }
+
+    private void GenerateDungeonMap()
+    {
+        _dungeonMap = new string[_dungeonWidth, _dungeonHeight];
+
+        // Fill with walls
+        for (int x = 0; x < _dungeonWidth; x++)
+        {
+            for (int y = 0; y < _dungeonHeight; y++)
+            {
+                _dungeonMap[x, y] = "Wall";
+            }
+        }
+
+        // Carve out rooms and corridors
+        CarveRooms();
+    }
+
+    private void CarveRooms()
+    {
+        // Simple room generation: create 5-8 rectangular rooms
+        int roomCount = _random.Next(5, 9);
+        List<(int x, int y, int width, int height)> rooms = new List<(int, int, int, int)>();
+
+        for (int i = 0; i < roomCount; i++)
+        {
+            int width = _random.Next(4, 8);
+            int height = _random.Next(4, 8);
+            int x = _random.Next(1, _dungeonWidth - width - 1);
+            int y = _random.Next(1, _dungeonHeight - height - 1);
+
+            // Carve room
+            for (int rx = x; rx < x + width; rx++)
+            {
+                for (int ry = y; ry < y + height; ry++)
+                {
+                    _dungeonMap[rx, ry] = "Floor";
+                }
+            }
+
+            rooms.Add((x, y, width, height));
+
+            // Connect to previous room with corridor
+            if (i > 0)
+            {
+                var prevRoom = rooms[i - 1];
+                int prevCenterX = prevRoom.x + prevRoom.width / 2;
+                int prevCenterY = prevRoom.y + prevRoom.height / 2;
+                int currCenterX = x + width / 2;
+                int currCenterY = y + height / 2;
+
+                // Horizontal corridor
+                int startX = Math.Min(prevCenterX, currCenterX);
+                int endX = Math.Max(prevCenterX, currCenterX);
+                for (int cx = startX; cx <= endX; cx++)
+                {
+                    _dungeonMap[cx, prevCenterY] = "Floor";
+                }
+
+                // Vertical corridor
+                int startY = Math.Min(prevCenterY, currCenterY);
+                int endY = Math.Max(prevCenterY, currCenterY);
+                for (int cy = startY; cy <= endY; cy++)
+                {
+                    _dungeonMap[currCenterX, cy] = "Floor";
+                }
+            }
+        }
     }
 
     public void ExitDungeon()
     {
         InDungeon = false;
         DungeonDepth = 0;
+        _dungeonMap = null;
     }
 
     public void DescendDungeon()
@@ -2490,12 +2660,99 @@ public class RPGGame
         CombatLog = $"Encountered {mob.Name} [Level {mob.Level}]!";
     }
 
+    // ===== GENERATION 31: MOB AI, FOG OF WAR, DUNGEON MAPS =====
+
+    public void TickWorld()
+    {
+        // Mobs AI: move toward player if in detection range
+        foreach (var mob in _activeMobs.ToList()) // ToList to avoid modification during iteration
+        {
+            int distance = Math.Abs(mob.X - PlayerX) + Math.Abs(mob.Y - PlayerY);
+
+            if (distance <= MobDetectionRange && distance > 0)
+            {
+                // Move toward player
+                int dx = 0, dy = 0;
+
+                if (mob.X < PlayerX) dx = 1;
+                else if (mob.X > PlayerX) dx = -1;
+
+                if (mob.Y < PlayerY) dy = 1;
+                else if (mob.Y > PlayerY) dy = -1;
+
+                // Try to move (prefer moving in one direction)
+                int newX = mob.X + dx;
+                int newY = mob.Y;
+
+                // Check if target position is valid and empty
+                if (newX >= 0 && newX < WorldWidth && newY >= 0 && newY < WorldHeight &&
+                    !IsMobAt(newX, newY))
+                {
+                    mob.X = newX;
+                }
+                else
+                {
+                    // Try vertical movement instead
+                    newX = mob.X;
+                    newY = mob.Y + dy;
+
+                    if (newX >= 0 && newX < WorldWidth && newY >= 0 && newY < WorldHeight &&
+                        !IsMobAt(newX, newY))
+                    {
+                        mob.Y = newY;
+                    }
+                }
+            }
+        }
+    }
+
+    public bool IsTileExplored(int x, int y)
+    {
+        if (x < 0 || x >= WorldWidth || y < 0 || y >= WorldHeight)
+            return false;
+
+        if (_exploredTiles == null)
+            return false;
+
+        return _exploredTiles[x, y];
+    }
+
+    public bool HasDungeonMap()
+    {
+        return _dungeonMap != null;
+    }
+
+    public string GetDungeonTile(int x, int y)
+    {
+        if (!InDungeon || _dungeonMap == null)
+            return "None";
+
+        if (x < 0 || x >= _dungeonWidth || y < 0 || y >= _dungeonHeight)
+            return "OutOfBounds";
+
+        return _dungeonMap[x, y];
+    }
+
+
     // Testing helper methods
     public void SetTerrainForTesting(int x, int y, string terrain)
     {
         if (x >= 0 && x < WorldWidth && y >= 0 && y < WorldHeight)
         {
             _worldMap[x, y] = terrain;
+        }
+    }
+
+    public void AddMobForTesting(Mob mob)
+    {
+        _activeMobs.Add(mob);
+    }
+
+    public void SetDungeonTileForTesting(int x, int y, string tile)
+    {
+        if (_dungeonMap != null && x >= 0 && x < _dungeonWidth && y >= 0 && y < _dungeonHeight)
+        {
+            _dungeonMap[x, y] = tile;
         }
     }
 }

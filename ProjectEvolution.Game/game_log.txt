@@ -371,3 +371,16 @@
 [09:38:08] MOVE: North to (10,9) - Grassland (-1 turns)
 [09:38:08] ENCOUNTER: Random encounter at (10,9)
 [09:38:09] COMBAT: Fighting Goblin Scout [Lvl1] HP:2
+[09:50:31] GAME: Project Evolution started!
+[09:50:31] INIT: Player spawned at (10,10)
+[09:50:35] MOVE: East to (11,10) - Grassland (-1 turns)
+[09:50:36] MOVE: East to (12,10) - Grassland (-1 turns)
+[09:50:37] MOVE: North to (12,9) - Grassland (-1 turns)
+[09:50:39] MOVE: West to (11,9) - Grassland (-1 turns)
+[09:50:40] MOVE: South to (11,10) - Grassland (-1 turns)
+[09:50:40] MOVE: South to (11,11) - Grassland (-1 turns)
+[09:50:40] MOVE: South to (11,12) - Grassland (-1 turns)
+[09:50:41] MOVE: South to (11,13) - Forest (-2 turns)
+[09:50:42] MOVE: West to (10,13) - Grassland (-1 turns)
+[09:50:42] MOVE: South to (10,14) - Forest (-2 turns)
+[09:50:44] MOVE: South to (10,15) - Dungeon (-1 turns)
