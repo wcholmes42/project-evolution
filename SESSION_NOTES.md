@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 7 (FINAL)
-**Status**: ✅ Complete - All 7 generations implemented!
+**Current Generation**: 8
+**Status**: ✅ Ready to continue - Combat dynamics evolution in progress!
 
 ## Quick Start
 ```bash
@@ -67,7 +67,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Added RemainingEnemies property
 - Tests: `MultiEnemy_Start_PlayerFaces3Enemies`, `MultiEnemy_DefeatOneEnemy_CountDecreases`, `MultiEnemy_DefeatAllEnemies_PlayerWins`, `MultiEnemy_PlayerHPPersistsBetweenFights`, `MultiEnemy_PlayerDies_GameOver`
 
-#### Generation 7: Character Stats (FINAL)
+#### Generation 7: Character Stats
 - Added PlayerStrength and PlayerDefense properties
 - SetPlayerStats(strength, defense) to customize character
 - Strength determines damage dealt per attack
@@ -76,9 +76,18 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Stats work with all combat modes (single, loot, multi-enemy)
 - Default stats: Strength 1, Defense 0 (backward compatible)
 - Tests: `Stats_PlayerStartsWithDefaultStats`, `Stats_HigherStrength_DealsMoreDamage`, `Stats_Defense_ReducesDamageTaken`, `Stats_DefeatEnemyWithHighStrength_Faster`, `Stats_MultiEnemyWithStats_GoldAndHP`
-- **Final Test Count**: 35 passing
 
-### 🎉 Evolution Complete!
+#### Generation 8: Critical Hits & Misses (Current)
+- Added HitType enum (Normal, Critical, Miss)
+- 15% chance to miss (no damage dealt)
+- 15% chance to critical hit (2x damage!)
+- 70% chance for normal hit
+- DetermineHitType() handles RNG
+- Combat is now unpredictable - same fight can end differently
+- Tests: `CriticalHit_DoesDoubleDamage`, `Miss_DealsNoDamage`, `NormalHit_DealsNormalDamage`, `BothMiss_NoDamageDealt`, `CriticalHit_RandomRNG_CanOccur`
+- **Current Test Count**: 40 passing
+
+### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
 The game has evolved from "start and win" to a full RPG combat system with:
 - Turn-based combat

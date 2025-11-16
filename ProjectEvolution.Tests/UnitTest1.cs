@@ -616,4 +616,102 @@ public class GameTests
         Assert.Equal(20, game.PlayerGold); // 2 enemies * 10 gold
         Assert.Equal(6, game.PlayerHP); // Took 4 damage total (1 per round)
     }
+
+    [Fact]
+    public void CriticalHit_DoesDoubleDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithCrits();
+        game.SetPlayerStats(strength: 2, defense: 0);
+
+        // Act - Force a critical hit
+        game.ExecuteCritCombatRound(CombatAction.Attack, CombatAction.Attack,
+            playerHitType: HitType.Critical, enemyHitType: HitType.Normal);
+
+        // Assert - Critical does 2x damage: 2 * 2 = 4 damage
+        Assert.Equal(0, game.EnemyHP); // 3 - 4 = 0 (overkill)
+    }
+
+    [Fact]
+    public void Miss_DealsNoDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithCrits();
+
+        // Act - Force a miss
+        game.ExecuteCritCombatRound(CombatAction.Attack, CombatAction.Attack,
+            playerHitType: HitType.Miss, enemyHitType: HitType.Normal);
+
+        // Assert - Enemy takes no damage from miss
+        Assert.Equal(3, game.EnemyHP);
+        Assert.Equal(9, game.PlayerHP); // But enemy still hits player
+    }
+
+    [Fact]
+    public void NormalHit_DealsNormalDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithCrits();
+        game.SetPlayerStats(strength: 2, defense: 0);
+
+        // Act
+        game.ExecuteCritCombatRound(CombatAction.Attack, CombatAction.Attack,
+            playerHitType: HitType.Normal, enemyHitType: HitType.Normal);
+
+        // Assert - Normal damage
+        Assert.Equal(1, game.EnemyHP); // 3 - 2 = 1
+        Assert.Equal(9, game.PlayerHP); // 10 - 1 = 9
+    }
+
+    [Fact]
+    public void BothMiss_NoDamageDealt()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartCombatWithCrits();
+
+        // Act
+        game.ExecuteCritCombatRound(CombatAction.Attack, CombatAction.Attack,
+            playerHitType: HitType.Miss, enemyHitType: HitType.Miss);
+
+        // Assert - Both miss, no damage
+        Assert.Equal(3, game.EnemyHP);
+        Assert.Equal(10, game.PlayerHP);
+    }
+
+    [Fact]
+    public void CriticalHit_RandomRNG_CanOccur()
+    {
+        // Arrange & Act - Run many battles to verify crits can happen randomly
+        var critCount = 0;
+        var missCount = 0;
+        var normalCount = 0;
+
+        for (int i = 0; i < 200; i++)
+        {
+            var game = new RPGGame();
+            game.StartCombatWithCrits();
+            game.SetPlayerStats(strength: 1, defense: 0);
+
+            game.ExecuteCritCombatRoundWithRandomHits(CombatAction.Attack, CombatAction.Attack);
+
+            // Check what happened based on enemy HP
+            if (game.EnemyHP == 3) missCount++;      // Miss: 3 - 0 = 3
+            else if (game.EnemyHP == 2) normalCount++; // Normal: 3 - 1 = 2
+            else if (game.EnemyHP == 1) critCount++;   // Crit: 3 - 2 = 1
+        }
+
+        // Assert - Over 200 trials, should see all three outcomes
+        Assert.True(critCount > 0, "Should have some critical hits");
+        Assert.True(missCount > 0, "Should have some misses");
+        Assert.True(normalCount > 0, "Should have some normal hits");
+
+        // Roughly 15% crit, 15% miss, 70% normal
+        Assert.True(critCount > 10 && critCount < 60); // ~30 expected
+        Assert.True(missCount > 10 && missCount < 60); // ~30 expected
+        Assert.True(normalCount > 100); // ~140 expected
+    }
 }

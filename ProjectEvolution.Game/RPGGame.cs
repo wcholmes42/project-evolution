@@ -565,4 +565,132 @@ public class RPGGame
             }
         }
     }
+
+    public void StartCombatWithCrits()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        EnemyHP = 3;
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // Stats and gold persist
+    }
+
+    public void ExecuteCritCombatRoundWithRandomHits(CombatAction playerAction, CombatAction enemyAction)
+    {
+        HitType playerHit = DetermineHitType();
+        HitType enemyHit = DetermineHitType();
+        ExecuteCritCombatRound(playerAction, enemyAction, playerHit, enemyHit);
+    }
+
+    public void ExecuteCritCombatRound(CombatAction playerAction, CombatAction enemyAction,
+        HitType playerHitType, HitType enemyHitType)
+    {
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return;
+        }
+
+        CombatLog = string.Empty;
+
+        bool playerAttacks = playerAction == CombatAction.Attack;
+        bool playerDefends = playerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Player deals damage with hit/miss/crit mechanics
+        if (playerAttacks && !enemyDefends)
+        {
+            if (playerHitType == HitType.Miss)
+            {
+                CombatLog += "You swing and MISS! ";
+            }
+            else
+            {
+                int baseDamage = PlayerStrength;
+                int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
+                EnemyHP = Math.Max(0, EnemyHP - damage);
+
+                if (playerHitType == HitType.Critical)
+                {
+                    CombatLog += $"CRITICAL HIT! {damage} damage! ";
+                }
+                else
+                {
+                    CombatLog += $"You strike for {damage} damage! ";
+                }
+            }
+        }
+
+        // Enemy deals damage with hit/miss/crit mechanics
+        if (enemyAttacks && !playerDefends)
+        {
+            if (enemyHitType == HitType.Miss)
+            {
+                CombatLog += "The goblin misses! ";
+            }
+            else
+            {
+                int baseDamage = 1; // Enemy base damage
+                int damage = enemyHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
+                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+
+                if (enemyHitType == HitType.Critical)
+                {
+                    CombatLog += $"Goblin CRITICAL! {actualDamage} damage! ";
+                }
+                else
+                {
+                    CombatLog += $"Goblin hits for {actualDamage} damage! ";
+                }
+            }
+        }
+
+        // Check combat end
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            PlayerGold += 10;
+            CombatLog += "Victory! +10 gold!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "You have been defeated!";
+        }
+        else
+        {
+            if (playerDefends && enemyDefends)
+            {
+                CombatLog += "Both guard.";
+            }
+            else if (playerDefends && enemyAttacks)
+            {
+                CombatLog += "You block the attack!";
+            }
+            else if (enemyDefends && playerAttacks)
+            {
+                CombatLog += "The goblin blocks!";
+            }
+        }
+    }
+
+    private HitType DetermineHitType()
+    {
+        int roll = _random.Next(100);
+        if (roll < 15) return HitType.Miss;      // 0-14: 15% miss
+        if (roll < 30) return HitType.Critical;  // 15-29: 15% crit
+        return HitType.Normal;                    // 30-99: 70% normal
+    }
 }

@@ -10,15 +10,15 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 7 (FINAL)
+## Current State - Generation 8
 
-The complete RPG experience:
-- **Character Stats**: Strength 2, Defense 1
-- **Multi-Enemy Combat**: Face 3 goblins in sequence
-- **Strategic Depth**: Damage = Strength, Damage Reduction = Defense
-- **Resource Management**: HP persists, plan your attacks wisely
-- **Progression**: Earn 10 gold per goblin (30g total)
-- **Full RPG Loop**: Stats → Combat → Loot → Victory!
+RNG-Based Combat - Every Fight is Different:
+- **15% Miss Chance** - Attacks can whiff completely!
+- **15% Critical Hit** - 2x damage when RNG blesses you!
+- **70% Normal Hits** - Standard damage
+- **True Unpredictability**: Same fight, different outcome every time
+- **High Risk**: Miss twice? You might die. Crit twice? Easy victory!
+- The game is no longer a foregone conclusion!
 
 ## Running the Game
 
@@ -47,7 +47,15 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 7 (FINAL - Current)
+### Generation 8 (Current)
+- [x] Critical hit system (15% chance, 2x damage)
+- [x] Miss system (15% chance, no damage)
+- [x] RNG makes combat unpredictable
+- [x] HitType enum for combat outcomes
+- [x] Same fight can go completely different ways
+- [x] **40 tests, all passing**
+
+### Generation 7
 - [x] Character stats: Strength and Defense
 - [x] Customizable character with SetPlayerStats()
 - [x] Damage dealt = Strength value
