@@ -161,27 +161,55 @@ public class GradientTuner
                 EstimateGradients(config, delta, error);
             }
 
-            // Apply gradient descent with EXPLORATION
+            // Apply gradient descent with AGGRESSIVE EXPLORATION
             if (_cyclesRun > 2) // Need 2+ cycles to estimate gradients
             {
                 // Debug: log before adjustment
                 var beforeConfig = $"Det={config.MobDetectionRange:F1} Mobs={config.MaxMobs:F1} HP={config.PlayerStartHP:F1} Def={config.PlayerDefense:F1}";
 
-                // ADAPTIVE EXPLORATION: Vary jump size based on progress!
-                if (_cyclesRun % 10 == 0)
+                var random = new Random();
+
+                // MUCH MORE FREQUENT EXPLORATION: Every 3-5 cycles!
+                bool shouldExplore = (_cyclesRun % 3 == 0) ||
+                                   (_cyclesSinceImprovement > 2) ||
+                                   (Math.Abs(progressRate) < 0.3);
+
+                if (shouldExplore)
                 {
-                    var random = new Random();
+                    // AGGRESSIVE EXPLORATION with adaptive variance
+                    double exploreStrength = _mutationVariance * (1.0 + _cyclesSinceImprovement * 0.3);
 
-                    // Use mutation variance (increases when stuck, decreases when improving)
-                    int detJump = (int)(_mutationVariance * random.Next(-2, 3));
-                    int mobsJump = (int)(_mutationVariance * random.Next(-8, 9));
-                    int hpJump = (int)(_mutationVariance * random.Next(-3, 4));
-                    int defJump = (int)(_mutationVariance * random.Next(-1, 2));
+                    // Sometimes try COMPLETELY random config (10% chance)
+                    if (random.NextDouble() < 0.1)
+                    {
+                        config.MobDetectionRange = random.Next(2, 11);
+                        config.MaxMobs = random.Next(15, 61);
+                        config.PlayerStartHP = random.Next(3, 16);
+                        config.PlayerDefense = random.Next(0, 5);
 
-                    config.MobDetectionRange += detJump;
-                    config.MaxMobs += mobsJump;
-                    config.PlayerStartHP += hpJump;
-                    config.PlayerDefense += defJump;
+                        Console.SetCursorPosition(2, 28);
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        Console.Write("🎲 RANDOM RESTART - Full exploration!                                          ");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        // Big jumps scaled by how stuck we are
+                        int detJump = (int)(exploreStrength * random.Next(-3, 4));
+                        int mobsJump = (int)(exploreStrength * random.Next(-12, 13));
+                        int hpJump = (int)(exploreStrength * random.Next(-4, 5));
+                        int defJump = (int)(exploreStrength * random.Next(-2, 3));
+
+                        config.MobDetectionRange += detJump;
+                        config.MaxMobs += mobsJump;
+                        config.PlayerStartHP += hpJump;
+                        config.PlayerDefense += defJump;
+
+                        Console.SetCursorPosition(2, 28);
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Write($"🔍 EXPLORING: Jumps Det{detJump:+0;-0} Mobs{mobsJump:+0;-0} HP{hpJump:+0;-0} Def{defJump:+0;-0}                   ");
+                        Console.ResetColor();
+                    }
 
                     // Clamp with EXPANDED RANGES!
                     config.MobDetectionRange = Math.Clamp(config.MobDetectionRange, 2, 10);
@@ -192,6 +220,11 @@ public class GradientTuner
                 else
                 {
                     ApplyGradientDescent(config, error);
+
+                    Console.SetCursorPosition(2, 28);
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write("⚡ GRADIENT DESCENT - Following gradients                                    ");
+                    Console.ResetColor();
                 }
 
                 // Debug: log after adjustment
@@ -334,6 +367,7 @@ public class GradientTuner
         Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
         Console.WriteLine("║ PROGRESS TRACKING:                                                         ║");
         Console.WriteLine("║ SAVE STATUS:                                                               ║");
+        Console.WriteLine("║ STRATEGY:                                                                  ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════╝");
     }
 
