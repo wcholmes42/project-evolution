@@ -68,6 +68,15 @@ var game = new RPGGame();
 var logger = new GameLogger();
 var _random = new Random();
 
+// Load optimal config from tuning (if exists)
+var optimalConfig = ConfigPersistence.LoadOptimalConfig();
+if (optimalConfig != null)
+{
+    // Apply AI-tuned values to the game!
+    game.SetOptimalConfig(optimalConfig);
+    logger.LogEvent("CONFIG", $"Using AI-optimized settings: HP={optimalConfig.PlayerStartHP}, Det={optimalConfig.MobDetectionRange}, Mobs={optimalConfig.MaxMobs}");
+}
+
 logger.LogEvent("GAME", "Project Evolution started!");
 game.SetPlayerStats(strength: 2, defense: 1);
 game.StartWorldExploration();

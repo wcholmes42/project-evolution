@@ -10,7 +10,8 @@ public class AutoTuner
         Console.WriteLine("║           Press ESC anytime to abort all cycles                ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝\n");
 
-        var config = new SimulationConfig
+        // Load saved config or use defaults
+        var config = ConfigPersistence.LoadOptimalConfig() ?? new SimulationConfig
         {
             ShowVisuals = false, // Batch mode for speed
             MobDetectionRange = 3,  // AI-optimized ✅

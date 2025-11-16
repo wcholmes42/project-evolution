@@ -44,6 +44,9 @@ public class RandomSearchTuner
             {
                 bestScore = score;
                 bestConfig = config;
+
+                // Save to persist across runs!
+                ConfigPersistence.SaveOptimalConfig(config, stats, score, (i + 1) * 200);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"✨ NEW BEST! Iteration {i+1}: Score {score:F1}, Avg {avgTurns:F1} turns");
                 Console.WriteLine($"   Det={config.MobDetectionRange} Mobs={config.MaxMobs} HP={config.PlayerStartHP} STR={config.PlayerStrength} DEF={config.PlayerDefense}");

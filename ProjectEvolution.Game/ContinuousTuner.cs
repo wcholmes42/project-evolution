@@ -18,7 +18,9 @@ public class ContinuousTuner
         Console.Clear();
         Console.CursorVisible = false;
 
-        var config = new SimulationConfig
+        // Load saved config or use defaults
+        var savedConfig = ConfigPersistence.LoadOptimalConfig();
+        var config = savedConfig ?? new SimulationConfig
         {
             ShowVisuals = false,
             MobDetectionRange = 3,  // AI-optimized ✅
@@ -56,6 +58,9 @@ public class ContinuousTuner
                 _bestConfig = CloneConfig(config);
                 _bestStats = stats;
                 _bestCycleNumber = _cyclesRun;
+
+                // Save the best config to persist across runs!
+                ConfigPersistence.SaveOptimalConfig(config, stats, score, _cyclesRun * 20);
             }
 
             // Update display

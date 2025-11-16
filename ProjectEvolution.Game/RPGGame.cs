@@ -27,6 +27,8 @@ public class RPGGame
     public int AvailableStatPoints { get; private set; } = 0;
     public int EnemyLevel { get; private set; } = 1;
     public int MaxPlayerHP { get; private set; } = 9; // AI-optimized from 233K+ game simulations!
+    private int _configuredMaxMobs = 29; // Can be overridden by tuning results
+    private int _configuredMobDetection = 3; // Can be overridden
     public int CombatsWon { get; private set; } = 0;
     public bool RunEnded { get; private set; } = false;
     public int PlayerX { get; private set; } = 10;
@@ -42,13 +44,23 @@ public class RPGGame
     public int WorldTurn { get; private set; } = 0;
     private List<Mob> _activeMobs = new List<Mob>();
     private bool[,] _exploredTiles;
-    private const int MobDetectionRange = 3; // Mobs detect player within 3 tiles (AI-optimized!)
+    private int _mobDetectionRange = 3; // Mobs detect player (can be tuned!)
     private const int PlayerVisionRange = 3; // Player can see 3 tiles around
-    private const int MaxMobsInWorld = 29; // Cap on total mobs (AI-optimized from 233K+ games!)
+    private int _maxMobsInWorld = 29; // Cap on total mobs (can be tuned!)
     private const int MinMobsInWorld = 5;  // Minimum viable population
     private string[,] _dungeonMap;
     private int _dungeonWidth = 30;
     private int _dungeonHeight = 30;
+
+    public void SetOptimalConfig(SimulationConfig config)
+    {
+        // Apply tuning results to the game!
+        MaxPlayerHP = config.PlayerStartHP;
+        _maxMobsInWorld = config.MaxMobs;
+        _mobDetectionRange = config.MobDetectionRange;
+        PlayerStrength = config.PlayerStrength;
+        PlayerDefense = config.PlayerDefense;
+    }
 
     public void Start()
     {
@@ -2691,7 +2703,7 @@ public class RPGGame
         {
             int distance = Math.Abs(mob.X - PlayerX) + Math.Abs(mob.Y - PlayerY);
 
-            if (distance <= MobDetectionRange && distance > 0)
+            if (distance <= _mobDetectionRange && distance > 0)
             {
                 // Move toward player
                 int dx = 0, dy = 0;
@@ -2782,7 +2794,7 @@ public class RPGGame
         // Apply spawns (respect population limits)
         foreach (var (x, y) in spawnLocations)
         {
-            if (_activeMobs.Count < MaxMobsInWorld)
+            if (_activeMobs.Count < _maxMobsInWorld)
             {
                 EnemyType type = (EnemyType)_random.Next(3);
                 string name = type switch
