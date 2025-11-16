@@ -185,21 +185,25 @@ public class GradientTuner
 
         if (Math.Abs(error) > 2) // React to smaller errors
         {
+            // CRITICAL FIX: SIGNS WERE BACKWARDS!
+            // Positive error = too easy → need to make HARDER
+            // Negative error = too hard → need to make EASIER
+
             // MobDetection: Higher detection → harder → fewer turns
-            // INCREASED sensitivity (/10 → /3)
-            _gradients["MobDetection"] = alpha * (-error / 3.0) + (1 - alpha) * _gradients["MobDetection"];
+            // If too easy (+error): INCREASE detection (+ gradient)
+            _gradients["MobDetection"] = alpha * (+error / 3.0) + (1 - alpha) * _gradients["MobDetection"];
 
             // MaxMobs: More mobs → harder → fewer turns
-            // INCREASED sensitivity (/20 → /8)
-            _gradients["MaxMobs"] = alpha * (-error / 8.0) + (1 - alpha) * _gradients["MaxMobs"];
+            // If too easy (+error): INCREASE mobs (+ gradient)
+            _gradients["MaxMobs"] = alpha * (+error / 8.0) + (1 - alpha) * _gradients["MaxMobs"];
 
             // PlayerHP: More HP → easier → more turns
-            // INCREASED sensitivity (/5 → /2)
-            _gradients["PlayerHP"] = alpha * (error / 2.0) + (1 - alpha) * _gradients["PlayerHP"];
+            // If too easy (+error): DECREASE HP (- gradient)
+            _gradients["PlayerHP"] = alpha * (-error / 2.0) + (1 - alpha) * _gradients["PlayerHP"];
 
             // PlayerDefense: More defense → easier → more turns
-            // INCREASED sensitivity (/8 → /4)
-            _gradients["PlayerDefense"] = alpha * (error / 4.0) + (1 - alpha) * _gradients["PlayerDefense"];
+            // If too easy (+error): DECREASE defense (- gradient)
+            _gradients["PlayerDefense"] = alpha * (-error / 4.0) + (1 - alpha) * _gradients["PlayerDefense"];
         }
     }
 
