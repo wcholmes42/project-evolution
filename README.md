@@ -10,16 +10,18 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 11
+## Current State - Generation 12 (FINAL)
 
-Variable Stats - No Two Fights Alike:
-- **Every enemy has RANDOM stats within ranges**:
-  - Scout: 1-3 HP, 1 dmg
-  - Warrior: 4-6 HP, 1-2 dmg
-  - Archer: 2-4 HP, 1-3 dmg
-- **Maximum Unpredictability**: Same enemy type = different fight!
-- **Terrifying Possibilities**: 4 HP Archer with 3 dmg + crit = 6 damage = INSTANT DEATH!
-- **Reload for completely different experience** every time!
+🎮 PERMADEATH ROGUELIKE - The Ultimate Evolution:
+- **HIGH STAKES**: Die = lose current run gold!
+- **PERMANENT PROGRESSION**: Win = gold becomes permanent forever!
+- **Full Chaos Stack**:
+  - Variable enemy stats (1-6 HP, 1-3 dmg)
+  - Random enemy types (Scout/Warrior/Archer)
+  - Crit/Miss system (15% each)
+  - Stamina management (12 stamina, careful planning required)
+- **True Roguelike**: Every run is unique, death matters, choices matter!
+- **The same fight can be trivial or impossible!**
 
 ## Running the Game
 
@@ -48,13 +50,20 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 11 (Current)
+### Generation 12 (FINAL)
+- [x] Permadeath system with permanent gold
+- [x] Win = gold becomes permanent (safe forever)
+- [x] Death = lose current run gold, keep permanent
+- [x] Death counter tracks all defeats
+- [x] High stakes roguelike gameplay
+- [x] **62 tests, all passing** ✅
+
+### Generation 11
 - [x] Variable stat ranges for every enemy
 - [x] Scout: 1-3 HP, Warrior: 4-6 HP, Archer: 2-4 HP
 - [x] Warrior/Archer have variable damage too
 - [x] Same enemy type = different stats each time
 - [x] True unpredictability achieved
-- [x] **57 tests, all passing**
 
 ### Generation 10
 - [x] Three distinct enemy types

@@ -19,6 +19,8 @@ public class RPGGame
     public int PlayerStamina { get; private set; } = 12;
     public int EnemyDamage { get; private set; } = 1;
     public string EnemyName { get; private set; } = "Goblin";
+    public int PermanentGold { get; private set; } = 0;
+    public int DeathCount { get; private set; } = 0;
 
     public void Start()
     {
@@ -1166,6 +1168,178 @@ public class RPGGame
             {
                 CombatLog += $"{EnemyName} blocks!";
             }
+        }
+    }
+
+    public void StartPermadeathMode()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        PlayerStamina = 12;
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        PlayerGold = 0; // Reset current gold for new run
+        // PermanentGold, DeathCount, and Stats persist
+    }
+
+    public void StartNewPermadeathCombat()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        PlayerStamina = 12;
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // PlayerGold persists between victories until death
+        // PermanentGold, DeathCount, and Stats persist
+    }
+
+    public void ExecutePermadeathRoundWithRandomHits(CombatAction playerAction, CombatAction enemyAction)
+    {
+        HitType playerHit = DetermineHitType();
+        HitType enemyHit = DetermineHitType();
+        ExecutePermadeathRound(playerAction, enemyAction, playerHit, enemyHit);
+    }
+
+    public void ExecutePermadeathRound(CombatAction playerAction, CombatAction enemyAction,
+        HitType playerHitType, HitType enemyHitType)
+    {
+        // Same as ExecuteVariableStatsCombatRound but without gold handling in combat end
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return;
+        }
+
+        CombatLog = string.Empty;
+
+        // Check stamina
+        CombatAction actualPlayerAction = playerAction;
+        if (PlayerStamina < 3 && playerAction == CombatAction.Attack)
+        {
+            actualPlayerAction = CombatAction.Defend;
+            CombatLog += "No stamina! ";
+        }
+
+        // Deduct stamina
+        if (actualPlayerAction == CombatAction.Attack)
+        {
+            PlayerStamina = Math.Max(0, PlayerStamina - 3);
+        }
+        else
+        {
+            PlayerStamina = Math.Max(0, PlayerStamina - 1);
+        }
+
+        bool playerAttacks = actualPlayerAction == CombatAction.Attack;
+        bool playerDefends = actualPlayerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Player damage
+        if (playerAttacks && !enemyDefends)
+        {
+            if (playerHitType == HitType.Miss)
+            {
+                CombatLog += "MISS! ";
+            }
+            else
+            {
+                int baseDamage = PlayerStrength;
+                int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
+                EnemyHP = Math.Max(0, EnemyHP - damage);
+
+                if (playerHitType == HitType.Critical)
+                {
+                    CombatLog += $"CRIT {damage}! ";
+                }
+                else
+                {
+                    CombatLog += $"Hit {damage}! ";
+                }
+            }
+        }
+
+        // Enemy damage
+        if (enemyAttacks && !playerDefends)
+        {
+            if (enemyHitType == HitType.Miss)
+            {
+                CombatLog += $"{EnemyName} misses! ";
+            }
+            else
+            {
+                int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
+                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+
+                if (enemyHitType == HitType.Critical)
+                {
+                    CombatLog += $"{EnemyName} CRIT {actualDamage}! ";
+                }
+                else
+                {
+                    CombatLog += $"{EnemyName} {actualDamage}! ";
+                }
+            }
+        }
+
+        // Check combat end
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            PlayerGold += 10; // Add to current gold (not permanent yet)
+            CombatLog += "Victory! +10g!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "DEATH!";
+        }
+        else
+        {
+            if (playerDefends && enemyDefends)
+            {
+                CombatLog += "Guard.";
+            }
+            else if (playerDefends && enemyAttacks)
+            {
+                CombatLog += "Block!";
+            }
+            else if (enemyDefends && playerAttacks)
+            {
+                CombatLog += $"{EnemyName} blocks!";
+            }
+        }
+    }
+
+    public void CommitGoldOnVictory()
+    {
+        if (IsWon && CombatEnded)
+        {
+            PermanentGold = PlayerGold; // Make current gold permanent
+        }
+    }
+
+    public void HandlePermadeath()
+    {
+        if (!IsWon && CombatEnded)
+        {
+            DeathCount++;
+            PlayerGold = PermanentGold; // Reset to permanent gold (lose current run gold)
         }
     }
 }

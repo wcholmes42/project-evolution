@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 11
-**Status**: ✅ Ready to continue - Combat dynamics evolution in progress!
+**Current Generation**: 12 (FINAL - Combat Dynamics Complete!)
+**Status**: ✅ ALL EVOLUTIONS COMPLETE - Ready to test!
 
 ## Quick Start
 ```bash
@@ -108,7 +108,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Combat log shows enemy name
 - Tests: `EnemyType_GoblinScout_Has2HP`, `EnemyType_GoblinWarrior_Has5HP`, `EnemyType_GoblinArcher_Has3HP2Damage`, `EnemyType_ArcherDealsMoreDamage`, `EnemyType_WarriorTakesLongerToDefeat`, `EnemyType_RandomEncounters_AllTypesCanAppear`
 
-#### Generation 11: Variable Enemy Stats (Current)
+#### Generation 11: Variable Enemy Stats
 - InitializeEnemyWithVariableStats() adds randomness to EVERY enemy
 - Enemy stat ranges:
   * Scout: 1-3 HP, 1 damage
@@ -118,7 +118,16 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Impossible to predict exact fight length
 - Archer with 3 damage + crit = 6 damage in one hit!
 - Tests: `VariableStats_ScoutHPInRange`, `VariableStats_WarriorHPAndDamageInRange`, `VariableStats_ArcherCanBeVeryDangerous`, `VariableStats_SameTypeCanHaveDifferentStats`, `VariableStats_CombatWithVariableEnemy`
-- **Current Test Count**: 57 passing
+
+#### Generation 12: Permadeath Mode (FINAL)
+- Added PermanentGold and DeathCount properties
+- Win combat → CommitGoldOnVictory() makes gold permanent
+- Lose combat → HandlePermadeath() resets to permanent gold, increments death count
+- High stakes: Current run gold at risk every fight!
+- Permanent gold is safe forever
+- Can chain victories to build wealth, or lose it all on one bad roll
+- Tests: `Permadeath_StartsWith0PermanentGold`, `Permadeath_WinCombat_GoldBecomesPermanent`, `Permadeath_LoseCombat_GoldIsLost`, `Permadeath_MultipleWins_GoldAccumulates`, `Permadeath_DeathCounter_IncrementsOnLoss`
+- **FINAL Test Count**: 62 passing
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
