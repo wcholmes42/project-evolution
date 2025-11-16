@@ -183,6 +183,7 @@ while (playing)
                             logger.LogEvent("VICTORY", $"Defeated {game.EnemyName}. XP: {game.PlayerXP}");
                             ui.AddMessage("✅ Victory!");
                             ui.RenderStatusBar(game);
+                            ui.RenderMap(game); // Restore map view after combat
                         }
                         else
                         {
@@ -236,8 +237,16 @@ while (playing)
                             ui.AddMessage("💀 GAME OVER!");
                             playing = false;
                         }
+                        else
+                        {
+                            ui.AddMessage("✅ Victory!");
+                        }
                     }
                     ui.RenderStatusBar(game);
+                    if (game.CombatEnded && game.IsWon)
+                    {
+                        ui.RenderMap(game); // Restore map view after combat
+                    }
                 }
             }
             else if (roomType == "Treasure")

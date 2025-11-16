@@ -1,22 +1,24 @@
 # Project Evolution - Session Notes
 
-**Last Updated**: 2025-11-15
+**Last Updated**: 2025-11-16
 **Current Generation**: 28 (Combat Overhaul!) ⚔️
-**Status**: ✅ Fully playable with flee option and better combat UI!
+**Status**: ✅ Fully playable with flee option and better combat UI! Map rendering fixed!
 
 ## 📝 TODO for Next Session
-
-**UI Issue - High Priority:**
-- After combat ends (victory or flee), need to call `ui.RenderMap(game)` to restore map view
-- Currently combat display stays on screen
-- Player can't see the world map until next move
-- FIX: Add `ui.RenderMap(game)` after combat resolution in both encounter and dungeon combat blocks
 
 **Enhancements to Consider:**
 - Stamina regeneration (1 per turn in combat?)
 - Better visual indication when stamina runs out
 - Combat history/damage dealt tracking
 - Enemy AI patterns (aggressive vs defensive)
+
+## ✅ Recently Completed (2025-11-16)
+
+**UI Fix - Map Rendering:**
+- ✅ Fixed map not rendering after combat victory in world encounters
+- ✅ Fixed map not rendering after combat victory in dungeon battles
+- ✅ Added explicit victory message for dungeon combat
+- Now the map properly restores after all combat ends (victory or flee)
 
 ## 🏆 LINE IN THE SAND - What We've Built
 
