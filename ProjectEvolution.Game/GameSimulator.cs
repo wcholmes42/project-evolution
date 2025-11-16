@@ -104,22 +104,121 @@ public class GameSimulator
 
     public SimulationStats RunSimulation(int numberOfRuns)
     {
-        Console.WriteLine($"\n🎮 Starting {numberOfRuns} automated game runs...\n");
-        _abortAll = false;
-
-        for (int run = 0; run < numberOfRuns; run++)
+        if (_config.ShowVisuals)
         {
-            if (_abortAll)
-            {
-                Console.WriteLine($"\n⚠️ Aborted after {run} runs.");
-                break;
-            }
+            // Visual mode - run sequentially
+            Console.WriteLine($"\n🎮 Starting {numberOfRuns} automated game runs...\n");
+            _abortAll = false;
 
-            bool aborted = RunSingleGame(run + 1, numberOfRuns);
-            if (aborted)
+            for (int run = 0; run < numberOfRuns; run++)
             {
-                _abortAll = true;
+                if (_abortAll)
+                {
+                    Console.WriteLine($"\n⚠️ Aborted after {run} runs.");
+                    break;
+                }
+
+                bool aborted = RunSingleGame(run + 1, numberOfRuns);
+                if (aborted)
+                {
+                    _abortAll = true;
+                }
             }
+        }
+        else
+        {
+            // Headless mode - PARALLEL EXECUTION!
+            int cores = Environment.ProcessorCount;
+            Console.Write($"\r🚀 Parallel mode: {cores} cores × {numberOfRuns} runs... ");
+
+            // Thread-safe stats collection
+            var threadLocalStats = new object();
+
+            Parallel.For(0, numberOfRuns, new ParallelOptions { MaxDegreeOfParallelism = cores }, (run) =>
+            {
+                var game = new RPGGame();
+                game.SetPlayerStats(_config.PlayerStrength, _config.PlayerDefense);
+                game.StartWorldExploration();
+                var autoPlayer = new AutoPlayer(game);
+
+                int maxTurns = 500;
+                int turns = 0;
+                int combatRounds = 0;
+
+                while (autoPlayer.IsAlive && turns < maxTurns)
+                {
+                    if (game.CombatEnded == false && game.EnemyHP > 0)
+                    {
+                        combatRounds++;
+                        if (combatRounds > 50)
+                        {
+                            game.EndCombatStalemate();
+                            combatRounds = 0;
+                            continue;
+                        }
+
+                        if (autoPlayer.ShouldUsePotion()) { game.UsePotion(); combatRounds--; }
+                        else if (autoPlayer.ShouldFlee())
+                        {
+                            bool fled = game.AttemptFlee();
+                            autoPlayer.CombatsFled++;
+                            if (fled || game.PlayerHP <= 0) combatRounds = 0;
+                            if (game.PlayerHP <= 0) break;
+                        }
+                        else
+                        {
+                            game.ExecuteGameLoopRoundWithRandomHits(autoPlayer.DecideCombatAction(), CombatAction.Attack);
+                            if (game.CombatEnded)
+                            {
+                                game.ProcessGameLoopVictory();
+                                if (game.IsWon) autoPlayer.CombatsWon++;
+                                combatRounds = 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        combatRounds = 0;
+                        autoPlayer.PlayTurn();
+                        turns++;
+
+                        if (!game.InDungeon)
+                        {
+                            var mob = game.GetMobAt(game.PlayerX, game.PlayerY);
+                            if (mob != null)
+                            {
+                                game.TriggerMobEncounter(mob);
+                                continue;
+                            }
+                            else if (game.RollForEncounter())
+                            {
+                                game.TriggerEncounter();
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (game.PlayerHP <= 0) break;
+                }
+
+                // Collect stats (thread-safe)
+                lock (threadLocalStats)
+                {
+                    _stats.TotalRuns++;
+                    if (game.PlayerHP <= 0)
+                    {
+                        _stats.Deaths++;
+                        _stats.DeathReasons.Add($"Lvl{game.PlayerLevel} Turn{turns} vs {game.EnemyName}");
+                    }
+                    _stats.TotalTurns += turns;
+                    _stats.TotalCombatsWon += autoPlayer.CombatsWon;
+                    _stats.TotalGoldEarned += game.PlayerGold;
+                    _stats.MaxTurnsSurvived = Math.Max(_stats.MaxTurnsSurvived, turns);
+                    _stats.MaxLevel = Math.Max(_stats.MaxLevel, game.PlayerLevel);
+                }
+            });
+
+            Console.WriteLine("✅ Done!");
         }
 
         return _stats;

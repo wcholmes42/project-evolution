@@ -37,9 +37,9 @@ public class GradientTuner
         {
             _cyclesRun++;
 
-            // Run simulation
+            // Run simulation (PARALLEL for speed!)
             var simulator = new GameSimulator(config.ToSimConfig());
-            var stats = simulator.RunSimulation(30); // More samples for better gradient estimation
+            var stats = simulator.RunSimulation(100); // INCREASED: More samples, runs parallel!
 
             double avgTurns = stats.AverageTurnsPerRun;
             double error = avgTurns - _targetScore; // How far from ideal?
