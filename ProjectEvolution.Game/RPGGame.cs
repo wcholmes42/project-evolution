@@ -36,6 +36,7 @@ public class RPGGame
     private string[,] _worldMap;
     public bool InLocation { get; private set; } = false;
     public string CurrentLocation { get; private set; } = null;
+    public int PotionCount { get; private set; } = 0;
 
     public void Start()
     {
@@ -2206,4 +2207,43 @@ public class RPGGame
         CombatEnded = false;
         CombatLog = "You are ambushed!";
     }
+
+    public bool VisitInn()
+    {
+        const int innCost = 10;
+        if (PlayerGold >= innCost)
+        {
+            PlayerGold -= innCost;
+            PlayerHP = MaxPlayerHP;
+            return true;
+        }
+        return false;
+    }
+
+    public bool BuyPotion()
+    {
+        const int potionCost = 5;
+        if (PlayerGold >= potionCost)
+        {
+            PlayerGold -= potionCost;
+            PotionCount++;
+            return true;
+        }
+        return false;
+    }
+
+    public bool UsePotion()
+    {
+        if (PotionCount > 0)
+        {
+            PotionCount--;
+            PlayerHP = Math.Min(MaxPlayerHP, PlayerHP + 5);
+            return true;
+        }
+        return false;
+    }
+
+    // Test helpers
+    public void SetGoldForTesting(int gold) => PlayerGold = gold;
+    public void SetHPForTesting(int hp) => PlayerHP = hp;
 }

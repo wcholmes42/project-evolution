@@ -1912,4 +1912,73 @@ public class GameTests
         Assert.True(game.EnemyHP > 0); // Enemy exists
         Assert.NotNull(game.EnemyName); // Enemy has a name
     }
+
+    [Fact]
+    public void Town_VisitInn_HealsToFull()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetGoldForTesting(20); // Give enough gold
+        game.SetHPForTesting(5); // Damaged
+
+        // Act
+        bool healed = game.VisitInn();
+
+        // Assert
+        Assert.True(healed);
+        Assert.Equal(game.MaxPlayerHP, game.PlayerHP); // Full HP
+        Assert.Equal(10, game.PlayerGold); // Spent 10 gold
+    }
+
+    [Fact]
+    public void Town_InnCosts10Gold()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetGoldForTesting(5); // Not enough
+
+        // Act
+        bool healed = game.VisitInn();
+
+        // Assert
+        Assert.False(healed); // Can't afford
+    }
+
+    [Fact]
+    public void Town_BuyPotion_AddsToInventory()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetGoldForTesting(20);
+
+        // Act
+        bool bought = game.BuyPotion();
+
+        // Assert
+        Assert.True(bought);
+        Assert.Equal(1, game.PotionCount);
+        Assert.Equal(15, game.PlayerGold); // Potion costs 5
+    }
+
+    [Fact]
+    public void Town_UsePotion_Heals5HP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetGoldForTesting(20);
+        game.BuyPotion();
+        game.SetHPForTesting(5);
+
+        // Act
+        bool used = game.UsePotion();
+
+        // Assert
+        Assert.True(used);
+        Assert.Equal(0, game.PotionCount);
+        Assert.Equal(10, game.PlayerHP); // 5 + 5 healing
+    }
 }

@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 21 (Random Encounters Active!)
+**Current Generation**: 22 (Town Services Active!)
 **Status**: ✅ Building Warhammer Quest + Ultima IV fusion!
 
 ## 🏆 LINE IN THE SAND - What We've Built
@@ -181,13 +181,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - InLocation and CurrentLocation properties
 - **Test Count**: 96 passing
 
-#### Generation 21: Random Encounter Tables (CURRENT) 🎲
+#### Generation 21: Random Encounter Tables 🎲
 - Warhammer Quest style encounter rolling
-- RollForEncounter() based on terrain
 - Forest: 40% | Mountain: 30% | Grassland: 20%
 - Towns: 0% (safe zones)
-- TriggerEncounter() starts combat
-- **Test Count**: 100 passing ✅
+- **Test Count**: 100 passing
+
+#### Generation 22: Town Services (CURRENT) 🏪
+- VisitInn() - heal to full for 10 gold
+- BuyPotion() - 5 gold, +5 HP when used
+- UsePotion() - consume from inventory
+- PotionCount property tracks inventory
+- Gold-based economy
+- **Test Count**: 104 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
