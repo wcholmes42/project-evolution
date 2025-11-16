@@ -27,6 +27,8 @@ public class RPGGame
     public int AvailableStatPoints { get; private set; } = 0;
     public int EnemyLevel { get; private set; } = 1;
     public int MaxPlayerHP { get; private set; } = 10;
+    public int CombatsWon { get; private set; } = 0;
+    public bool RunEnded { get; private set; } = false;
 
     public void Start()
     {
@@ -1965,6 +1967,108 @@ public class RPGGame
             MaxPlayerHP += 2; // Gain 2 max HP per level
             PlayerHP = MaxPlayerHP; // Restore to full HP on level up
             CombatLog += $" LEVEL UP {PlayerLevel}! +2 MaxHP! HP restored!";
+        }
+    }
+
+    public void StartGameLoop()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        PlayerHP = MaxPlayerHP;
+        PlayerStamina = 12;
+        CombatsWon = 0;
+        RunEnded = false;
+        int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
+        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+    }
+
+    public void ContinueToNextCombat()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        PlayerHP = MaxPlayerHP; // Restore HP between fights
+        PlayerStamina = 12; // Restore stamina
+        int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
+        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+    }
+
+    public void ExecuteGameLoopRoundWithRandomHits(CombatAction playerAction, CombatAction enemyAction)
+    {
+        HitType playerHit = DetermineHitType();
+        HitType enemyHit = DetermineHitType();
+        ExecuteGameLoopRound(playerAction, enemyAction, playerHit, enemyHit);
+    }
+
+    public void ExecuteGameLoopRound(CombatAction playerAction, CombatAction enemyAction,
+        HitType playerHitType, HitType enemyHitType)
+    {
+        if (!_combatStarted || !_hpCombat) throw new InvalidOperationException("Combat not started");
+        if (CombatEnded) return;
+
+        CombatLog = string.Empty;
+
+        CombatAction actualPlayerAction = playerAction;
+        if (PlayerStamina < 3 && playerAction == CombatAction.Attack)
+        {
+            actualPlayerAction = CombatAction.Defend;
+            CombatLog += "No stamina! ";
+        }
+
+        if (actualPlayerAction == CombatAction.Attack) PlayerStamina = Math.Max(0, PlayerStamina - 3);
+        else PlayerStamina = Math.Max(0, PlayerStamina - 1);
+
+        bool playerAttacks = actualPlayerAction == CombatAction.Attack;
+        bool playerDefends = actualPlayerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        if (playerAttacks && !enemyDefends && playerHitType != HitType.Miss)
+        {
+            int damage = playerHitType == HitType.Critical ? PlayerStrength * 2 : PlayerStrength;
+            EnemyHP = Math.Max(0, EnemyHP - damage);
+            CombatLog += playerHitType == HitType.Critical ? $"CRIT {damage}! " : $"Hit {damage}! ";
+        }
+        else if (playerAttacks) CombatLog += "MISS! ";
+
+        if (enemyAttacks && !playerDefends && enemyHitType != HitType.Miss)
+        {
+            int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
+            int actualDamage = Math.Max(1, damage - PlayerDefense);
+            PlayerHP = Math.Max(0, PlayerHP - actualDamage);
+            CombatLog += enemyHitType == HitType.Critical ? $"{EnemyName} CRIT {actualDamage}! " : $"{EnemyName} {actualDamage}! ";
+        }
+        else if (enemyAttacks) CombatLog += $"{EnemyName} misses! ";
+
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            int xpGained = GetEnemyXPValue((EnemyType)Enum.Parse(typeof(EnemyType), EnemyName.Replace(" ", "")));
+            PlayerXP += xpGained;
+            PlayerGold += 10;
+            CombatLog += $"Victory! +10g +{xpGained}xp!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            RunEnded = true;
+            CombatLog += "DEATH! Run ended!";
+        }
+    }
+
+    public void ProcessGameLoopVictory()
+    {
+        if (IsWon && CombatEnded)
+        {
+            CombatsWon++;
+            ProcessMaxHPGrowth(); // Check for level up
         }
     }
 }

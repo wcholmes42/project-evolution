@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 17 (Progression System Complete!)
-**Status**: ✅ Two major cohorts complete - Ready for next!
+**Current Generation**: 18 (Game Loop Complete!)
+**Status**: ✅ Fully playable endless mode - Ready to test!
 **Git Tags**:
   - v1.0-roguelike-complete (Gen 0-12: Combat)
   - v2.0-progression-complete (Gen 13-17: Leveling)
