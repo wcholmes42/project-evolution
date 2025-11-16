@@ -1,6 +1,7 @@
 # .NET
 bin/
 obj/
+game_log.txt
 *.user
 *.suo
 *.userprefs

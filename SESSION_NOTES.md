@@ -1,8 +1,22 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 27 (Logging & Transparency!) 📊
-**Status**: ✅ Production-quality roguelike with ultimate presentation!
+**Current Generation**: 28 (Combat Overhaul!) ⚔️
+**Status**: ✅ Fully playable with flee option and better combat UI!
+
+## 📝 TODO for Next Session
+
+**UI Issue - High Priority:**
+- After combat ends (victory or flee), need to call `ui.RenderMap(game)` to restore map view
+- Currently combat display stays on screen
+- Player can't see the world map until next move
+- FIX: Add `ui.RenderMap(game)` after combat resolution in both encounter and dungeon combat blocks
+
+**Enhancements to Consider:**
+- Stamina regeneration (1 per turn in combat?)
+- Better visual indication when stamina runs out
+- Combat history/damage dealt tracking
+- Enemy AI patterns (aggressive vs defensive)
 
 ## 🏆 LINE IN THE SAND - What We've Built
 
@@ -12,7 +26,8 @@
   - v2.1-endless-mode (Gen 18: Game Loop)
   - v3.0-world-exploration (Gen 19-25: Warhammer Quest Fusion)
   - v3.1-demoscene-ui (Gen 26: Ultimate ASCII UI)
-  - v3.2-logging (Gen 27: Comprehensive Logging) ⭐ **CURRENT**
+  - v3.2-logging (Gen 27: Comprehensive Logging)
+  - v3.3-combat-overhaul (Gen 28: Combat Fixes) ⭐ **CURRENT**
 
 **Test Coverage**: 114 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
@@ -217,15 +232,18 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Box drawing, ANSI colors, map view
 - **Test Count**: 114 passing
 
-#### Generation 27: Comprehensive Logging (CURRENT) 📊
-- GameLogger class with timestamped events
-- DumpGameState() - complete internal state on exit
-- ShowRecentEvents() - last N events displayed
-- game_log.txt file logging
-- HP damage tracking
-- Death cause identification
-- Movement/encounter/combat logging
-- FULL TRANSPARENCY into why game ended
+#### Generation 27: Comprehensive Logging 📊
+- GameLogger class, state dumps, event tracking
+- **Test Count**: 114 passing
+
+#### Generation 28: Combat Overhaul (CURRENT) ⚔️
+- FIXED: StartWorldExploration() now initializes HP!
+- Encounters have infinite stamina (999)
+- AttemptFlee() - 50% escape or take damage
+- RenderCombat() - "across the table" side-by-side display
+- Clear visual combat feedback
+- [F] Flee option in all combats
+- No more stamina trap!
 - **Test Count**: 114 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
