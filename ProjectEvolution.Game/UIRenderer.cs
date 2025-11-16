@@ -187,23 +187,27 @@ public class UIRenderer
     {
         int startRow = StatusBarHeight + MapViewHeight + 2;
 
+        // Calculate starting index in message log
+        int startIndex = Math.Max(0, _messageLog.Count - MaxMessages);
+        int messagesToShow = Math.Min(MaxMessages, _messageLog.Count);
+
         for (int i = 0; i < MaxMessages; i++)
         {
             Console.SetCursorPosition(2, startRow + i);
             Console.Write(new string(' ', 76)); // Clear
 
-            if (i < _messageLog.Count)
+            if (i < messagesToShow)
             {
                 Console.SetCursorPosition(2, startRow + i);
-                string msg = _messageLog[_messageLog.Count - MaxMessages + i];
+                string msg = _messageLog[startIndex + i];
                 if (msg.Length > 76) msg = msg.Substring(0, 73) + "...";
 
                 // Color code messages
-                if (msg.Contains("Victory") || msg.Contains("Found"))
+                if (msg.Contains("Victory") || msg.Contains("Found") || msg.Contains("✅"))
                     Console.ForegroundColor = ConsoleColor.Green;
-                else if (msg.Contains("TRAP") || msg.Contains("damage"))
+                else if (msg.Contains("TRAP") || msg.Contains("damage") || msg.Contains("💀") || msg.Contains("💥"))
                     Console.ForegroundColor = ConsoleColor.Red;
-                else if (msg.Contains("LEVEL UP"))
+                else if (msg.Contains("LEVEL UP") || msg.Contains("⭐"))
                     Console.ForegroundColor = ConsoleColor.Yellow;
 
                 Console.Write(msg);
