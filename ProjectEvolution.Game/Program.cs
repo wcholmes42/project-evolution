@@ -68,6 +68,7 @@ while (playing)
             {
                 ui.AddMessage("🏘️  Entered Town!");
                 ui.AddMessage("[I]nn (10g heal) | [B]uy Potion (5g) | [X]it");
+                Thread.Sleep(400); // Brief pause to see options
 
                 var townKey = Console.ReadKey(intercept: true).Key;
                 if (townKey == ConsoleKey.I)
@@ -76,6 +77,7 @@ while (playing)
                     {
                         ui.AddMessage("✅ Rested at Inn - Fully healed! -10g");
                         ui.RenderStatusBar(game);
+                        Thread.Sleep(700); // Ahhh, refreshing!
                     }
                     else ui.AddMessage("❌ Not enough gold (need 10g)");
                 }
@@ -85,6 +87,7 @@ while (playing)
                     {
                         ui.AddMessage("✅ Bought healing potion! -5g");
                         ui.RenderStatusBar(game);
+                        Thread.Sleep(600); // Potion acquired!
                     }
                     else ui.AddMessage("❌ Not enough gold (need 5g)");
                 }
@@ -95,6 +98,7 @@ while (playing)
                 ui.AddMessage("⚔️  Entered Dungeon! Depth 1 - Danger awaits!");
                 ui.RenderStatusBar(game);
                 ui.RenderCommandBar(true);
+                Thread.Sleep(600); // Ominous pause before adventure
             }
             else
             {
@@ -107,6 +111,7 @@ while (playing)
             {
                 ui.AddMessage("🧪 Used potion! +5 HP");
                 ui.RenderStatusBar(game);
+                Thread.Sleep(600); // Potion effect!
             }
             else ui.AddMessage("No potions!");
         }
@@ -123,9 +128,11 @@ while (playing)
             {
                 logger.LogEvent("ENCOUNTER", $"Random encounter at ({game.PlayerX},{game.PlayerY})");
                 ui.AddMessage("💥 AMBUSH! Enemy encountered!");
+                Thread.Sleep(800); // Pause to build tension
                 game.TriggerEncounter();
                 logger.LogEvent("COMBAT", $"Fighting {game.EnemyName} [Lvl{game.EnemyLevel}] HP:{game.EnemyHP}");
                 ui.RenderStatusBar(game);
+                Thread.Sleep(400); // Brief pause to see enemy stats
 
                 // Combat
                 while (!game.CombatEnded && playing)
@@ -139,6 +146,7 @@ while (playing)
                         ui.AddMessage("🧪 Potion! +5 HP");
                         ui.RenderStatusBar(game);
                         ui.RenderCombat(game);
+                        Thread.Sleep(600); // Let player see the healing
                         continue;
                     }
 
@@ -148,6 +156,7 @@ while (playing)
                         logger.LogEvent("FLEE", fled ? "Successfully fled!" : "Failed to flee, took damage");
                         ui.AddMessage(game.CombatLog);
                         ui.RenderStatusBar(game);
+                        Thread.Sleep(fled ? 600 : 800); // Longer pause if failed (took damage)
                         if (fled)
                         {
                             ui.RenderMap(game); // Return to map view
@@ -156,6 +165,7 @@ while (playing)
                         if (game.PlayerHP <= 0)
                         {
                             ui.AddMessage("💀 DIED WHILE FLEEING!");
+                            Thread.Sleep(1200); // Dramatic pause for death
                             playing = false;
                             break;
                         }
@@ -174,6 +184,7 @@ while (playing)
 
                     logger.LogEvent("COMBAT_ROUND", game.CombatLog);
                     ui.AddMessage(game.CombatLog);
+                    Thread.Sleep(900); // Pause to read combat results
 
                     if (game.CombatEnded)
                     {
@@ -183,12 +194,15 @@ while (playing)
                             logger.LogEvent("VICTORY", $"Defeated {game.EnemyName}. XP: {game.PlayerXP}");
                             ui.AddMessage("✅ Victory!");
                             ui.RenderStatusBar(game);
+                            Thread.Sleep(1000); // Celebrate victory!
+                            ui.RenderMap(game); // Return to map view after combat
                         }
                         else
                         {
                             logger.LogEvent("DEATH", $"Killed by {game.EnemyName}. HP: 0");
                             ui.AddMessage("💀 YOU DIED! GAME OVER!");
                             ui.AddMessage($"Killed by: {game.EnemyName} [Lvl {game.EnemyLevel}]");
+                            Thread.Sleep(1500); // Dramatic pause for death
                             playing = false;
                         }
                     }
@@ -206,11 +220,13 @@ while (playing)
         {
             var roomType = game.RollForRoom();
             ui.AddMessage($"🎲 Rolled: {roomType} Room");
+            Thread.Sleep(500); // Suspenseful pause for roll result
 
             if (roomType == "Monster")
             {
                 game.TriggerDungeonCombat();
                 ui.AddMessage($"👹 Monster appears! {game.EnemyName} [Lvl{game.EnemyLevel}]");
+                Thread.Sleep(800); // Build tension before combat starts
 
                 while (!game.CombatEnded && playing)
                 {
@@ -221,19 +237,45 @@ while (playing)
                     {
                         ui.AddMessage("🧪 +5 HP");
                         ui.RenderStatusBar(game);
+                        Thread.Sleep(600); // Let player see the healing
+                        continue;
+                    }
+
+                    if (combatKey == ConsoleKey.F)
+                    {
+                        bool fled = game.AttemptFlee();
+                        ui.AddMessage(game.CombatLog);
+                        ui.RenderStatusBar(game);
+                        Thread.Sleep(fled ? 600 : 800);
+                        if (fled) break;
+                        if (game.PlayerHP <= 0)
+                        {
+                            ui.AddMessage("💀 DIED WHILE FLEEING!");
+                            Thread.Sleep(1200);
+                            playing = false;
+                            break;
+                        }
                         continue;
                     }
 
                     var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
                     game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
                     ui.AddMessage(game.CombatLog);
+                    Thread.Sleep(900); // Pause to read combat results
 
                     if (game.CombatEnded)
                     {
                         game.ProcessGameLoopVictory();
-                        if (!game.IsWon)
+                        if (game.IsWon)
+                        {
+                            ui.AddMessage("✅ Victory!");
+                            ui.RenderStatusBar(game);
+                            Thread.Sleep(1000); // Celebrate victory!
+                        }
+                        else
                         {
                             ui.AddMessage("💀 GAME OVER!");
+                            Thread.Sleep(1500);
                             playing = false;
                         }
                     }
@@ -245,6 +287,7 @@ while (playing)
                 int gold = game.RollForTreasure(game.DungeonDepth);
                 ui.AddMessage($"💎 TREASURE! Found {gold} gold!");
                 ui.RenderStatusBar(game);
+                Thread.Sleep(800); // Let player appreciate the loot!
             }
             else // Empty room - check for events
             {
@@ -254,16 +297,19 @@ while (playing)
                     int dmg = game.TriggerTrap();
                     ui.AddMessage($"💥 TRAP! Took {dmg} damage!");
                     ui.RenderStatusBar(game);
+                    Thread.Sleep(900); // Ouch! Let that sink in
                 }
                 else if (eventType == "Discovery")
                 {
                     var bonus = game.TriggerDiscovery();
                     ui.AddMessage($"✨ Discovery! {bonus}");
                     ui.RenderStatusBar(game);
+                    Thread.Sleep(700); // Nice find!
                 }
                 else
                 {
                     ui.AddMessage("Empty room. Nothing here.");
+                    Thread.Sleep(400); // Brief pause
                 }
             }
         }
@@ -272,6 +318,7 @@ while (playing)
             game.DescendDungeon();
             ui.AddMessage($"⬇️  Descended to Depth {game.DungeonDepth}!");
             ui.RenderStatusBar(game);
+            Thread.Sleep(600); // Going deeper...
         }
         else if (key == ConsoleKey.X)
         {
@@ -280,6 +327,7 @@ while (playing)
             ui.RenderStatusBar(game);
             ui.RenderMap(game);
             ui.RenderCommandBar(false);
+            Thread.Sleep(500); // Return to surface
         }
     }
 }

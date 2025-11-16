@@ -1,18 +1,18 @@
 # Project Evolution - Session Notes
 
-**Last Updated**: 2025-11-15
-**Current Generation**: 28 (Combat Overhaul!) ⚔️
-**Status**: ✅ Fully playable with flee option and better combat UI!
+**Last Updated**: 2025-11-16
+**Current Generation**: 29 (Game Pacing & Feel!) ⏱️
+**Status**: ✅ Perfect pacing with strategic delays and map restoration!
 
 ## 📝 TODO for Next Session
 
-**UI Issue - High Priority:**
-- After combat ends (victory or flee), need to call `ui.RenderMap(game)` to restore map view
-- Currently combat display stays on screen
-- Player can't see the world map until next move
-- FIX: Add `ui.RenderMap(game)` after combat resolution in both encounter and dungeon combat blocks
+**Turn-Based World System:**
+- Design game loop that ticks on each player action
+- Add world time counter
+- Implement terrain movement penalties (Forest/Mountain slower)
+- Add mob displays on the map (show nearby enemies)
 
-**Enhancements to Consider:**
+**Future Enhancements:**
 - Stamina regeneration (1 per turn in combat?)
 - Better visual indication when stamina runs out
 - Combat history/damage dealt tracking
@@ -27,7 +27,8 @@
   - v3.0-world-exploration (Gen 19-25: Warhammer Quest Fusion)
   - v3.1-demoscene-ui (Gen 26: Ultimate ASCII UI)
   - v3.2-logging (Gen 27: Comprehensive Logging)
-  - v3.3-combat-overhaul (Gen 28: Combat Fixes) ⭐ **CURRENT**
+  - v3.3-combat-overhaul (Gen 28: Combat Fixes)
+  - v3.4-pacing (Gen 29: Game Feel & Pacing) ⭐ **CURRENT**
 
 **Test Coverage**: 114 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
@@ -236,7 +237,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - GameLogger class, state dumps, event tracking
 - **Test Count**: 114 passing
 
-#### Generation 28: Combat Overhaul (CURRENT) ⚔️
+#### Generation 28: Combat Overhaul ⚔️
 - FIXED: StartWorldExploration() now initializes HP!
 - Encounters have infinite stamina (999)
 - AttemptFlee() - 50% escape or take damage
@@ -246,7 +247,18 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - No more stamina trap!
 - **Test Count**: 114 passing ✅
 
-### 🎉 Original Evolution Complete! Now adding combat dynamics...
+#### Generation 29: Game Pacing & Feel (CURRENT) ⏱️
+- Strategic delays throughout gameplay for better readability
+- Combat rounds pause 900ms so player can read results
+- Encounters pause 800ms to build tension
+- Victory pause 1000ms, death pause 1500ms (dramatic!)
+- Dungeon events (traps, treasure) have appropriate pauses
+- FIXED: Map view restored after combat (ui.RenderMap after victory)
+- Town/potion actions have brief pauses for feedback
+- No code changes needed - game already uses ReadKey (no Enter required!)
+- **Test Count**: 114 passing ✅
+
+### 🎉 Original Evolution Complete! Now adding turn-based world mechanics...
 
 The game has evolved from "start and win" to a full RPG combat system with:
 - Turn-based combat

@@ -165,3 +165,203 @@
 [00:29:14] COMBAT_ROUND: Goblin Warrior misses! 
 [00:29:15] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
 [00:29:15] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:34:29] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:34:30] COMBAT_ROUND: No stamina! Goblin Warrior misses! 
+[00:34:31] COMBAT_ROUND: Goblin Warrior misses! 
+[00:34:31] COMBAT_ROUND: Goblin Warrior misses! 
+[00:34:31] COMBAT_ROUND: Goblin Warrior misses! 
+[00:34:31] COMBAT_ROUND: Goblin Warrior misses! 
+[00:34:37] GAME: Project Evolution started!
+[00:34:37] INIT: Player spawned at (10,10)
+[00:34:39] MOVE: South to (10,11) - Grassland
+[00:34:40] MOVE: West to (9,11) - Forest
+[00:34:40] MOVE: North to (9,10) - Grassland
+[00:34:40] ENCOUNTER: Random encounter at (9,10)
+[00:34:40] COMBAT: Fighting Goblin Warrior [Lvl2] HP:6
+[00:35:15] DAMAGE: Player took 3 damage. HP: 7/10
+[00:35:15] COMBAT_ROUND: Hit 2! Goblin Warrior CRIT 3! 
+[00:35:21] DAMAGE: Player took 3 damage. HP: 4/10
+[00:35:21] COMBAT_ROUND: Hit 2! Goblin Warrior CRIT 3! 
+[00:35:24] DAMAGE: Player took 1 damage. HP: 3/10
+[00:35:24] COMBAT_ROUND: Hit 2! Goblin Warrior 1! Victory! +10g +25xp!
+[00:35:24] VICTORY: Defeated Goblin Warrior. XP: 25
+[00:35:38] MOVE: South to (9,11) - Forest
+[00:35:38] ENCOUNTER: Random encounter at (9,11)
+[00:35:38] COMBAT: Fighting Goblin Scout [Lvl1] HP:3
+[00:35:39] COMBAT_ROUND: Goblin Scout misses! 
+[09:06:52] GAME: Project Evolution started!
+[09:06:52] INIT: Player spawned at (10,10)
+[09:07:07] MOVE: West to (9,10) - Grassland
+[09:07:08] MOVE: North to (9,9) - Forest
+[09:07:08] ENCOUNTER: Random encounter at (9,9)
+[09:07:08] COMBAT: Fighting Goblin Archer [Lvl1] HP:3
+[09:07:25] DAMAGE: Player took 1 damage. HP: 9/10
+[09:07:25] COMBAT_ROUND: Hit 2! Goblin Archer 1! 
+[09:07:27] DAMAGE: Player took 1 damage. HP: 8/10
+[09:07:27] COMBAT_ROUND: Hit 2! Goblin Archer 1! Victory! +10g +15xp!
+[09:07:27] VICTORY: Defeated Goblin Archer. XP: 15
+[09:07:33] MOVE: South to (9,10) - Grassland
+[09:07:36] MOVE: North to (9,9) - Forest
+[09:07:36] MOVE: North to (9,8) - Grassland
+[09:07:37] MOVE: North to (9,7) - Forest
+[09:07:37] ENCOUNTER: Random encounter at (9,7)
+[09:07:37] COMBAT: Fighting Goblin Archer [Lvl1] HP:3
+[09:07:39] DAMAGE: Player took 2 damage. HP: 6/10
+[09:07:39] COMBAT_ROUND: Hit 2! Goblin Archer 2! 
+[09:07:39] DAMAGE: Player took 2 damage. HP: 4/10
+[09:07:39] COMBAT_ROUND: CRIT 4! Goblin Archer 2! Victory! +10g +15xp!
+[09:07:39] VICTORY: Defeated Goblin Archer. XP: 30
+[09:07:40] MOVE: West to (8,7) - Grassland
+[09:07:41] MOVE: West to (7,7) - Mountain
+[09:07:42] MOVE: West to (6,7) - Forest
+[09:07:43] MOVE: West to (5,7) - Grassland
+[09:07:43] ENCOUNTER: Random encounter at (5,7)
+[09:07:43] COMBAT: Fighting Goblin Warrior [Lvl1] HP:6
+[09:07:46] DAMAGE: Player took 1 damage. HP: 3/10
+[09:07:46] COMBAT_ROUND: CRIT 4! Goblin Warrior 1! 
+[09:07:48] DAMAGE: Player took 1 damage. HP: 2/10
+[09:07:48] COMBAT_ROUND: Hit 2! Goblin Warrior 1! Victory! +10g +25xp!
+[09:07:48] VICTORY: Defeated Goblin Warrior. XP: 55
+[09:07:50] MOVE: North to (5,6) - Forest
+[09:07:50] ENCOUNTER: Random encounter at (5,6)
+[09:07:50] COMBAT: Fighting Goblin Scout [Lvl2] HP:3
+[09:07:51] COMBAT_ROUND: Goblin Scout misses! 
+[09:07:52] DAMAGE: Player took 1 damage. HP: 1/10
+[09:07:52] COMBAT_ROUND: Hit 2! Goblin Scout 1! 
+[09:07:53] COMBAT_ROUND: Hit 2! Goblin Scout misses! Victory! +10g +10xp!
+[09:07:53] VICTORY: Defeated Goblin Scout. XP: 65
+[09:07:55] MOVE: West to (4,6) - Grassland
+[09:07:56] MOVE: North to (4,5) - Grassland
+[09:07:56] MOVE: East to (5,5) - Town
+[09:08:33] MOVE: West to (4,5) - Grassland
+[09:08:33] ENCOUNTER: Random encounter at (4,5)
+[09:08:33] COMBAT: Fighting Goblin Archer [Lvl1] HP:2
+[09:08:36] FLEE: Successfully fled!
+[09:08:37] MOVE: West to (3,5) - Grassland
+[09:08:37] ENCOUNTER: Random encounter at (3,5)
+[09:08:37] COMBAT: Fighting Goblin Scout [Lvl1] HP:1
+[09:08:38] FLEE: Successfully fled!
+[09:08:38] MOVE: West to (2,5) - Forest
+[09:08:38] ENCOUNTER: Random encounter at (2,5)
+[09:08:38] COMBAT: Fighting Goblin Archer [Lvl2] HP:4
+[09:08:39] FLEE: Failed to flee, took damage
+[09:08:40] FLEE: Successfully fled!
+[09:08:40] MOVE: North to (2,4) - Grassland
+[09:08:41] MOVE: North to (2,3) - Grassland
+[09:08:42] MOVE: North to (2,2) - Grassland
+[09:08:42] ENCOUNTER: Random encounter at (2,2)
+[09:08:42] COMBAT: Fighting Goblin Archer [Lvl1] HP:3
+[09:08:43] FLEE: Successfully fled!
+[09:08:43] MOVE: North to (2,1) - Grassland
+[09:08:43] MOVE: North to (2,0) - Grassland
+[09:08:44] MOVE: West to (1,0) - Grassland
+[09:08:44] ENCOUNTER: Random encounter at (1,0)
+[09:08:44] COMBAT: Fighting Goblin Archer [Lvl1] HP:4
+[09:08:44] FLEE: Failed to flee, took damage
+[09:08:45] FLEE: Successfully fled!
+[09:08:45] MOVE: West to (0,0) - Grassland
+[09:08:46] MOVE: South to (0,1) - Forest
+[09:08:46] ENCOUNTER: Random encounter at (0,1)
+[09:08:46] COMBAT: Fighting Goblin Archer [Lvl1] HP:3
+[09:08:46] FLEE: Failed to flee, took damage
+[09:08:47] COMBAT_ROUND: Goblin Archer misses! 
+[09:08:47] FLEE: Successfully fled!
+[09:08:48] MOVE: South to (0,2) - Grassland
+[09:08:48] MOVE: South to (0,3) - Forest
+[09:08:49] MOVE: South to (0,4) - Grassland
+[09:08:49] ENCOUNTER: Random encounter at (0,4)
+[09:08:49] COMBAT: Fighting Goblin Warrior [Lvl1] HP:6
+[09:08:49] FLEE: Failed to flee, took damage
+[09:08:49] COMBAT_ROUND: Goblin Warrior misses! 
+[09:08:49] FLEE: Successfully fled!
+[09:08:50] MOVE: South to (0,5) - Mountain
+[09:08:50] ENCOUNTER: Random encounter at (0,5)
+[09:08:50] COMBAT: Fighting Goblin Archer [Lvl1] HP:3
+[09:08:51] FLEE: Successfully fled!
+[09:08:51] MOVE: South to (0,6) - Forest
+[09:08:51] ENCOUNTER: Random encounter at (0,6)
+[09:08:51] COMBAT: Fighting Goblin Scout [Lvl2] HP:5
+[09:08:52] FLEE: Successfully fled!
+[09:08:52] MOVE: South to (0,7) - Mountain
+[09:08:52] ENCOUNTER: Random encounter at (0,7)
+[09:08:52] COMBAT: Fighting Goblin Warrior [Lvl1] HP:6
+[09:08:52] FLEE: Failed to flee, took damage
+[09:08:53] FLEE: Failed to flee, took damage
+[09:08:53] FLEE: Successfully fled!
+[09:08:54] MOVE: South to (0,8) - Forest
+[09:08:54] MOVE: South to (0,9) - Mountain
+[09:08:55] MOVE: South to (0,10) - Forest
+[09:08:55] MOVE: South to (0,11) - Mountain
+[09:08:56] MOVE: South to (0,12) - Forest
+[09:08:56] MOVE: South to (0,13) - Grassland
+[09:08:57] MOVE: South to (0,14) - Grassland
+[09:08:57] MOVE: South to (0,15) - Grassland
+[09:08:57] MOVE: South to (0,16) - Grassland
+[09:08:58] MOVE: South to (0,17) - Grassland
+[09:08:58] ENCOUNTER: Random encounter at (0,17)
+[09:08:58] COMBAT: Fighting Goblin Archer [Lvl1] HP:2
+[09:08:58] FLEE: Successfully fled!
+[09:08:59] MOVE: South to (0,18) - Grassland
+[09:08:59] MOVE: East to (1,18) - Grassland
+[09:09:00] MOVE: East to (2,18) - Forest
+[09:09:00] MOVE: East to (3,18) - Mountain
+[09:09:00] ENCOUNTER: Random encounter at (3,18)
+[09:09:00] COMBAT: Fighting Goblin Scout [Lvl2] HP:5
+[09:09:01] FLEE: Failed to flee, took damage
+[09:09:01] FLEE: Failed to flee, took damage
+[09:09:02] FLEE: Failed to flee, took damage
+[09:09:02] GAME: Game session ended
+[09:09:02] DUMP: 
+[09:09:02] DUMP: ═══════════════════════════════════════════════════════
+[09:09:02] DUMP:           GAME STATE DUMP
+[09:09:02] DUMP: Reason: Player Death (HP reached 0)
+[09:09:02] DUMP: ═══════════════════════════════════════════════════════
+[09:09:02] DUMP: 
+[09:09:02] DUMP: PLAYER STATE:
+[09:09:02] DUMP:   Level: 1
+[09:09:02] DUMP:   HP: 0/10
+[09:09:02] DUMP:   XP: 65/100
+[09:09:02] DUMP:   Gold: 25g
+[09:09:02] DUMP:   Strength: 2
+[09:09:02] DUMP:   Defense: 1
+[09:09:02] DUMP:   Stamina: 999/12
+[09:09:02] DUMP:   Potions: 1
+[09:09:02] DUMP:   Stat Points: 0
+[09:09:02] DUMP: 
+[09:09:02] DUMP: LOCATION:
+[09:09:02] DUMP:   Position: (3, 18)
+[09:09:02] DUMP:   Terrain: Mountain
+[09:09:02] DUMP:   In Location: False
+[09:09:02] DUMP:   In Dungeon: False
+[09:09:02] DUMP:   Dungeon Depth: 0
+[09:09:02] DUMP: 
+[09:09:02] DUMP: PROGRESS:
+[09:09:02] DUMP:   Combats Won: 4
+[09:09:02] DUMP:   Deaths: 0
+[09:09:02] DUMP:   Run Ended: True
+[09:09:02] DUMP: 
+[09:09:02] DUMP: COMBAT STATE:
+[09:09:02] DUMP:   In Combat: False
+[09:09:02] DUMP:   Combat Won: False
+[09:09:02] DUMP:   Enemy: Goblin Scout [Lvl 2]
+[09:09:02] DUMP:   Enemy HP: 5
+[09:09:02] DUMP:   Enemy Damage: 2
+[09:09:02] DUMP: 
+[09:09:02] DUMP: ═══════════════════════════════════════════════════════
+[09:09:02] DUMP: 
+[09:25:52] GAME: Project Evolution started!
+[09:25:52] INIT: Player spawned at (10,10)
+[09:25:58] MOVE: East to (11,10) - Grassland
+[09:26:00] MOVE: East to (12,10) - Grassland
+[09:26:01] MOVE: East to (13,10) - Mountain
+[09:26:03] MOVE: East to (14,10) - Forest
+[09:26:03] ENCOUNTER: Random encounter at (14,10)
+[09:26:03] COMBAT: Fighting Goblin Warrior [Lvl1] HP:6
+[09:26:24] DAMAGE: Player took 1 damage. HP: 9/10
+[09:26:24] COMBAT_ROUND: Hit 2! Goblin Warrior 1! 
+[09:26:33] DAMAGE: Player took 1 damage. HP: 8/10
+[09:26:33] COMBAT_ROUND: CRIT 4! Goblin Warrior 1! Victory! +10g +25xp!
+[09:26:33] VICTORY: Defeated Goblin Warrior. XP: 25
+[09:26:39] MOVE: North to (14,9) - Mountain
+[09:26:39] ENCOUNTER: Random encounter at (14,9)
+[09:26:40] COMBAT: Fighting Goblin Scout [Lvl1] HP:3
