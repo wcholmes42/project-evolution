@@ -1890,6 +1890,13 @@ public class RPGGame
         StartCombatWithMaxHP();
     }
 
+    public void ExecuteMaxHPCombatRoundWithRandomHits(CombatAction playerAction, CombatAction enemyAction)
+    {
+        HitType playerHit = DetermineHitType();
+        HitType enemyHit = DetermineHitType();
+        ExecuteMaxHPCombatRound(playerAction, enemyAction, playerHit, enemyHit);
+    }
+
     public void ExecuteMaxHPCombatRound(CombatAction playerAction, CombatAction enemyAction,
         HitType playerHitType, HitType enemyHitType)
     {

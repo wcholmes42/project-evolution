@@ -1,28 +1,30 @@
 ﻿using ProjectEvolution.Game;
 
-Console.WriteLine("╔═══════════════════════════════════════╗");
-Console.WriteLine("║  PROJECT EVOLUTION - GENERATION 13    ║");
-Console.WriteLine("║    EXPERIENCE & LEVELING SYSTEM       ║");
-Console.WriteLine("╚═══════════════════════════════════════╝");
+Console.WriteLine("╔════════════════════════════════════════╗");
+Console.WriteLine("║  PROJECT EVOLUTION - GEN 13-17         ║");
+Console.WriteLine("║    COMPLETE PROGRESSION SYSTEM         ║");
+Console.WriteLine("╚════════════════════════════════════════╝");
 Console.WriteLine();
-Console.WriteLine("CHARACTER PROGRESSION!");
-Console.WriteLine("  ⭐  Defeat enemies → Earn 10 XP");
-Console.WriteLine("  📈  Level up at 100/200/300 XP...");
-Console.WriteLine("  🎯  Track your growth!");
+Console.WriteLine("📈 FULL RPG PROGRESSION:");
+Console.WriteLine("  ⭐ Earn XP → Level up → Grow stronger");
+Console.WriteLine("  💪 Spend stat points (STR/DEF)");
+Console.WriteLine("  ❤️  Gain +2 Max HP per level + full heal!");
+Console.WriteLine("  👹 Enemies scale with YOUR level");
 Console.WriteLine();
-Console.WriteLine("PLUS all previous systems:");
-Console.WriteLine("  Variable enemies | Crits/Misses | Stamina");
+Console.WriteLine("⚡ Scout:10xp | Warrior:25xp | Archer:15xp");
+Console.WriteLine("🎲 Crits/Misses | Stamina | Variable Stats");
 Console.WriteLine();
 
 var game = new RPGGame();
 game.SetPlayerStats(strength: 2, defense: 1);
-game.StartCombatWithXP();
+game.StartCombatWithMaxHP();
 
-Console.WriteLine($"⭐ LEVEL {game.PlayerLevel} | XP: {game.PlayerXP}/{game.XPForNextLevel}");
-Console.WriteLine($"💰 Gold: {game.PlayerGold}g");
+Console.WriteLine($"YOU: Lvl {game.PlayerLevel} | HP:{game.PlayerHP}/{game.MaxPlayerHP} | STR:{game.PlayerStrength} DEF:{game.PlayerDefense}");
+Console.WriteLine($"XP: {game.PlayerXP}/{game.XPForNextLevel} | Gold:{game.PlayerGold}g");
+if (game.AvailableStatPoints > 0) Console.WriteLine($"⚡ UNSPENT STAT POINTS: {game.AvailableStatPoints}!");
 Console.WriteLine();
-Console.WriteLine($"⚔️  A {game.EnemyName} appears!");
-Console.WriteLine($"    Stats: {game.EnemyHP} HP, {game.EnemyDamage} damage");
+Console.WriteLine($"ENEMY: {game.EnemyName} [Lvl {game.EnemyLevel}]");
+Console.WriteLine($"Stats: {game.EnemyHP} HP, {game.EnemyDamage} damage");
 Console.WriteLine();
 
 while (!game.CombatEnded)
@@ -51,15 +53,16 @@ while (!game.CombatEnded)
         action = CombatAction.Defend;
     }
 
-    game.ExecuteXPCombatRoundWithRandomHits(action, CombatAction.Attack);
+    game.ExecuteMaxHPCombatRoundWithRandomHits(action, CombatAction.Attack);
 
     Console.WriteLine();
     Console.WriteLine(game.CombatLog);
 
     if (game.CombatEnded)
     {
-        game.ProcessXPGain();
-        if (game.CombatLog.Contains("LEVEL UP"))
+        string logBefore = game.CombatLog;
+        game.ProcessMaxHPGrowth();
+        if (game.CombatLog != logBefore)
         {
             Console.WriteLine(game.CombatLog); // Show level up message
         }
@@ -75,31 +78,34 @@ while (!game.CombatEnded)
 }
 
 Console.WriteLine();
-Console.WriteLine("╔═══════════════════════════════════════╗");
+Console.WriteLine("╔════════════════════════════════════════╗");
 if (game.IsWon)
 {
-    Console.WriteLine("║           ⭐ VICTORY! ⭐              ║");
-    Console.WriteLine("╚═══════════════════════════════════════╝");
-    Console.WriteLine($"The {game.EnemyName} falls defeated!");
+    Console.WriteLine("║             ⭐ VICTORY! ⭐              ║");
+    Console.WriteLine("╚════════════════════════════════════════╝");
+    Console.WriteLine($"The {game.EnemyName} [Lvl {game.EnemyLevel}] falls!");
     Console.WriteLine();
-    Console.WriteLine($"⭐ LEVEL: {game.PlayerLevel}");
-    Console.WriteLine($"📊 XP: {game.PlayerXP}/{game.XPForNextLevel}");
+    Console.WriteLine($"⭐ Level {game.PlayerLevel} | XP: {game.PlayerXP}/{game.XPForNextLevel}");
+    Console.WriteLine($"❤️  HP: {game.PlayerHP}/{game.MaxPlayerHP} | ⚡ Stamina: {game.PlayerStamina}/12");
+    Console.WriteLine($"💪 STR: {game.PlayerStrength} | DEF: {game.PlayerDefense}");
+    if (game.AvailableStatPoints > 0)
+    {
+        Console.WriteLine($"📊 UNSPENT POINTS: {game.AvailableStatPoints} - Allocate them!");
+    }
     Console.WriteLine($"💰 Gold: {game.PlayerGold}g");
-    Console.WriteLine($"💚 HP: {game.PlayerHP}/10");
-    Console.WriteLine($"⚡ Stamina: {game.PlayerStamina}/12");
     Console.WriteLine();
-    Console.WriteLine("You grow stronger with each victory!");
+    Console.WriteLine("Your journey of growth continues!");
 }
 else
 {
-    Console.WriteLine("║           💀 DEATH 💀                 ║");
-    Console.WriteLine("╚═══════════════════════════════════════╝");
-    Console.WriteLine($"The {game.EnemyName} has slain you!");
+    Console.WriteLine("║            💀 DEFEATED 💀              ║");
+    Console.WriteLine("╚════════════════════════════════════════╝");
+    Console.WriteLine($"{game.EnemyName} [Lvl {game.EnemyLevel}] has slain you!");
     Console.WriteLine();
-    Console.WriteLine($"⭐ Reached Level: {game.PlayerLevel}");
-    Console.WriteLine($"💰 Gold Earned: {game.PlayerGold}g");
+    Console.WriteLine($"⭐ Final Level: {game.PlayerLevel}");
+    Console.WriteLine($"💰 Gold: {game.PlayerGold}g");
     Console.WriteLine();
-    Console.WriteLine("Experience is the best teacher... even in death.");
+    Console.WriteLine("The path to power is paved with defeats.");
 }
 
 Console.WriteLine();

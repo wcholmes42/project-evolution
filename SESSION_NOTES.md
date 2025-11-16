@@ -1,9 +1,11 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 12 (Combat Dynamics Complete!)
-**Status**: ✅ Tagged as v1.0-roguelike-complete - Ready for next cohort!
-**Git Tag**: v1.0-roguelike-complete
+**Current Generation**: 17 (Progression System Complete!)
+**Status**: ✅ Two major cohorts complete - Ready for next!
+**Git Tags**:
+  - v1.0-roguelike-complete (Gen 0-12: Combat)
+  - v2.0-progression-complete (Gen 13-17: Leveling)
 
 ## Quick Start
 ```bash
@@ -120,15 +122,38 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Archer with 3 damage + crit = 6 damage in one hit!
 - Tests: `VariableStats_ScoutHPInRange`, `VariableStats_WarriorHPAndDamageInRange`, `VariableStats_ArcherCanBeVeryDangerous`, `VariableStats_SameTypeCanHaveDifferentStats`, `VariableStats_CombatWithVariableEnemy`
 
-#### Generation 12: Permadeath Mode (FINAL)
-- Added PermanentGold and DeathCount properties
-- Win combat → CommitGoldOnVictory() makes gold permanent
-- Lose combat → HandlePermadeath() resets to permanent gold, increments death count
-- High stakes: Current run gold at risk every fight!
-- Permanent gold is safe forever
-- Can chain victories to build wealth, or lose it all on one bad roll
-- Tests: `Permadeath_StartsWith0PermanentGold`, `Permadeath_WinCombat_GoldBecomesPermanent`, `Permadeath_LoseCombat_GoldIsLost`, `Permadeath_MultipleWins_GoldAccumulates`, `Permadeath_DeathCounter_IncrementsOnLoss`
-- **FINAL Test Count**: 62 passing
+#### Generation 12: Permadeath Mode
+- Permadeath, permanent gold, death counter
+- **Test Count**: 62 passing
+
+### 📈 Progression Cohort (Gen 13-17)
+
+#### Generation 13: Experience & Leveling
+- PlayerXP, PlayerLevel, XPForNextLevel
+- Earn 10 XP per enemy, level at 100/200/300...
+- **Test Count**: 67 passing
+
+#### Generation 14: Stat Points
+- Gain 2 stat points per level
+- SpendStatPoint(STR/DEF) for customization
+- **Test Count**: 72 passing
+
+#### Generation 15: Enemy XP Variety
+- Scout:10xp, Warrior:25xp, Archer:15xp
+- Risk vs reward balanced
+- **Test Count**: 76 passing
+
+#### Generation 16: Enemy Level Scaling
+- Enemies have levels (EnemyLevel property)
+- Scale with player level (±1)
+- +2 HP, +1 damage per level
+- **Test Count**: 78 passing
+
+#### Generation 17: Max HP Growth (CURRENT)
+- MaxPlayerHP increases +2 per level
+- HP fully restored on level up
+- Player grows in power AND survivability
+- **FINAL Test Count**: 81 passing
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
