@@ -297,6 +297,19 @@ public class GradientTuner
         }
     }
 
+    private static FloatConfig CloneConfig(FloatConfig config)
+    {
+        return new FloatConfig
+        {
+            MobDetectionRange = config.MobDetectionRange,
+            MaxMobs = config.MaxMobs,
+            MinMobs = config.MinMobs,
+            PlayerStartHP = config.PlayerStartHP,
+            PlayerStrength = config.PlayerStrength,
+            PlayerDefense = config.PlayerDefense
+        };
+    }
+
     private static void DrawConvergenceGraph()
     {
         int graphWidth = 60;
