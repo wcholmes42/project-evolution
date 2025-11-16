@@ -12,6 +12,7 @@ public class RPGGame
     public int PlayerHP { get; private set; }
     public int EnemyHP { get; private set; }
     public bool CombatEnded { get; private set; }
+    public int PlayerGold { get; private set; }
 
     public void Start()
     {
@@ -168,6 +169,91 @@ public class RPGGame
             IsWon = false;
             CombatEnded = true;
             CombatLog += "You have been defeated!";
+        }
+        else
+        {
+            // Combat continues
+            if (playerDefends && enemyDefends)
+            {
+                CombatLog += "Both fighters guard defensively.";
+            }
+            else if (playerDefends && enemyAttacks)
+            {
+                CombatLog += "You block the goblin's attack!";
+            }
+            else if (enemyDefends && playerAttacks)
+            {
+                CombatLog += "The goblin blocks your attack!";
+            }
+        }
+    }
+
+    public void StartCombatWithLoot()
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        EnemyHP = 3;
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // Gold persists across combats - don't reset it
+    }
+
+    public void ExecuteLootCombatRoundWithRandomEnemy(CombatAction playerAction)
+    {
+        CombatAction enemyAction = _random.Next(2) == 0 ? CombatAction.Attack : CombatAction.Defend;
+        ExecuteLootCombatRound(playerAction, enemyAction);
+    }
+
+    public void ExecuteLootCombatRound(CombatAction playerAction, CombatAction enemyAction)
+    {
+        if (!_combatStarted || !_hpCombat)
+        {
+            throw new InvalidOperationException("HP combat has not been started");
+        }
+
+        if (CombatEnded)
+        {
+            return; // Combat already over
+        }
+
+        CombatLog = string.Empty; // Clear previous log
+
+        // Resolve damage
+        bool playerAttacks = playerAction == CombatAction.Attack;
+        bool playerDefends = playerAction == CombatAction.Defend;
+        bool enemyAttacks = enemyAction == CombatAction.Attack;
+        bool enemyDefends = enemyAction == CombatAction.Defend;
+
+        // Player deals damage if attacking and enemy not defending
+        if (playerAttacks && !enemyDefends)
+        {
+            EnemyHP = Math.Max(0, EnemyHP - 1);
+            CombatLog += "You strike the goblin! ";
+        }
+
+        // Enemy deals damage if attacking and player not defending
+        if (enemyAttacks && !playerDefends)
+        {
+            PlayerHP = Math.Max(0, PlayerHP - 1);
+            CombatLog += "The goblin strikes you! ";
+        }
+
+        // Check for combat end
+        if (EnemyHP <= 0)
+        {
+            IsWon = true;
+            CombatEnded = true;
+            PlayerGold += 10; // Award gold for victory
+            CombatLog += "The goblin falls defeated! You gain 10 gold!";
+        }
+        else if (PlayerHP <= 0)
+        {
+            IsWon = false;
+            CombatEnded = true;
+            CombatLog += "You have been defeated! No gold awarded.";
         }
         else
         {

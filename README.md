@@ -10,14 +10,13 @@ This project follows a strict TDD evolution approach:
 3. Add a new feature through a new test
 4. Repeat
 
-## Current State - Generation 4
+## Current State - Generation 5
 
-Multi-round combat with health points:
-- Player: 10 HP | Enemy: 3 HP
-- Turn-based combat with multiple rounds
-- Attack deals 1 damage (unless blocked)
-- Defend blocks all incoming damage
-- Fight until someone reaches 0 HP
+Combat with loot rewards:
+- Defeat goblins to earn 10 gold each
+- Gold persists across multiple combats
+- Track your growing wealth
+- Only victors earn gold - defeat gives nothing!
 
 ## Running the Game
 
@@ -46,7 +45,14 @@ To reach Ultima IV level of:
 
 ## Evolution History
 
-### Generation 4 (Current)
+### Generation 5 (Current)
+- [x] Loot system: 10 gold per defeated goblin
+- [x] Gold accumulates across combats
+- [x] Combat log shows gold rewards
+- [x] No gold awarded on defeat
+- [x] First persistent player progression
+
+### Generation 4
 - [x] Health point system (Player: 10 HP, Enemy: 3 HP)
 - [x] Multi-round turn-based combat
 - [x] Attack deals 1 damage when not blocked

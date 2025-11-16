@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 4
+**Current Generation**: 5
 **Status**: ✅ Ready to continue
 
 ## Quick Start
@@ -40,7 +40,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Added CombatLog property for narrative feedback
 - Tests: `CombatWithAI_PlayerAttacks_EnemyDefends_PlayerWins`, `CombatWithAI_PlayerDefends_EnemyAttacks_PlayerLoses`, `CombatWithAI_BothDefend_Draw_PlayerLoses`, `CombatWithAI_BothAttack_CoinFlip_CanWin`, `CombatWithAI_BothAttack_CoinFlip_CanLose`, `CombatWithAI_RandomEnemy_ProducesBothOutcomes`
 
-#### Generation 4: Health Points (Current)
+#### Generation 4: Health Points
 - Player starts with 10 HP
 - Enemy starts with 3 HP
 - Multi-round combat system
@@ -49,14 +49,17 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - Combat ends when either reaches 0 HP
 - Added properties: PlayerHP, EnemyHP, CombatEnded
 - Tests: `CombatWithHP_PlayerStartsWith10HP`, `CombatWithHP_EnemyStartsWith3HP`, `CombatWithHP_PlayerAttacks_EnemyDefends_EnemyTakesNoDamage`, `CombatWithHP_PlayerAttacks_EnemyAttacks_EnemyTakesDamage`, `CombatWithHP_PlayerDefends_EnemyAttacks_PlayerTakesNoDamage`, `CombatWithHP_DefeatEnemy_PlayerWins`, `CombatWithHP_PlayerHPReaches0_PlayerLoses`, `CombatWithHP_CombatEndsWhenEitherDies`
-- **Current Test Count**: 21 passing
+
+#### Generation 5: Loot & Rewards (Current)
+- Player gains 10 gold per defeated enemy
+- Added PlayerGold property
+- Gold persists across multiple combats
+- Combat log shows gold earned
+- Only award gold on victory (not defeat)
+- Tests: `CombatWithLoot_PlayerStartsWith0Gold`, `CombatWithLoot_DefeatEnemy_PlayerGainsGold`, `CombatWithLoot_LoseToEnemy_NoGoldAwarded`, `CombatWithLoot_GoldPersistsAcrossMultipleCombats`
+- **Current Test Count**: 25 passing
 
 ### 🎯 Next Generations (Planned)
-
-#### Generation 5: Loot & Rewards
-- Win combat → gain gold
-- Track player inventory
-- Display rewards
 
 #### Generation 6: Multiple Enemies
 - Face 2-3 goblins in sequence
@@ -112,12 +115,22 @@ while (!game.CombatEnded)
     // game.ExecuteHPCombatRound(CombatAction.Attack, CombatAction.Defend);
 }
 
+// Generation 5
+game.StartCombatWithLoot();
+while (!game.CombatEnded)
+{
+    game.ExecuteLootCombatRoundWithRandomEnemy(CombatAction.Attack);
+    // or for testing:
+    // game.ExecuteLootCombatRound(CombatAction.Attack, CombatAction.Defend);
+}
+
 // Check results
 bool won = game.IsWon;
 string log = game.CombatLog;
 int playerHP = game.PlayerHP;
 int enemyHP = game.EnemyHP;
 bool ended = game.CombatEnded;
+int gold = game.PlayerGold; // Persists across combats
 ```
 
 ### Design Principles

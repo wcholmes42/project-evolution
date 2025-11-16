@@ -1,16 +1,16 @@
 ﻿using ProjectEvolution.Game;
 
-Console.WriteLine("=== Project Evolution - Generation 4 ===");
+Console.WriteLine("=== Project Evolution - Generation 5 ===");
 Console.WriteLine();
-Console.WriteLine("A goblin warrior blocks your path!");
+Console.WriteLine("Welcome, adventurer! Your quest for gold begins...");
 Console.WriteLine();
 
 var game = new RPGGame();
-game.StartCombatWithHP();
+game.StartCombatWithLoot();
 
 while (!game.CombatEnded)
 {
-    Console.WriteLine($"Your HP: {game.PlayerHP}/10  |  Goblin HP: {game.EnemyHP}/3");
+    Console.WriteLine($"Gold: {game.PlayerGold}g  |  Your HP: {game.PlayerHP}/10  |  Goblin HP: {game.EnemyHP}/3");
     Console.WriteLine();
     Console.WriteLine("What will you do?");
     Console.WriteLine("1. Attack");
@@ -34,7 +34,7 @@ while (!game.CombatEnded)
         action = CombatAction.Defend;
     }
 
-    game.ExecuteHPCombatRoundWithRandomEnemy(action);
+    game.ExecuteLootCombatRoundWithRandomEnemy(action);
 
     Console.WriteLine();
     Console.WriteLine(game.CombatLog);
@@ -52,10 +52,12 @@ if (game.IsWon)
 {
     Console.WriteLine("VICTORY! The goblin falls!");
     Console.WriteLine($"You survived with {game.PlayerHP} HP remaining.");
+    Console.WriteLine($"Total Gold: {game.PlayerGold}g");
 }
 else
 {
     Console.WriteLine("DEFEAT! You have fallen in battle!");
+    Console.WriteLine($"Total Gold: {game.PlayerGold}g");
 }
 Console.WriteLine("======================");
 
