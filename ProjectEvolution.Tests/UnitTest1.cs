@@ -2074,7 +2074,7 @@ public class GameTests
 
         // Assert
         Assert.True(goldGained > 0);
-        Assert.True(goldGained >= 10 && goldGained <= 30); // Depth 1 range
+        Assert.True(goldGained >= 20 && goldGained <= 40); // Depth 1: 10-30 base + 10 depth bonus
     }
 
     [Fact]
@@ -2090,8 +2090,8 @@ public class GameTests
 
         // Assert - Depth 5 should give more (statistically, over time)
         // This is probabilistic, so just check ranges
-        Assert.True(depth1Gold >= 10 && depth1Gold <= 30);
-        Assert.True(depth5Gold >= 50); // Much higher at depth 5
+        Assert.True(depth1Gold >= 20 && depth1Gold <= 40); // Depth 1: 10-30 + 10
+        Assert.True(depth5Gold >= 60); // Depth 5: 10-30 + 50 = 60-80
     }
 
     [Fact]
@@ -2139,5 +2139,166 @@ public class GameTests
         // Assert
         Assert.NotNull(bonus); // Got some bonus
         Assert.True(game.PlayerGold >= goldBefore || game.PlayerXP > 0); // Gold or XP gained
+    }
+
+    // ===== GENERATION 30: TURN-BASED WORLD SYSTEM =====
+
+    [Fact]
+    public void TurnBasedWorld_StartsAtTurn0()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.Equal(0, game.WorldTurn);
+    }
+
+    [Fact]
+    public void TurnBasedWorld_GrasslandMovement_Costs1Turn()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Ensure we're on grassland
+        while (game.GetCurrentTerrain() != "Grassland")
+        {
+            game.MoveNorth();
+        }
+        int turnBefore = game.WorldTurn;
+
+        // Act
+        game.MoveNorth(); // Move on grassland
+
+        // Assert
+        Assert.Equal(turnBefore + 1, game.WorldTurn);
+    }
+
+    [Fact]
+    public void TurnBasedWorld_ForestMovement_Costs2Turns()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetTerrainForTesting(game.PlayerX, game.PlayerY - 1, "Forest"); // North is forest
+        int turnBefore = game.WorldTurn;
+
+        // Act
+        game.MoveNorth(); // Move into forest
+
+        // Assert
+        Assert.Equal(turnBefore + 2, game.WorldTurn);
+    }
+
+    [Fact]
+    public void TurnBasedWorld_MountainMovement_Costs3Turns()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetTerrainForTesting(game.PlayerX, game.PlayerY - 1, "Mountain"); // North is mountain
+        int turnBefore = game.WorldTurn;
+
+        // Act
+        game.MoveNorth(); // Move into mountain
+
+        // Assert
+        Assert.Equal(turnBefore + 3, game.WorldTurn);
+    }
+
+    [Fact]
+    public void TurnBasedWorld_TownMovement_Costs1Turn()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetTerrainForTesting(game.PlayerX, game.PlayerY - 1, "Town");
+        int turnBefore = game.WorldTurn;
+
+        // Act
+        game.MoveNorth(); // Move into town
+
+        // Assert
+        Assert.Equal(turnBefore + 1, game.WorldTurn);
+    }
+
+    [Fact]
+    public void Mobs_WorldStartsWithMobs()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.True(game.GetActiveMobCount() > 0); // Should have some mobs
+    }
+
+    [Fact]
+    public void Mobs_CanGetMobsInRange()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - get mobs near player
+        var nearbyMobs = game.GetMobsInRange(5); // 5 tile radius
+
+        // Assert
+        Assert.NotNull(nearbyMobs);
+        // nearbyMobs could be empty or have mobs, both valid
+    }
+
+    [Fact]
+    public void Mobs_HavePositionAndName()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        var allMobs = game.GetAllMobs();
+
+        // Assert
+        if (allMobs.Count > 0)
+        {
+            var mob = allMobs[0];
+            Assert.True(mob.X >= 0 && mob.X < game.WorldWidth);
+            Assert.True(mob.Y >= 0 && mob.Y < game.WorldHeight);
+            Assert.NotNull(mob.Name);
+            Assert.NotEmpty(mob.Name);
+        }
+    }
+
+    [Fact]
+    public void Mobs_DontSpawnOnPlayer()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var allMobs = game.GetAllMobs();
+
+        // Assert
+        foreach (var mob in allMobs)
+        {
+            bool isOnPlayer = (mob.X == game.PlayerX && mob.Y == game.PlayerY);
+            Assert.False(isOnPlayer); // No mob should spawn on player
+        }
+    }
+
+    [Fact]
+    public void Mobs_DontSpawnInTowns()
+    {
+        // Arrange & Act
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var allMobs = game.GetAllMobs();
+
+        // Assert
+        foreach (var mob in allMobs)
+        {
+            string terrain = game.GetTerrainAt(mob.X, mob.Y);
+            Assert.NotEqual("Town", terrain); // Mobs shouldn't spawn in towns
+        }
     }
 }

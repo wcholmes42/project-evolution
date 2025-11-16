@@ -118,8 +118,20 @@ while (playing)
 
         if (moved)
         {
-            logger.LogEvent("MOVE", $"{direction} to ({game.PlayerX},{game.PlayerY}) - {game.GetCurrentTerrain()}");
-            ui.AddMessage($"Moved {direction} to {game.GetCurrentTerrain()}");
+            string terrain = game.GetCurrentTerrain();
+            int turnCost = terrain switch
+            {
+                "Forest" => 2,
+                "Mountain" => 3,
+                _ => 1
+            };
+
+            string moveMsg = turnCost > 1
+                ? $"Moved {direction} to {terrain} (-{turnCost} turns, difficult terrain!)"
+                : $"Moved {direction} to {terrain}";
+
+            logger.LogEvent("MOVE", $"{direction} to ({game.PlayerX},{game.PlayerY}) - {terrain} (-{turnCost} turns)");
+            ui.AddMessage(moveMsg);
             ui.RenderStatusBar(game);
             ui.RenderMap(game);
 

@@ -90,7 +90,7 @@ public class UIRenderer
         Console.SetCursorPosition(2, 5);
         Console.Write(new string(' ', 76));
         Console.SetCursorPosition(2, 5);
-        Console.Write($"📍 Position: ({game.PlayerX,2},{game.PlayerY,2})  ");
+        Console.Write($"📍 ({game.PlayerX,2},{game.PlayerY,2})  ");
 
         var terrain = game.GetCurrentTerrain();
         Console.ForegroundColor = terrain switch
@@ -108,6 +108,12 @@ public class UIRenderer
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
             Console.Write($"  ⚔️  DEPTH: {game.DungeonDepth}");
+            Console.ResetColor();
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"  ⏱️  Turn: {game.WorldTurn}");
             Console.ResetColor();
         }
     }
@@ -142,6 +148,13 @@ public class UIRenderer
                     Console.Write(" @ ");
                     Console.ResetColor();
                 }
+                // Check for mob
+                else if (game.IsMobAt(worldX, worldY))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write(" M ");
+                    Console.ResetColor();
+                }
                 else
                 {
                     // Get terrain at this position
@@ -165,7 +178,7 @@ public class UIRenderer
 
         // Legend
         Console.SetCursorPosition(2, startRow + 8);
-        Console.Write("Legend: @ = You  ■ = Town  Ω = Dungeon  ♣ = Forest  ▲ = Mountain  . = Grass");
+        Console.Write("Legend: @ = You  M = Mob  ■ = Town  Ω = Dungeon  ♣ = Forest  ▲ = Mountain");
     }
 
     private string GetTerrainAtPosition(RPGGame game, int x, int y)

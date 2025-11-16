@@ -365,3 +365,4 @@
 [09:26:39] MOVE: North to (14,9) - Mountain
 [09:26:39] ENCOUNTER: Random encounter at (14,9)
 [09:26:40] COMBAT: Fighting Goblin Scout [Lvl1] HP:3
+[09:32:03] COMBAT_ROUND: Goblin Scout misses! 

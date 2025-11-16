@@ -39,6 +39,8 @@ public class RPGGame
     public int PotionCount { get; private set; } = 0;
     public bool InDungeon { get; private set; } = false;
     public int DungeonDepth { get; private set; } = 0;
+    public int WorldTurn { get; private set; } = 0;
+    private List<Mob> _activeMobs = new List<Mob>();
 
     public void Start()
     {
@@ -2111,7 +2113,9 @@ public class RPGGame
         PlayerY = 10;
         PlayerHP = MaxPlayerHP; // CRITICAL FIX: Initialize HP!
         PlayerStamina = 12;
+        WorldTurn = 0;
         GenerateWorld();
+        SpawnMobs();
     }
 
     public bool MoveNorth()
@@ -2119,6 +2123,7 @@ public class RPGGame
         if (PlayerY > 0)
         {
             PlayerY--;
+            AdvanceTurnsByTerrain();
             return true;
         }
         return false;
@@ -2129,6 +2134,7 @@ public class RPGGame
         if (PlayerY < WorldHeight - 1)
         {
             PlayerY++;
+            AdvanceTurnsByTerrain();
             return true;
         }
         return false;
@@ -2139,6 +2145,7 @@ public class RPGGame
         if (PlayerX < WorldWidth - 1)
         {
             PlayerX++;
+            AdvanceTurnsByTerrain();
             return true;
         }
         return false;
@@ -2149,9 +2156,25 @@ public class RPGGame
         if (PlayerX > 0)
         {
             PlayerX--;
+            AdvanceTurnsByTerrain();
             return true;
         }
         return false;
+    }
+
+    private void AdvanceTurnsByTerrain()
+    {
+        string terrain = GetCurrentTerrain();
+        int turnCost = terrain switch
+        {
+            "Grassland" => 1,
+            "Town" => 1,
+            "Dungeon" => 1,
+            "Forest" => 2,
+            "Mountain" => 3,
+            _ => 1
+        };
+        WorldTurn += turnCost;
     }
 
     public string GetCurrentTerrain()
@@ -2369,6 +2392,77 @@ public class RPGGame
             int xpGained = _random.Next(10, 21); // 10-20 XP
             PlayerXP += xpGained;
             return $"Gained {xpGained} XP!";
+        }
+    }
+
+    // ===== GENERATION 30: TURN-BASED WORLD & MOBS =====
+
+    private void SpawnMobs()
+    {
+        _activeMobs.Clear();
+
+        // Spawn 10-15 mobs across the world
+        int mobCount = _random.Next(10, 16);
+        string[] mobNames = { "Goblin Scout", "Orc Wanderer", "Wild Beast", "Bandit", "Skeleton" };
+
+        for (int i = 0; i < mobCount; i++)
+        {
+            int x, y;
+            string terrain;
+
+            // Find valid spawn location (not on player, not in town)
+            do
+            {
+                x = _random.Next(WorldWidth);
+                y = _random.Next(WorldHeight);
+                terrain = _worldMap[x, y];
+            }
+            while ((x == PlayerX && y == PlayerY) || terrain == "Town");
+
+            string name = mobNames[_random.Next(mobNames.Length)];
+            int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2)); // Level ±1 of player
+
+            _activeMobs.Add(new Mob(x, y, name, level));
+        }
+    }
+
+    public int GetActiveMobCount()
+    {
+        return _activeMobs.Count;
+    }
+
+    public List<Mob> GetAllMobs()
+    {
+        return new List<Mob>(_activeMobs); // Return copy
+    }
+
+    public List<Mob> GetMobsInRange(int range)
+    {
+        var nearbyMobs = new List<Mob>();
+
+        foreach (var mob in _activeMobs)
+        {
+            int distance = Math.Abs(mob.X - PlayerX) + Math.Abs(mob.Y - PlayerY);
+            if (distance <= range)
+            {
+                nearbyMobs.Add(mob);
+            }
+        }
+
+        return nearbyMobs;
+    }
+
+    public bool IsMobAt(int x, int y)
+    {
+        return _activeMobs.Any(m => m.X == x && m.Y == y);
+    }
+
+    // Testing helper methods
+    public void SetTerrainForTesting(int x, int y, string terrain)
+    {
+        if (x >= 0 && x < WorldWidth && y >= 0 && y < WorldHeight)
+        {
+            _worldMap[x, y] = terrain;
         }
     }
 }

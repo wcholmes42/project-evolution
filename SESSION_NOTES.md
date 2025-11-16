@@ -1,16 +1,16 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-16
-**Current Generation**: 29 (Game Pacing & Feel!) ⏱️
-**Status**: ✅ Perfect pacing with strategic delays and map restoration!
+**Current Generation**: 30 (Turn-Based World!) 🕐
+**Status**: ✅ True turn-based mechanics with terrain costs and visible mobs!
 
 ## 📝 TODO for Next Session
 
-**Turn-Based World System:**
-- Design game loop that ticks on each player action
-- Add world time counter
-- Implement terrain movement penalties (Forest/Mountain slower)
-- Add mob displays on the map (show nearby enemies)
+**World Dynamics:**
+- Mob movement/AI (mobs move on player turns?)
+- Mob encounters when walking into them
+- Time-based events (weather, day/night cycle?)
+- Hunger/rest system tied to turns?
 
 **Future Enhancements:**
 - Stamina regeneration (1 per turn in combat?)
@@ -28,9 +28,10 @@
   - v3.1-demoscene-ui (Gen 26: Ultimate ASCII UI)
   - v3.2-logging (Gen 27: Comprehensive Logging)
   - v3.3-combat-overhaul (Gen 28: Combat Fixes)
-  - v3.4-pacing (Gen 29: Game Feel & Pacing) ⭐ **CURRENT**
+  - v3.4-pacing (Gen 29: Game Feel & Pacing)
+  - v3.5-turn-based (Gen 30: Turn-Based World) ⭐ **CURRENT**
 
-**Test Coverage**: 114 passing tests (100% coverage maintained)
+**Test Coverage**: 124 passing tests (100% coverage maintained)
 **From "you win" to production roguelike**: 26 generations!
 
 ## Quick Start
@@ -247,7 +248,7 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - No more stamina trap!
 - **Test Count**: 114 passing ✅
 
-#### Generation 29: Game Pacing & Feel (CURRENT) ⏱️
+#### Generation 29: Game Pacing & Feel ⏱️
 - Strategic delays throughout gameplay for better readability
 - Combat rounds pause 900ms so player can read results
 - Encounters pause 800ms to build tension
@@ -258,7 +259,24 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - No code changes needed - game already uses ReadKey (no Enter required!)
 - **Test Count**: 114 passing ✅
 
-### 🎉 Original Evolution Complete! Now adding turn-based world mechanics...
+#### Generation 30: Turn-Based World System (CURRENT) 🕐
+- WorldTurn counter tracks game time
+- Terrain movement costs implemented:
+  - Grassland/Town: 1 turn (fast)
+  - Forest: 2 turns (difficult terrain!)
+  - Mountain: 3 turns (very slow, treacherous!)
+- Strategic terrain choices matter now!
+- Mob system with visible enemies on map ('M' in red)
+- 10-15 mobs spawn across world at start
+- Mobs don't spawn in towns or on player
+- Mobs visible in 3-tile radius (tactical awareness!)
+- Turn counter displayed in status bar
+- Movement feedback shows terrain difficulty
+- Mob class: X, Y, Name, Level properties
+- FIXED: Treasure test ranges (depth bonus was miscalculated)
+- **Test Count**: 124 passing ✅
+
+### 🎉 Turn-based world mechanics complete! Now refining world dynamics...
 
 The game has evolved from "start and win" to a full RPG combat system with:
 - Turn-based combat
