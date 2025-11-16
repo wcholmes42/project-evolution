@@ -34,6 +34,8 @@ public class RPGGame
     public int WorldWidth { get; private set; } = 20;
     public int WorldHeight { get; private set; } = 20;
     private string[,] _worldMap;
+    public bool InLocation { get; private set; } = false;
+    public string CurrentLocation { get; private set; } = null;
 
     public void Start()
     {
@@ -2150,5 +2152,23 @@ public class RPGGame
     public string GetCurrentTerrain()
     {
         return _worldMap[PlayerX, PlayerY];
+    }
+
+    public bool EnterLocation()
+    {
+        string terrain = GetCurrentTerrain();
+        if (terrain == "Town" || terrain == "Dungeon")
+        {
+            InLocation = true;
+            CurrentLocation = terrain;
+            return true;
+        }
+        return false;
+    }
+
+    public void ExitLocation()
+    {
+        InLocation = false;
+        CurrentLocation = null;
     }
 }

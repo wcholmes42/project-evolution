@@ -1725,4 +1725,105 @@ public class GameTests
         // Assert - Should have at least some variety
         Assert.True(terrains.Distinct().Count() >= 2);
     }
+
+    [Fact]
+    public void Location_CanEnterTown()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Move to town at (5,5)
+        int moveCount = 0;
+        while ((game.PlayerX != 5 || game.PlayerY != 5) && moveCount < 20)
+        {
+            if (game.PlayerX > 5) game.MoveWest();
+            else if (game.PlayerX < 5) game.MoveEast();
+            else if (game.PlayerY > 5) game.MoveNorth();
+            else game.MoveSouth();
+            moveCount++;
+        }
+
+        // Act
+        bool entered = game.EnterLocation();
+
+        // Assert
+        Assert.True(entered);
+        Assert.Equal("Town", game.CurrentLocation);
+        Assert.True(game.InLocation);
+    }
+
+    [Fact]
+    public void Location_CannotEnterGrassland()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Ensure we're on grassland
+        while (game.GetCurrentTerrain() != "Grassland")
+        {
+            game.MoveEast();
+        }
+
+        // Act
+        bool entered = game.EnterLocation();
+
+        // Assert
+        Assert.False(entered);
+        Assert.False(game.InLocation);
+    }
+
+    [Fact]
+    public void Location_ExitTown_ReturnsToWorld()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Go to town
+        int moves = 0;
+        while ((game.PlayerX != 5 || game.PlayerY != 5) && moves < 20)
+        {
+            if (game.PlayerX > 5) game.MoveWest();
+            else if (game.PlayerX < 5) game.MoveEast();
+            else if (game.PlayerY > 5) game.MoveNorth();
+            else game.MoveSouth();
+            moves++;
+        }
+        game.EnterLocation();
+
+        // Act
+        game.ExitLocation();
+
+        // Assert
+        Assert.False(game.InLocation);
+        Assert.Null(game.CurrentLocation);
+    }
+
+    [Fact]
+    public void Location_DungeonIsEnterable()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Go to dungeon at (10,5)
+        int moves = 0;
+        while ((game.PlayerX != 10 || game.PlayerY != 5) && moves < 20)
+        {
+            if (game.PlayerX > 10) game.MoveWest();
+            else if (game.PlayerX < 10) game.MoveEast();
+            else if (game.PlayerY > 5) game.MoveNorth();
+            else game.MoveSouth();
+            moves++;
+        }
+
+        // Act
+        bool entered = game.EnterLocation();
+
+        // Assert
+        Assert.True(entered);
+        Assert.Equal("Dungeon", game.CurrentLocation);
+    }
 }

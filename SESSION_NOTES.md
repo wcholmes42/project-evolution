@@ -1,8 +1,8 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 18 🏁 **MAJOR MILESTONE**
-**Status**: ✅ **FULLY PLAYABLE ROGUELIKE RPG**
+**Current Generation**: 20 (World Exploration In Progress...)
+**Status**: ✅ Building Warhammer Quest + Ultima IV fusion!
 
 ## 🏆 LINE IN THE SAND - What We've Built
 
@@ -159,16 +159,28 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 #### Generation 17: Max HP Growth
 - MaxPlayerHP increases +2 per level
 - HP fully restored on level up
-- Player grows in power AND survivability
 
-#### Generation 18: Endless Game Loop (CURRENT) 🏁
-- CombatsWon and RunEnded properties
+#### Generation 18: Endless Game Loop 🏁
 - Continuous play mode until death
-- Continue (Y) or Quit (N) after each victory
-- HP and Stamina fully restored between fights
-- Final stats displayed on death
-- Safe exit option anytime
-- **FINAL Test Count**: 84 passing ✅
+- Continue or quit after victories
+- **Test Count**: 84 passing
+
+### 🗺️ World Exploration Cohort (Gen 19-25)
+
+#### Generation 19: Grid-Based World Map
+- 20x20 procedurally generated world
+- PlayerX, PlayerY with N/S/E/W movement
+- Terrain types: Grassland, Forest, Mountain
+- Special locations: Towns & Dungeons
+- Bounds checking
+- **Test Count**: 92 passing
+
+#### Generation 20: Location System (CURRENT)
+- EnterLocation() for Towns & Dungeons
+- ExitLocation() back to world
+- InLocation and CurrentLocation properties
+- Only special locations are enterable
+- **Test Count**: 96 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
