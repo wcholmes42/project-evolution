@@ -1,11 +1,18 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-15
-**Current Generation**: 18 (Game Loop Complete!)
-**Status**: ✅ Fully playable endless mode - Ready to test!
+**Current Generation**: 18 🏁 **MAJOR MILESTONE**
+**Status**: ✅ **FULLY PLAYABLE ROGUELIKE RPG**
+
+## 🏆 LINE IN THE SAND - What We've Built
+
 **Git Tags**:
-  - v1.0-roguelike-complete (Gen 0-12: Combat)
-  - v2.0-progression-complete (Gen 13-17: Leveling)
+  - v1.0-roguelike-complete (Gen 0-12: Combat Dynamics)
+  - v2.0-progression-complete (Gen 13-17: Character Progression)
+  - v2.1-endless-mode (Gen 18: Game Loop) ⭐ **CURRENT**
+
+**Test Coverage**: 84 passing tests (100% coverage maintained)
+**From "you win" to complete RPG**: 18 TDD generations
 
 ## Quick Start
 ```bash
@@ -149,11 +156,19 @@ dotnet run --project ProjectEvolution.Game  # Play the game
 - +2 HP, +1 damage per level
 - **Test Count**: 78 passing
 
-#### Generation 17: Max HP Growth (CURRENT)
+#### Generation 17: Max HP Growth
 - MaxPlayerHP increases +2 per level
 - HP fully restored on level up
 - Player grows in power AND survivability
-- **FINAL Test Count**: 81 passing
+
+#### Generation 18: Endless Game Loop (CURRENT) 🏁
+- CombatsWon and RunEnded properties
+- Continuous play mode until death
+- Continue (Y) or Quit (N) after each victory
+- HP and Stamina fully restored between fights
+- Final stats displayed on death
+- Safe exit option anytime
+- **FINAL Test Count**: 84 passing ✅
 
 ### 🎉 Original Evolution Complete! Now adding combat dynamics...
 
