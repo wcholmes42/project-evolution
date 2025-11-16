@@ -10,6 +10,9 @@ public class GradientTuner
     private static int _cyclesRun = 0;
     private static double _targetScore = 50.0; // Target: 50 turns average
     private static double _bestScore = 0;
+    private static int _cyclesSinceImprovement = 0;
+    private static double _mutationVariance = 1.0; // Adaptive exploration strength
+    private static List<double> _recentScores = new List<double>(); // Last 10 for progress rate
 
     private class LeaderboardEntry
     {
@@ -69,6 +72,35 @@ public class GradientTuner
             double score = 100 - Math.Abs(error) * 2; // Score out of 100
 
             _scoreHistory.Add(avgTurns);
+            _recentScores.Add(score);
+            if (_recentScores.Count > 10) _recentScores.RemoveAt(0);
+
+            // Track progress
+            bool improved = score > _bestScore;
+            if (improved)
+            {
+                _cyclesSinceImprovement = 0;
+                _mutationVariance = Math.Max(0.5, _mutationVariance * 0.9); // Reduce variance when improving
+            }
+            else
+            {
+                _cyclesSinceImprovement++;
+
+                // ADAPTIVE EXPLORATION: Stuck? Increase mutation variance!
+                if (_cyclesSinceImprovement > 5)
+                {
+                    _mutationVariance = Math.Min(5.0, _mutationVariance * 1.3); // Increase variance when stuck
+                }
+            }
+
+            // Calculate progress rate (improvement over last 10 cycles)
+            double progressRate = 0;
+            if (_recentScores.Count >= 5)
+            {
+                double firstHalf = _recentScores.Take(5).Average();
+                double secondHalf = _recentScores.Skip(_recentScores.Count - 5).Average();
+                progressRate = secondHalf - firstHalf; // Positive = improving
+            }
 
             // Add to leaderboard
             var entry = new LeaderboardEntry
@@ -90,8 +122,8 @@ public class GradientTuner
                 ConfigPersistence.SaveOptimalConfig(config.ToSimConfig(), stats, score, _cyclesRun * 300);
             }
 
-            // Update display
-            UpdateGradientDisplay(config, stats, error);
+            // Update display with progress metrics
+            UpdateGradientDisplay(config, stats, error, progressRate);
 
             // Calculate gradients (estimate parameter impact)
             if (_cyclesRun > 1)
@@ -106,14 +138,21 @@ public class GradientTuner
                 // Debug: log before adjustment
                 var beforeConfig = $"Det={config.MobDetectionRange:F1} Mobs={config.MaxMobs:F1} HP={config.PlayerStartHP:F1} Def={config.PlayerDefense:F1}";
 
-                // Every 10 cycles: BIG RANDOM JUMP to escape local minima!
+                // ADAPTIVE EXPLORATION: Vary jump size based on progress!
                 if (_cyclesRun % 10 == 0)
                 {
                     var random = new Random();
-                    config.MobDetectionRange += random.Next(-2, 3);
-                    config.MaxMobs += random.Next(-8, 9);
-                    config.PlayerStartHP += random.Next(-3, 4);
-                    config.PlayerDefense += random.Next(-1, 2);
+
+                    // Use mutation variance (increases when stuck, decreases when improving)
+                    int detJump = (int)(_mutationVariance * random.Next(-2, 3));
+                    int mobsJump = (int)(_mutationVariance * random.Next(-8, 9));
+                    int hpJump = (int)(_mutationVariance * random.Next(-3, 4));
+                    int defJump = (int)(_mutationVariance * random.Next(-1, 2));
+
+                    config.MobDetectionRange += detJump;
+                    config.MaxMobs += mobsJump;
+                    config.PlayerStartHP += hpJump;
+                    config.PlayerDefense += defJump;
 
                     // Clamp
                     config.MobDetectionRange = Math.Clamp(config.MobDetectionRange, 2, 6);
@@ -263,10 +302,12 @@ public class GradientTuner
         Console.WriteLine("║   MaxMobs:                                                                 ║");
         Console.WriteLine("║   PlayerHP:                                                                ║");
         Console.WriteLine("║   PlayerDef:                                                               ║");
+        Console.WriteLine("╠════════════════════════════════════════════════════════════════════════════╣");
+        Console.WriteLine("║ PROGRESS TRACKING:                                                         ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════╝");
     }
 
-    private static void UpdateGradientDisplay(FloatConfig config, SimulationStats stats, double error)
+    private static void UpdateGradientDisplay(FloatConfig config, SimulationStats stats, double error, double progressRate)
     {
         // Cycle and error
         Console.SetCursorPosition(2, 4);
@@ -294,6 +335,12 @@ public class GradientTuner
         Console.Write($"  PlayerHP:     {_gradients["PlayerHP"],+6:F3}                                                 ");
         Console.SetCursorPosition(2, 22);
         Console.Write($"  PlayerDef:    {_gradients["PlayerDefense"],+6:F3}                                                 ");
+
+        // Progress tracking
+        Console.SetCursorPosition(2, 24);
+        Console.ForegroundColor = progressRate > 0 ? ConsoleColor.Green : progressRate < -2 ? ConsoleColor.Red : ConsoleColor.Yellow;
+        Console.Write($"PROGRESS: {progressRate,+6:F2}/cycle | Stuck: {_cyclesSinceImprovement} | Mutation: {_mutationVariance:F1}x              ");
+        Console.ResetColor();
     }
 
     private static void DrawLeaderboard()

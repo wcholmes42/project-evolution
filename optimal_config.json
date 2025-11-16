@@ -3,10 +3,10 @@
   "MaxMobs": 40,
   "MinMobs": 5,
   "PlayerStartHP": 5,
-  "PlayerStrength": 2,
+  "PlayerStrength": 1,
   "PlayerDefense": 0,
-  "Score": 19.46666666666667,
-  "AvgTurns": 90.26666666666667,
-  "TotalGamesSimulated": 77100,
-  "Discovered": "2025-11-16T13:45:54.2659749-08:00"
+  "Score": 41.893333333333345,
+  "AvgTurns": 79.05333333333333,
+  "TotalGamesSimulated": 109800,
+  "Discovered": "2025-11-16T13:52:46.1364597-08:00"
 }
