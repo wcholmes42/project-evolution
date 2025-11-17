@@ -511,8 +511,22 @@ while (playing)
             }
             else if (currentTile == "Stairs")
             {
-                ui.AddMessage("🚪 Found stairs going deeper!");
-                // Could add descend option here
+                ui.AddMessage("🚪 Found stairs! Press [D] to descend or keep exploring");
+            }
+        }
+        else if (key == ConsoleKey.D && game.InDungeon)
+        {
+            // Check if on stairs
+            if (game.GetDungeonTile(game.PlayerX, game.PlayerY) == "Stairs")
+            {
+                game.DescendDungeon();
+                ui.AddMessage($"⬇️  Descended to Depth {game.DungeonDepth}!");
+                ui.RenderStatusBar(game);
+                Thread.Sleep(600);
+            }
+            else
+            {
+                ui.AddMessage("No stairs here - find the > symbol!");
             }
             // else: just regular floor, nothing happens
         }
