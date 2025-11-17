@@ -409,12 +409,40 @@ while (playing)
             ui.RenderStatusBar(game);
             ui.RenderMap(game); // Update dungeon view
 
-            // REDUCED: 30% → 15% chance for events (less punishing!)
-            int eventRoll = _random.Next(100);
-            if (eventRoll < 15) // 15% chance for something to happen
+            // CHECK WHAT TILE WE'RE ON!
+            string currentTile = game.GetDungeonTile(game.PlayerX, game.PlayerY);
+
+            if (currentTile == "Treasure")
             {
-                int encounterType = _random.Next(3);
-                if (encounterType == 0) // Monster
+                // Stepped on treasure!
+                int gold = game.RollForTreasure(game.DungeonDepth);
+                ui.AddMessage($"💎 TREASURE CHEST! Found {gold} gold!");
+                ui.RenderStatusBar(game);
+                Thread.Sleep(800);
+
+                // Remove treasure from map
+                game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
+            }
+            else if (currentTile == "Trap")
+            {
+                // Stepped on trap!
+                int dmg = game.TriggerTrap();
+                ui.AddMessage($"💥 TRAP! Took {dmg} damage!");
+                ui.RenderStatusBar(game);
+                Thread.Sleep(900);
+
+                // Remove trap from map
+                game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
+
+                if (game.PlayerHP <= 0)
+                {
+                    ui.AddMessage("💀 GAME OVER!");
+                    playing = false;
+                }
+            }
+            else if (currentTile == "Monster")
+            {
+                // Stepped on monster!
                 {
                     game.TriggerDungeonCombat();
                     ui.AddMessage($"👹 {game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
@@ -477,23 +505,16 @@ while (playing)
                             }
                         }
                         ui.RenderStatusBar(game);
+                    ui.RenderMap(game); // Update to show monster gone
                     }
                 }
-                else if (encounterType == 1) // Treasure
-                {
-                    int gold = game.RollForTreasure(game.DungeonDepth);
-                    ui.AddMessage($"💎 TREASURE! Found {gold} gold!");
-                    ui.RenderStatusBar(game);
-                    Thread.Sleep(800);
-                }
-                else // Trap
-                {
-                    int dmg = game.TriggerTrap();
-                    ui.AddMessage($"💥 TRAP! Took {dmg} damage!");
-                    ui.RenderStatusBar(game);
-                    Thread.Sleep(900);
-                }
             }
+            else if (currentTile == "Stairs")
+            {
+                ui.AddMessage("🚪 Found stairs going deeper!");
+                // Could add descend option here
+            }
+            // else: just regular floor, nothing happens
         }
         else if (key == ConsoleKey.N || key == ConsoleKey.S || key == ConsoleKey.E || key == ConsoleKey.W ||
                  key == ConsoleKey.UpArrow || key == ConsoleKey.DownArrow ||
