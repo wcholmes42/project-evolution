@@ -480,3 +480,547 @@
 [10:12:36] MOVE: West to (10,13) - Grassland (-1 turns)
 [10:12:36] MOVE: South to (10,14) - Forest (-2 turns)
 [10:12:38] MOVE: South to (10,15) - Dungeon (-1 turns)
+[10:20:41] GAME: Project Evolution started!
+[10:20:41] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[10:20:41] INIT: Player spawned at (10,10)
+[10:20:46] MOVE: South to (10,11) - Grassland (-1 turns)
+[10:20:47] MOVE: South to (10,12) - Forest (-2 turns)
+[10:20:47] MOVE: South to (10,13) - Grassland (-1 turns)
+[10:20:48] MOVE: South to (10,14) - Forest (-2 turns)
+[10:20:48] MOVE: South to (10,15) - Dungeon (-1 turns)
+[10:42:52] GAME: Project Evolution started!
+[10:42:52] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[10:42:52] INIT: Player spawned at (10,10)
+[10:42:53] MOVE: South to (10,11) - Grassland (-1 turns)
+[10:42:54] MOVE: South to (10,12) - Forest (-2 turns)
+[10:42:54] MOVE: South to (10,13) - Grassland (-1 turns)
+[10:42:55] MOVE: South to (10,14) - Forest (-2 turns)
+[10:42:55] MOVE: South to (10,15) - Dungeon (-1 turns)
+[10:50:52] MOVE: East to (11,15) - Forest (-2 turns)
+[10:50:53] MOVE: West to (10,15) - Dungeon (-1 turns)
+[10:55:15] GAME: Project Evolution started!
+[10:55:15] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[10:55:15] INIT: Player spawned at (10,10)
+[10:55:16] MOVE: South to (10,11) - Grassland (-1 turns)
+[10:55:17] MOVE: South to (10,12) - Forest (-2 turns)
+[10:55:17] ENCOUNTER: Random encounter at (10,12)
+[10:55:19] MOVE: West to (9,12) - Grassland (-1 turns)
+[10:55:22] MOVE: East to (10,12) - Forest (-2 turns)
+[10:55:25] MOVE: East to (11,12) - Grassland (-1 turns)
+[10:55:25] MOVE: East to (12,12) - Grassland (-1 turns)
+[10:55:26] MOVE: South to (12,13) - Grassland (-1 turns)
+[10:55:26] ENCOUNTER: Mob encounter: Ambusher at (12,13)
+[10:55:27] COMBAT: Fighting Ambusher [Lvl2] HP:6
+[10:55:28] COMBAT_ROUND: Ambusher misses! 
+[10:55:30] DAMAGE: Player took 1 damage. HP: 99/100
+[10:55:30] COMBAT_ROUND: Hit 10! Ambusher CRIT 1! Victory! +10g +15xp!
+[10:55:30] VICTORY: Defeated Ambusher. XP: 15
+[10:55:30] MOB: Removed Ambusher from map
+[10:55:32] MOVE: West to (11,13) - Forest (-2 turns)
+[10:55:32] ENCOUNTER: Random encounter at (11,13)
+[10:55:32] MOVE: West to (10,13) - Grassland (-1 turns)
+[10:55:33] MOVE: South to (10,14) - Forest (-2 turns)
+[10:55:36] MOVE: South to (10,15) - Dungeon (-1 turns)
+[10:57:29] MOVE: East to (7,15) - Grassland (-1 turns)
+[10:57:29] MOVE: North to (7,14) - Grassland (-1 turns)
+[10:57:30] MOVE: North to (7,13) - Mountain (-3 turns)
+[10:57:31] MOVE: North to (7,12) - Forest (-2 turns)
+[10:57:31] MOVE: East to (8,12) - Mountain (-3 turns)
+[10:57:32] MOVE: East to (9,12) - Grassland (-1 turns)
+[10:57:33] MOVE: South to (9,13) - Mountain (-3 turns)
+[10:57:33] MOVE: South to (9,14) - Forest (-2 turns)
+[10:58:21] MOVE: North to (9,13) - Mountain (-3 turns)
+[10:58:22] MOVE: East to (10,13) - Grassland (-1 turns)
+[10:58:22] MOVE: East to (11,13) - Forest (-2 turns)
+[10:58:23] MOVE: North to (11,12) - Grassland (-1 turns)
+[10:58:23] MOVE: North to (11,11) - Grassland (-1 turns)
+[10:58:23] MOVE: North to (11,10) - Grassland (-1 turns)
+[10:58:23] MOVE: North to (11,9) - Grassland (-1 turns)
+[10:58:24] MOVE: North to (11,8) - Grassland (-1 turns)
+[10:58:24] MOVE: West to (10,8) - Grassland (-1 turns)
+[10:58:24] MOVE: West to (9,8) - Grassland (-1 turns)
+[10:58:24] ENCOUNTER: Random encounter at (9,8)
+[10:58:25] MOVE: West to (8,8) - Forest (-2 turns)
+[10:58:25] ENCOUNTER: Mob encounter: Ambusher at (8,8)
+[10:58:26] COMBAT: Fighting Ambusher [Lvl1] HP:4
+[10:58:26] COMBAT_ROUND: Ambusher misses! 
+[10:58:27] COMBAT_ROUND: Ambusher misses! 
+[10:58:28] COMBAT_ROUND: Ambusher misses! 
+[10:58:29] COMBAT_ROUND: Ambusher misses! 
+[10:58:30] COMBAT_ROUND: Ambusher misses! 
+[10:58:31] COMBAT_ROUND: Ambusher misses! 
+[10:58:32] COMBAT_ROUND: MISS! Ambusher misses! 
+[10:58:33] DAMAGE: Player took 1 damage. HP: 94/100
+[10:58:33] COMBAT_ROUND: Hit 10! Ambusher CRIT 1! Victory! +10g +15xp!
+[10:58:33] VICTORY: Defeated Ambusher. XP: 160
+[10:58:33] MOB: Removed Ambusher from map
+[10:58:34] MOVE: West to (7,8) - Forest (-2 turns)
+[10:58:35] MOVE: West to (6,8) - Mountain (-3 turns)
+[10:58:36] MOVE: North to (6,7) - Forest (-2 turns)
+[10:58:36] MOVE: West to (5,7) - Grassland (-1 turns)
+[10:58:36] MOVE: North to (5,6) - Forest (-2 turns)
+[10:58:37] MOVE: North to (5,5) - Town (-1 turns)
+[11:28:30] GAME: Project Evolution started!
+[11:28:30] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[11:28:30] INIT: Player spawned at (10,10)
+[11:28:32] MOVE: South to (10,11) - Grassland (-1 turns)
+[11:28:33] MOVE: South to (10,12) - Forest (-2 turns)
+[11:28:33] MOVE: South to (10,13) - Grassland (-1 turns)
+[11:28:33] MOVE: South to (10,14) - Forest (-2 turns)
+[11:28:34] MOVE: South to (10,15) - Dungeon (-1 turns)
+[11:30:06] MOVE: South to (7,6) - Forest (-2 turns)
+[11:30:08] MOVE: South to (7,7) - Mountain (-3 turns)
+[11:30:08] ENCOUNTER: Random encounter at (7,7)
+[11:30:08] MOVE: East to (8,7) - Grassland (-1 turns)
+[11:30:09] MOVE: East to (9,7) - Forest (-2 turns)
+[11:30:09] ENCOUNTER: Random encounter at (9,7)
+[11:30:09] MOVE: North to (9,6) - Grassland (-1 turns)
+[11:30:10] MOVE: North to (9,5) - Grassland (-1 turns)
+[11:30:10] MOVE: West to (8,5) - Grassland (-1 turns)
+[11:30:10] MOVE: West to (7,5) - Forest (-2 turns)
+[11:30:11] MOVE: West to (6,5) - Forest (-2 turns)
+[11:30:11] MOVE: West to (5,5) - Town (-1 turns)
+[11:30:20] MOVE: South to (5,6) - Forest (-2 turns)
+[11:30:20] ENCOUNTER: Mob encounter: Ambusher at (5,6)
+[11:30:20] COMBAT: Fighting Ambusher [Lvl2] HP:7
+[11:30:21] DAMAGE: Player took 1 damage. HP: 93/100
+[11:30:21] COMBAT_ROUND: Hit 10! Ambusher CRIT 1! Victory! +10g +25xp!
+[11:30:22] VICTORY: Defeated Ambusher. XP: 140
+[11:30:22] MOB: Removed Ambusher from map
+[11:30:23] MOVE: West to (4,6) - Grassland (-1 turns)
+[11:30:24] MOVE: South to (4,7) - Grassland (-1 turns)
+[11:30:24] ENCOUNTER: Mob encounter: Goblin Archer at (4,7)
+[11:30:25] COMBAT: Fighting Goblin Archer [Lvl1] HP:2
+[11:30:25] DAMAGE: Player took 1 damage. HP: 92/100
+[11:30:25] COMBAT_ROUND: Hit 10! Goblin Archer 1! Victory! +10g +15xp!
+[11:30:26] VICTORY: Defeated Goblin Archer. XP: 155
+[11:30:26] MOB: Removed Goblin Archer from map
+[11:30:27] MOVE: South to (4,8) - Grassland (-1 turns)
+[11:30:27] MOVE: South to (4,9) - Grassland (-1 turns)
+[11:30:28] MOVE: South to (4,10) - Grassland (-1 turns)
+[11:30:28] ENCOUNTER: Random encounter at (4,10)
+[11:30:28] MOVE: East to (5,10) - Grassland (-1 turns)
+[11:30:29] MOVE: South to (5,11) - Grassland (-1 turns)
+[11:30:29] ENCOUNTER: Random encounter at (5,11)
+[11:30:30] MOVE: South to (5,12) - Grassland (-1 turns)
+[11:30:33] MOVE: North to (5,11) - Grassland (-1 turns)
+[11:30:33] ENCOUNTER: Mob encounter: Ambusher at (5,11)
+[11:30:34] COMBAT: Fighting Ambusher [Lvl3] HP:9
+[11:30:34] DAMAGE: Player took 1 damage. HP: 91/100
+[11:30:34] COMBAT_ROUND: Hit 10! Ambusher 1! Victory! +10g +25xp!
+[11:30:35] VICTORY: Defeated Ambusher. XP: 180
+[11:30:35] MOB: Removed Ambusher from map
+[11:30:36] MOVE: South to (5,12) - Grassland (-1 turns)
+[11:30:37] MOVE: South to (5,13) - Grassland (-1 turns)
+[11:30:37] MOVE: South to (5,14) - Forest (-2 turns)
+[11:30:37] MOVE: South to (5,15) - Grassland (-1 turns)
+[11:30:38] MOVE: South to (5,16) - Forest (-2 turns)
+[11:30:38] MOVE: South to (5,17) - Grassland (-1 turns)
+[11:30:38] ENCOUNTER: Random encounter at (5,17)
+[11:30:39] MOVE: South to (5,18) - Forest (-2 turns)
+[11:30:39] MOVE: East to (6,18) - Grassland (-1 turns)
+[11:30:41] MOVE: North to (6,17) - Grassland (-1 turns)
+[11:30:42] MOVE: North to (6,16) - Grassland (-1 turns)
+[11:30:42] MOVE: North to (6,15) - Grassland (-1 turns)
+[11:30:43] MOVE: North to (6,14) - Grassland (-1 turns)
+[11:30:43] MOVE: North to (6,13) - Grassland (-1 turns)
+[11:30:43] MOVE: North to (6,12) - Grassland (-1 turns)
+[11:30:43] MOVE: North to (6,11) - Grassland (-1 turns)
+[11:30:43] MOVE: North to (6,10) - Grassland (-1 turns)
+[11:30:44] MOVE: North to (6,9) - Forest (-2 turns)
+[11:30:44] MOVE: North to (6,8) - Mountain (-3 turns)
+[11:30:44] MOVE: North to (6,7) - Forest (-2 turns)
+[11:30:45] MOVE: North to (6,6) - Mountain (-3 turns)
+[11:30:45] MOVE: North to (6,5) - Forest (-2 turns)
+[11:30:45] ENCOUNTER: Random encounter at (6,5)
+[11:30:46] MOVE: North to (6,4) - Mountain (-3 turns)
+[11:30:46] MOVE: North to (6,3) - Forest (-2 turns)
+[11:30:46] MOVE: North to (6,2) - Forest (-2 turns)
+[11:30:47] MOVE: South to (6,3) - Forest (-2 turns)
+[11:30:47] ENCOUNTER: Mob encounter: Ambusher at (6,3)
+[11:30:48] COMBAT: Fighting Ambusher [Lvl1] HP:3
+[11:30:48] DAMAGE: Player took 1 damage. HP: 90/100
+[11:30:48] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +15xp!
+[11:30:49] VICTORY: Defeated Ambusher. XP: 195
+[11:30:49] MOB: Removed Ambusher from map
+[11:30:50] MOVE: East to (7,3) - Forest (-2 turns)
+[11:30:50] MOVE: East to (8,3) - Grassland (-1 turns)
+[11:30:51] MOVE: East to (9,3) - Grassland (-1 turns)
+[11:30:51] MOVE: East to (10,3) - Grassland (-1 turns)
+[11:30:51] MOVE: South to (10,4) - Grassland (-1 turns)
+[11:30:52] MOVE: South to (10,5) - Dungeon (-1 turns)
+[11:32:05] MOVE: West to (13,10) - Mountain (-3 turns)
+[11:32:06] MOVE: West to (12,10) - Grassland (-1 turns)
+[11:32:06] MOVE: South to (12,11) - Grassland (-1 turns)
+[11:32:06] MOVE: South to (12,12) - Grassland (-1 turns)
+[11:32:20] MOVE: South to (12,13) - Grassland (-1 turns)
+[11:32:20] ENCOUNTER: Random encounter at (12,13)
+[11:32:21] MOVE: West to (11,13) - Forest (-2 turns)
+[11:32:21] MOVE: West to (10,13) - Grassland (-1 turns)
+[11:32:22] MOVE: East to (11,13) - Forest (-2 turns)
+[11:32:22] MOVE: East to (12,13) - Grassland (-1 turns)
+[11:32:23] MOVE: East to (13,13) - Grassland (-1 turns)
+[11:32:23] MOVE: South to (13,14) - Grassland (-1 turns)
+[11:32:23] MOVE: South to (13,15) - Grassland (-1 turns)
+[11:32:23] MOVE: South to (13,16) - Grassland (-1 turns)
+[11:32:24] MOVE: East to (14,16) - Grassland (-1 turns)
+[11:32:24] MOVE: East to (15,16) - Mountain (-3 turns)
+[11:32:25] MOVE: East to (16,16) - Forest (-2 turns)
+[11:32:25] MOVE: North to (16,15) - Mountain (-3 turns)
+[11:32:25] MOVE: West to (15,15) - Town (-1 turns)
+[11:32:36] MOVE: East to (16,15) - Mountain (-3 turns)
+[11:32:36] ENCOUNTER: Random encounter at (16,15)
+[11:32:37] MOVE: East to (17,15) - Grassland (-1 turns)
+[11:32:37] MOVE: East to (18,15) - Forest (-2 turns)
+[11:32:37] ENCOUNTER: Random encounter at (18,15)
+[11:32:37] MOVE: East to (19,15) - Grassland (-1 turns)
+[11:32:37] ENCOUNTER: Mob encounter: Ambusher at (19,15)
+[11:32:38] COMBAT: Fighting Ambusher [Lvl3] HP:9
+[11:32:39] COMBAT_ROUND: Ambusher misses! 
+[11:32:40] DAMAGE: Player took 1 damage. HP: 101/102
+[11:32:40] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +25xp!
+[11:32:40] VICTORY: Defeated Ambusher. XP: 390
+[11:32:40] MOB: Removed Ambusher from map
+[11:32:43] MOVE: West to (18,15) - Forest (-2 turns)
+[11:32:43] ENCOUNTER: Mob encounter: Ambusher at (18,15)
+[11:32:43] COMBAT: Fighting Ambusher [Lvl3] HP:5
+[11:32:44] COMBAT_ROUND: Hit 10! Ambusher misses! Victory! +10g +10xp!
+[11:32:45] VICTORY: Defeated Ambusher. XP: 400
+[11:32:45] MOB: Removed Ambusher from map
+[11:32:46] MOVE: East to (19,15) - Grassland (-1 turns)
+[11:32:47] MOVE: South to (19,16) - Grassland (-1 turns)
+[11:32:47] ENCOUNTER: Random encounter at (19,16)
+[11:32:48] MOVE: South to (19,17) - Grassland (-1 turns)
+[11:32:48] MOVE: North to (19,16) - Grassland (-1 turns)
+[11:32:50] MOVE: South to (19,17) - Grassland (-1 turns)
+[11:32:51] MOVE: South to (19,18) - Forest (-2 turns)
+[11:32:51] MOVE: South to (19,19) - Grassland (-1 turns)
+[11:32:51] MOVE: West to (18,19) - Forest (-2 turns)
+[11:32:52] MOVE: West to (17,19) - Forest (-2 turns)
+[11:32:52] MOVE: West to (16,19) - Mountain (-3 turns)
+[11:32:52] MOVE: West to (15,19) - Grassland (-1 turns)
+[11:32:52] MOVE: West to (14,19) - Grassland (-1 turns)
+[11:32:53] MOVE: West to (13,19) - Forest (-2 turns)
+[11:32:53] MOVE: West to (12,19) - Grassland (-1 turns)
+[11:32:53] MOVE: West to (11,19) - Forest (-2 turns)
+[11:32:53] MOVE: West to (10,19) - Forest (-2 turns)
+[11:32:53] ENCOUNTER: Random encounter at (10,19)
+[11:32:54] MOVE: West to (9,19) - Mountain (-3 turns)
+[11:32:54] ENCOUNTER: Mob encounter: Ambusher at (9,19)
+[11:32:55] COMBAT: Fighting Ambusher [Lvl4] HP:8
+[11:32:55] COMBAT_ROUND: Ambusher misses! 
+[11:32:56] COMBAT_ROUND: Ambusher misses! 
+[11:32:57] COMBAT_ROUND: Ambusher misses! 
+[11:32:58] COMBAT_ROUND: Ambusher misses! 
+[11:32:59] DAMAGE: Player took 1 damage. HP: 103/104
+[11:32:59] COMBAT_ROUND: Hit 10! Ambusher 1! Victory! +10g +10xp!
+[11:33:00] VICTORY: Defeated Ambusher. XP: 410
+[11:33:00] MOB: Removed Ambusher from map
+[11:33:02] MOVE: West to (8,19) - Grassland (-1 turns)
+[11:33:02] MOVE: North to (8,18) - Grassland (-1 turns)
+[11:33:02] MOVE: North to (8,17) - Grassland (-1 turns)
+[11:33:02] ENCOUNTER: Random encounter at (8,17)
+[11:33:03] MOVE: North to (8,16) - Mountain (-3 turns)
+[11:33:03] ENCOUNTER: Mob encounter: Ambusher at (8,16)
+[11:33:04] COMBAT: Fighting Ambusher [Lvl6] HP:12
+[11:33:04] COMBAT_ROUND: Ambusher misses! 
+[11:33:05] COMBAT_ROUND: Ambusher misses! 
+[11:33:06] DAMAGE: Player took 1 damage. HP: 102/104
+[11:33:06] COMBAT_ROUND: Hit 10! Ambusher CRIT 1! 
+[11:33:07] DAMAGE: Player took 1 damage. HP: 101/104
+[11:33:07] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +10xp!
+[11:33:08] VICTORY: Defeated Ambusher. XP: 420
+[11:33:08] MOB: Removed Ambusher from map
+[11:33:09] MOVE: West to (7,16) - Grassland (-1 turns)
+[11:33:10] MOVE: West to (6,16) - Grassland (-1 turns)
+[11:33:10] MOVE: North to (6,15) - Grassland (-1 turns)
+[11:33:11] MOVE: North to (6,14) - Grassland (-1 turns)
+[11:33:11] MOVE: North to (6,13) - Grassland (-1 turns)
+[11:33:12] MOVE: North to (6,12) - Grassland (-1 turns)
+[11:33:12] ENCOUNTER: Random encounter at (6,12)
+[11:33:13] MOVE: South to (6,13) - Grassland (-1 turns)
+[11:33:13] ENCOUNTER: Mob encounter: Ambusher at (6,13)
+[11:33:14] COMBAT: Fighting Ambusher [Lvl6] HP:14
+[11:33:14] DAMAGE: Player took 1 damage. HP: 100/104
+[11:33:14] COMBAT_ROUND: Hit 10! Ambusher 1! 
+[11:33:17] DAMAGE: Player took 1 damage. HP: 99/104
+[11:33:17] COMBAT_ROUND: Hit 10! Ambusher 1! Victory! +10g +25xp!
+[11:33:18] VICTORY: Defeated Ambusher. XP: 445
+[11:33:18] MOB: Removed Ambusher from map
+[11:33:20] MOVE: North to (6,12) - Grassland (-1 turns)
+[11:33:20] MOVE: North to (6,11) - Grassland (-1 turns)
+[11:33:20] MOVE: North to (6,10) - Grassland (-1 turns)
+[11:33:21] MOVE: North to (6,9) - Forest (-2 turns)
+[11:33:21] MOVE: North to (6,8) - Mountain (-3 turns)
+[11:33:21] MOVE: West to (5,8) - Grassland (-1 turns)
+[11:33:22] MOVE: West to (4,8) - Grassland (-1 turns)
+[11:33:22] MOVE: West to (3,8) - Forest (-2 turns)
+[11:33:22] MOVE: West to (2,8) - Grassland (-1 turns)
+[11:33:22] MOVE: West to (1,8) - Forest (-2 turns)
+[11:33:23] MOVE: South to (1,9) - Forest (-2 turns)
+[11:33:23] MOVE: South to (1,10) - Mountain (-3 turns)
+[11:33:23] MOVE: South to (1,11) - Forest (-2 turns)
+[11:33:24] MOVE: South to (1,12) - Mountain (-3 turns)
+[11:33:24] MOVE: South to (1,13) - Forest (-2 turns)
+[11:33:24] ENCOUNTER: Random encounter at (1,13)
+[11:33:25] MOVE: South to (1,14) - Mountain (-3 turns)
+[11:33:25] MOVE: West to (0,14) - Grassland (-1 turns)
+[11:33:25] MOVE: North to (0,13) - Grassland (-1 turns)
+[11:33:25] ENCOUNTER: Mob encounter: Ambusher at (0,13)
+[11:33:26] COMBAT: Fighting Ambusher [Lvl4] HP:10
+[11:33:27] DAMAGE: Player took 1 damage. HP: 98/104
+[11:33:27] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +25xp!
+[11:33:28] VICTORY: Defeated Ambusher. XP: 470
+[11:33:28] MOB: Removed Ambusher from map
+[11:33:29] MOVE: East to (1,13) - Forest (-2 turns)
+[11:33:29] MOVE: East to (2,13) - Mountain (-3 turns)
+[11:33:29] MOVE: East to (3,13) - Grassland (-1 turns)
+[11:33:30] MOVE: East to (4,13) - Forest (-2 turns)
+[11:33:30] MOVE: East to (5,13) - Grassland (-1 turns)
+[11:33:31] MOVE: East to (6,13) - Grassland (-1 turns)
+[11:33:31] MOVE: North to (6,12) - Grassland (-1 turns)
+[11:33:31] MOVE: North to (6,11) - Grassland (-1 turns)
+[11:33:31] MOVE: North to (6,10) - Grassland (-1 turns)
+[11:33:32] MOVE: East to (7,10) - Forest (-2 turns)
+[11:33:32] ENCOUNTER: Random encounter at (7,10)
+[11:33:32] MOVE: East to (8,10) - Mountain (-3 turns)
+[11:33:32] MOVE: West to (7,10) - Forest (-2 turns)
+[11:33:36] MOVE: West to (6,10) - Grassland (-1 turns)
+[11:33:36] MOVE: East to (7,10) - Forest (-2 turns)
+[11:33:36] MOVE: East to (8,10) - Mountain (-3 turns)
+[11:33:37] MOVE: East to (9,10) - Grassland (-1 turns)
+[11:33:37] MOVE: East to (10,10) - Forest (-2 turns)
+[11:33:37] MOVE: East to (11,10) - Grassland (-1 turns)
+[11:33:37] MOVE: East to (12,10) - Grassland (-1 turns)
+[11:33:38] MOVE: East to (13,10) - Mountain (-3 turns)
+[11:33:38] MOVE: East to (14,10) - Forest (-2 turns)
+[11:33:38] MOVE: East to (15,10) - Forest (-2 turns)
+[11:33:38] MOVE: East to (16,10) - Grassland (-1 turns)
+[11:33:39] MOVE: East to (17,10) - Forest (-2 turns)
+[11:33:39] MOVE: East to (18,10) - Grassland (-1 turns)
+[11:33:39] MOVE: East to (19,10) - Grassland (-1 turns)
+[11:33:39] MOVE: North to (19,9) - Grassland (-1 turns)
+[11:33:40] MOVE: North to (19,8) - Forest (-2 turns)
+[11:33:40] MOVE: North to (19,7) - Mountain (-3 turns)
+[11:33:40] ENCOUNTER: Random encounter at (19,7)
+[11:33:41] MOVE: North to (19,6) - Forest (-2 turns)
+[11:33:41] MOVE: South to (19,7) - Mountain (-3 turns)
+[11:33:41] ENCOUNTER: Mob encounter: Ambusher at (19,7)
+[11:33:41] COMBAT: Fighting Ambusher [Lvl6] HP:12
+[11:33:42] DAMAGE: Player took 1 damage. HP: 97/104
+[11:33:42] COMBAT_ROUND: Hit 10! Ambusher 1! 
+[11:33:43] DAMAGE: Player took 1 damage. HP: 96/104
+[11:33:43] COMBAT_ROUND: Hit 10! Ambusher 1! Victory! +10g +15xp!
+[11:33:44] VICTORY: Defeated Ambusher. XP: 485
+[11:33:44] MOB: Removed Ambusher from map
+[11:33:45] MOVE: West to (18,7) - Grassland (-1 turns)
+[11:33:45] MOVE: North to (18,6) - Grassland (-1 turns)
+[11:33:45] MOVE: North to (18,5) - Forest (-2 turns)
+[11:33:46] MOVE: North to (18,4) - Mountain (-3 turns)
+[11:33:46] MOVE: North to (18,3) - Forest (-2 turns)
+[11:33:46] MOVE: West to (17,3) - Grassland (-1 turns)
+[11:33:46] MOVE: West to (16,3) - Grassland (-1 turns)
+[11:33:46] MOVE: West to (15,3) - Grassland (-1 turns)
+[11:33:47] MOVE: West to (14,3) - Forest (-2 turns)
+[11:33:47] MOVE: West to (13,3) - Grassland (-1 turns)
+[11:33:47] MOVE: North to (13,2) - Forest (-2 turns)
+[11:33:47] MOVE: North to (13,1) - Grassland (-1 turns)
+[11:33:48] MOVE: West to (12,1) - Mountain (-3 turns)
+[11:33:48] MOVE: West to (11,1) - Forest (-2 turns)
+[11:33:48] MOVE: South to (11,2) - Mountain (-3 turns)
+[11:33:48] MOVE: South to (11,3) - Forest (-2 turns)
+[11:33:48] MOVE: South to (11,4) - Mountain (-3 turns)
+[11:33:49] MOVE: South to (11,5) - Grassland (-1 turns)
+[11:33:49] MOVE: South to (11,6) - Grassland (-1 turns)
+[11:33:49] MOVE: West to (10,6) - Grassland (-1 turns)
+[11:33:49] ENCOUNTER: Random encounter at (10,6)
+[11:33:50] MOVE: North to (10,5) - Dungeon (-1 turns)
+[11:33:52] MOVE: South to (10,6) - Grassland (-1 turns)
+[11:33:52] ENCOUNTER: Mob encounter: Goblin Scout at (10,6)
+[11:33:53] COMBAT: Fighting Goblin Scout [Lvl6] HP:11
+[11:33:54] COMBAT_ROUND: CRIT 20! Goblin Scout misses! Victory! +10g +10xp!
+[11:33:55] VICTORY: Defeated Goblin Scout. XP: 495
+[11:33:55] MOB: Removed Goblin Scout from map
+[11:33:56] MOVE: North to (10,5) - Dungeon (-1 turns)
+[11:33:56] ENCOUNTER: Mob encounter: Ambusher at (10,5)
+[11:33:56] COMBAT: Fighting Ambusher [Lvl5] HP:13
+[11:33:57] COMBAT_ROUND: Ambusher misses! 
+[11:33:58] COMBAT_ROUND: Ambusher misses! 
+[11:33:59] DAMAGE: Player took 1 damage. HP: 95/104
+[11:33:59] COMBAT_ROUND: MISS! Ambusher 1! 
+[11:33:59] DAMAGE: Player took 1 damage. HP: 94/104
+[11:33:59] COMBAT_ROUND: Hit 10! Ambusher 1! 
+[11:34:00] DAMAGE: Player took 1 damage. HP: 93/104
+[11:34:00] COMBAT_ROUND: MISS! Ambusher 1! 
+[11:34:01] DAMAGE: Player took 1 damage. HP: 92/104
+[11:34:01] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +25xp!
+[11:34:02] VICTORY: Defeated Ambusher. XP: 520
+[11:34:02] MOB: Removed Ambusher from map
+[11:34:09] MOVE: South to (10,6) - Grassland (-1 turns)
+[11:34:12] MOVE: South to (10,7) - Grassland (-1 turns)
+[11:34:12] ENCOUNTER: Random encounter at (10,7)
+[11:34:13] MOVE: South to (10,8) - Grassland (-1 turns)
+[11:34:13] ENCOUNTER: Mob encounter: Ambusher at (10,8)
+[11:34:14] COMBAT: Fighting Ambusher [Lvl6] HP:13
+[11:34:14] COMBAT_ROUND: Ambusher misses! 
+[11:34:15] COMBAT_ROUND: Ambusher misses! 
+[11:34:16] COMBAT_ROUND: Ambusher misses! 
+[11:34:17] COMBAT_ROUND: Ambusher misses! 
+[11:34:18] COMBAT_ROUND: Ambusher misses! 
+[11:34:19] COMBAT_ROUND: Ambusher misses! 
+[11:34:20] COMBAT_ROUND: Ambusher misses! 
+[11:34:21] COMBAT_ROUND: Ambusher misses! 
+[11:34:21] DAMAGE: Player took 1 damage. HP: 105/106
+[11:34:21] COMBAT_ROUND: Hit 10! Ambusher 1! 
+[11:34:22] DAMAGE: Player took 1 damage. HP: 104/106
+[11:34:22] COMBAT_ROUND: Hit 10! Ambusher 1! Victory! +10g +10xp!
+[11:34:23] VICTORY: Defeated Ambusher. XP: 530
+[11:34:23] MOB: Removed Ambusher from map
+[11:34:25] MOVE: North to (10,7) - Grassland (-1 turns)
+[11:34:25] MOVE: North to (10,6) - Grassland (-1 turns)
+[11:35:04] MOVE: East to (11,6) - Grassland (-1 turns)
+[11:35:04] MOVE: East to (12,6) - Forest (-2 turns)
+[11:35:04] MOVE: East to (13,6) - Mountain (-3 turns)
+[11:35:05] MOVE: East to (14,6) - Grassland (-1 turns)
+[11:35:05] MOVE: East to (15,6) - Forest (-2 turns)
+[11:35:05] ENCOUNTER: Random encounter at (15,6)
+[11:35:06] MOVE: East to (16,6) - Grassland (-1 turns)
+[11:35:06] ENCOUNTER: Random encounter at (16,6)
+[11:35:06] MOVE: East to (17,6) - Grassland (-1 turns)
+[11:35:06] MOVE: East to (18,6) - Grassland (-1 turns)
+[11:35:07] MOVE: North to (18,5) - Forest (-2 turns)
+[11:35:07] MOVE: North to (18,4) - Mountain (-3 turns)
+[11:35:07] MOVE: North to (18,3) - Forest (-2 turns)
+[11:35:08] MOVE: North to (18,2) - Mountain (-3 turns)
+[11:35:08] MOVE: North to (18,1) - Forest (-2 turns)
+[11:35:08] ENCOUNTER: Random encounter at (18,1)
+[11:35:09] MOVE: North to (18,0) - Mountain (-3 turns)
+[11:35:09] ENCOUNTER: Mob encounter: Ambusher at (18,0)
+[11:35:10] COMBAT: Fighting Ambusher [Lvl6] HP:14
+[11:35:10] COMBAT_ROUND: Ambusher misses! 
+[11:35:11] COMBAT_ROUND: Ambusher misses! 
+[11:35:12] COMBAT_ROUND: Ambusher misses! 
+[11:35:13] COMBAT_ROUND: Ambusher misses! 
+[11:35:14] COMBAT_ROUND: Ambusher misses! 
+[11:35:14] COMBAT_ROUND: Ambusher misses! 
+[11:35:15] COMBAT_ROUND: Ambusher misses! 
+[11:35:16] COMBAT_ROUND: Ambusher misses! 
+[11:35:17] COMBAT_ROUND: Ambusher misses! 
+[11:35:18] DAMAGE: Player took 1 damage. HP: 103/106
+[11:35:18] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +25xp!
+[11:35:19] VICTORY: Defeated Ambusher. XP: 555
+[11:35:19] MOB: Removed Ambusher from map
+[11:35:21] MOVE: West to (17,0) - Forest (-2 turns)
+[11:35:21] ENCOUNTER: Random encounter at (17,0)
+[11:35:22] MOVE: West to (16,0) - Grassland (-1 turns)
+[11:35:22] MOVE: West to (15,0) - Grassland (-1 turns)
+[11:35:22] MOVE: West to (14,0) - Grassland (-1 turns)
+[11:35:23] MOVE: West to (13,0) - Forest (-2 turns)
+[11:35:23] ENCOUNTER: Random encounter at (13,0)
+[11:35:24] MOVE: West to (12,0) - Grassland (-1 turns)
+[11:35:24] ENCOUNTER: Mob encounter: Ambusher at (12,0)
+[11:35:24] COMBAT: Fighting Ambusher [Lvl5] HP:9
+[11:35:25] COMBAT_ROUND: Ambusher misses! 
+[11:35:26] COMBAT_ROUND: Ambusher misses! 
+[11:35:27] COMBAT_ROUND: Ambusher misses! 
+[11:35:27] COMBAT_ROUND: Ambusher misses! 
+[11:35:28] COMBAT_ROUND: Ambusher misses! 
+[11:35:29] DAMAGE: Player took 1 damage. HP: 102/106
+[11:35:29] COMBAT_ROUND: CRIT 20! Ambusher 1! Victory! +10g +10xp!
+[11:35:30] VICTORY: Defeated Ambusher. XP: 565
+[11:35:30] MOB: Removed Ambusher from map
+[11:35:48] MOVE: West to (11,0) - Mountain (-3 turns)
+[11:35:48] MOVE: West to (10,0) - Forest (-2 turns)
+[11:35:48] ENCOUNTER: Random encounter at (10,0)
+[11:35:49] MOVE: West to (9,0) - Grassland (-1 turns)
+[11:35:49] MOVE: West to (8,0) - Grassland (-1 turns)
+[11:35:49] MOVE: West to (7,0) - Grassland (-1 turns)
+[11:35:50] MOVE: West to (6,0) - Forest (-2 turns)
+[11:35:50] MOVE: West to (5,0) - Forest (-2 turns)
+[11:35:51] MOVE: West to (4,0) - Mountain (-3 turns)
+[11:35:51] MOVE: West to (3,0) - Grassland (-1 turns)
+[11:35:51] MOVE: West to (2,0) - Grassland (-1 turns)
+[11:35:52] MOVE: West to (1,0) - Grassland (-1 turns)
+[11:35:52] MOVE: West to (0,0) - Grassland (-1 turns)
+[11:35:52] ENCOUNTER: Random encounter at (0,0)
+[11:35:53] MOVE: South to (0,1) - Forest (-2 turns)
+[11:35:53] ENCOUNTER: Mob encounter: Ambusher at (0,1)
+[11:35:54] COMBAT: Fighting Ambusher [Lvl5] HP:9
+[11:35:54] COMBAT_ROUND: Ambusher misses! 
+[11:35:55] COMBAT_ROUND: Ambusher misses! 
+[11:35:56] COMBAT_ROUND: Ambusher misses! 
+[11:35:57] COMBAT_ROUND: CRIT 20! Ambusher misses! Victory! +10g +10xp!
+[11:35:58] VICTORY: Defeated Ambusher. XP: 575
+[11:35:58] MOB: Removed Ambusher from map
+[11:35:59] MOVE: East to (1,1) - Grassland (-1 turns)
+[11:35:59] MOVE: East to (2,1) - Grassland (-1 turns)
+[11:35:59] MOVE: East to (3,1) - Grassland (-1 turns)
+[11:35:59] MOVE: East to (4,1) - Forest (-2 turns)
+[11:36:00] MOVE: East to (5,1) - Mountain (-3 turns)
+[11:36:00] MOVE: East to (6,1) - Grassland (-1 turns)
+[11:36:00] MOVE: East to (7,1) - Forest (-2 turns)
+[11:36:01] MOVE: East to (8,1) - Grassland (-1 turns)
+[11:36:01] MOVE: South to (8,2) - Forest (-2 turns)
+[11:36:01] MOVE: South to (8,3) - Grassland (-1 turns)
+[11:36:01] MOVE: South to (8,4) - Forest (-2 turns)
+[11:36:02] MOVE: South to (8,5) - Grassland (-1 turns)
+[11:36:02] MOVE: West to (7,5) - Forest (-2 turns)
+[11:36:02] MOVE: West to (6,5) - Forest (-2 turns)
+[11:36:02] ENCOUNTER: Random encounter at (6,5)
+[11:36:03] MOVE: West to (5,5) - Town (-1 turns)
+[11:36:06] MOVE: West to (4,5) - Grassland (-1 turns)
+[11:36:07] MOVE: West to (3,5) - Grassland (-1 turns)
+[11:36:07] MOVE: West to (2,5) - Forest (-2 turns)
+[11:36:08] MOVE: West to (1,5) - Grassland (-1 turns)
+[11:36:08] MOVE: South to (1,6) - Forest (-2 turns)
+[11:36:08] MOVE: South to (1,7) - Grassland (-1 turns)
+[11:36:09] MOVE: East to (2,7) - Forest (-2 turns)
+[11:36:09] MOVE: East to (3,7) - Grassland (-1 turns)
+[11:36:09] MOVE: East to (4,7) - Grassland (-1 turns)
+[11:36:09] MOVE: East to (5,7) - Grassland (-1 turns)
+[11:36:09] MOVE: East to (6,7) - Forest (-2 turns)
+[11:36:10] MOVE: East to (7,7) - Mountain (-3 turns)
+[11:36:10] MOVE: East to (8,7) - Grassland (-1 turns)
+[11:36:10] MOVE: East to (9,7) - Forest (-2 turns)
+[11:36:10] MOVE: East to (10,7) - Grassland (-1 turns)
+[11:36:11] MOVE: North to (10,6) - Grassland (-1 turns)
+[11:36:11] MOVE: North to (10,5) - Dungeon (-1 turns)
+[11:37:11] GAME: Game session ended
+[11:37:11] DUMP: 
+[11:37:11] DUMP: ═══════════════════════════════════════════════════════
+[11:37:11] DUMP:           GAME STATE DUMP
+[11:37:11] DUMP: Reason: Player quit
+[11:37:11] DUMP: ═══════════════════════════════════════════════════════
+[11:37:11] DUMP: 
+[11:37:11] DUMP: PLAYER STATE:
+[11:37:11] DUMP:   Level: 7
+[11:37:11] DUMP:   HP: 104/106
+[11:37:11] DUMP:   XP: 695/700
+[11:37:11] DUMP:   Gold: 1430g
+[11:37:11] DUMP:   Strength: 10
+[11:37:11] DUMP:   Defense: 5
+[11:37:11] DUMP:   Stamina: 993/12
+[11:37:11] DUMP:   Potions: 1
+[11:37:11] DUMP:   Stat Points: 12
+[11:37:11] DUMP: 
+[11:37:11] DUMP: LOCATION:
+[11:37:11] DUMP:   Position: (14, 10)
+[11:37:11] DUMP:   Terrain: Forest
+[11:37:11] DUMP:   In Location: False
+[11:37:11] DUMP:   In Dungeon: False
+[11:37:11] DUMP:   Dungeon Depth: 0
+[11:37:11] DUMP: 
+[11:37:11] DUMP: PROGRESS:
+[11:37:11] DUMP:   Combats Won: 21
+[11:37:11] DUMP:   Deaths: 0
+[11:37:11] DUMP:   Run Ended: False
+[11:37:11] DUMP: 
+[11:37:11] DUMP: COMBAT STATE:
+[11:37:11] DUMP:   In Combat: False
+[11:37:11] DUMP:   Combat Won: True
+[11:37:11] DUMP:   Enemy: Ambusher [Lvl 5]
+[11:37:11] DUMP:   Enemy HP: 0
+[11:37:11] DUMP:   Enemy Damage: 3
+[11:37:11] DUMP: 
+[11:37:11] DUMP: ═══════════════════════════════════════════════════════
+[11:37:11] DUMP: 

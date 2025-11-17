@@ -2,13 +2,32 @@ namespace ProjectEvolution.Game;
 
 public class SimulationConfig
 {
+    // World & Mob Spawning
     public int MobDetectionRange { get; set; } = 3;
     public int MaxMobs { get; set; } = 29; // AI-optimized
     public int MinMobs { get; set; } = 5;
-    public int PlayerStartHP { get; set; } = 9; // AI-optimized
-    public int PlayerStrength { get; set; } = 2;
-    public int PlayerDefense { get; set; } = 1;
     public int EncounterRateMultiplier { get; set; } = 100; // Percentage
+
+    // Player Starting Stats
+    public int PlayerStartHP { get; set; } = 20; // NEW: More reasonable starting value
+    public int PlayerStrength { get; set; } = 3;
+    public int PlayerDefense { get; set; } = 1;
+
+    // NEW: Enemy Scaling Parameters
+    public double EnemyHPScaling { get; set; } = 1.5; // HP per player level
+    public double EnemyDamageScaling { get; set; } = 0.5; // Damage per player level
+    public int BaseEnemyHP { get; set; } = 5; // Starting enemy HP
+    public int BaseEnemyDamage { get; set; } = 2; // Starting enemy damage
+
+    // NEW: Equipment Parameters
+    public int EquipmentDropRate { get; set; } = 20; // Percent chance per victory
+    public double EquipmentBonusScaling { get; set; } = 1.0; // Multiplier for weapon/armor bonuses
+
+    // NEW: Leveling Parameters
+    public int XPPerLevel { get; set; } = 100; // Base XP requirement per level
+    public int HPPerLevel { get; set; } = 2; // HP gained per level
+
+    // Simulation Controls
     public int SimulationSpeed { get; set; } = 100; // ms delay per turn
     public bool ShowVisuals { get; set; } = true;
 }
@@ -19,9 +38,13 @@ public class FloatConfig
     public double MobDetectionRange { get; set; } = 3.0;
     public double MaxMobs { get; set; } = 29.0;
     public double MinMobs { get; set; } = 5.0;
-    public double PlayerStartHP { get; set; } = 9.0;
-    public double PlayerStrength { get; set; } = 2.0;
+    public double PlayerStartHP { get; set; } = 20.0;
+    public double PlayerStrength { get; set; } = 3.0;
     public double PlayerDefense { get; set; } = 1.0;
+    public double EnemyHPScaling { get; set; } = 1.5;
+    public double EnemyDamageScaling { get; set; } = 0.5;
+    public double BaseEnemyHP { get; set; } = 5.0;
+    public double BaseEnemyDamage { get; set; } = 2.0;
 
     public SimulationConfig ToSimConfig()
     {
@@ -33,6 +56,10 @@ public class FloatConfig
             PlayerStartHP = (int)Math.Round(PlayerStartHP),
             PlayerStrength = (int)Math.Round(PlayerStrength),
             PlayerDefense = (int)Math.Round(PlayerDefense),
+            EnemyHPScaling = EnemyHPScaling,
+            EnemyDamageScaling = EnemyDamageScaling,
+            BaseEnemyHP = (int)Math.Round(BaseEnemyHP),
+            BaseEnemyDamage = (int)Math.Round(BaseEnemyDamage),
             ShowVisuals = false,
             SimulationSpeed = 0
         };
@@ -49,6 +76,12 @@ public class SimulationStats
     public int MaxTurnsSurvived { get; set; }
     public int MaxLevel { get; set; }
     public List<string> DeathReasons { get; set; } = new List<string>();
+
+    // NEW: Progression tracking
+    public int DeathsAtLevel1 { get; set; }
+    public int DeathsAtLevel2to4 { get; set; }
+    public int DeathsAtLevel5Plus { get; set; }
+    public double AverageLevel => TotalRuns > 0 ? (double)MaxLevel / TotalRuns : 0;
 
     public double AverageTurnsPerRun => TotalRuns > 0 ? (double)TotalTurns / TotalRuns : 0;
     public double SurvivalRate => TotalRuns > 0 ? (double)(TotalRuns - Deaths) / TotalRuns * 100 : 0;

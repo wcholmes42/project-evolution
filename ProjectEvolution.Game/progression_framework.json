@@ -1,0 +1,248 @@
+﻿{
+  "PlayerProgression": {
+    "BaseHP": 20,
+    "HPPerLevel": 3,
+    "BaseSTR": 3,
+    "BaseDEF": 1,
+    "StatPointsPerLevel": 2,
+    "MaxHPFormula": "BaseHP \u002B (Level * 3)",
+    "EffectiveSTRFormula": "BaseSTR \u002B AllocatedSTR \u002B EquipmentBonus"
+  },
+  "EnemyProgression": {
+    "BaseHP": 5,
+    "HPScalingCoefficient": 1.4332166661895889,
+    "BaseDamage": 2,
+    "DamageScalingCoefficient": 0.5361906079045453,
+    "HPFormula": "BaseHP \u002B (PlayerLevel * 1.43)",
+    "DamageFormula": "BaseDamage \u002B (PlayerLevel * 0.54)"
+  },
+  "Equipment": {
+    "WeaponTiers": [
+      {
+        "Tier": 0,
+        "BonusValue": 0,
+        "RecommendedCost": 5,
+        "RecommendedLevel": 0,
+        "PowerIncrease": 0
+      },
+      {
+        "Tier": 1,
+        "BonusValue": 1,
+        "RecommendedCost": 30,
+        "RecommendedLevel": 2,
+        "PowerIncrease": 99900
+      },
+      {
+        "Tier": 2,
+        "BonusValue": 2,
+        "RecommendedCost": 105,
+        "RecommendedLevel": 4,
+        "PowerIncrease": 99.80019980019983
+      },
+      {
+        "Tier": 3,
+        "BonusValue": 3,
+        "RecommendedCost": 230,
+        "RecommendedLevel": 6,
+        "PowerIncrease": 49.92503748125938
+      },
+      {
+        "Tier": 4,
+        "BonusValue": 4,
+        "RecommendedCost": 405,
+        "RecommendedLevel": 8,
+        "PowerIncrease": 33.28890369876709
+      },
+      {
+        "Tier": 5,
+        "BonusValue": 5,
+        "RecommendedCost": 630,
+        "RecommendedLevel": 10,
+        "PowerIncrease": 24.96875781054735
+      }
+    ],
+    "ArmorTiers": [
+      {
+        "Tier": 0,
+        "BonusValue": 0,
+        "RecommendedCost": 5,
+        "RecommendedLevel": 0,
+        "PowerIncrease": 0
+      },
+      {
+        "Tier": 1,
+        "BonusValue": 1,
+        "RecommendedCost": 30,
+        "RecommendedLevel": 2,
+        "PowerIncrease": 99900
+      },
+      {
+        "Tier": 2,
+        "BonusValue": 2,
+        "RecommendedCost": 105,
+        "RecommendedLevel": 4,
+        "PowerIncrease": 99.80019980019983
+      },
+      {
+        "Tier": 3,
+        "BonusValue": 3,
+        "RecommendedCost": 230,
+        "RecommendedLevel": 6,
+        "PowerIncrease": 49.92503748125938
+      },
+      {
+        "Tier": 4,
+        "BonusValue": 4,
+        "RecommendedCost": 405,
+        "RecommendedLevel": 8,
+        "PowerIncrease": 33.28890369876709
+      },
+      {
+        "Tier": 5,
+        "BonusValue": 5,
+        "RecommendedCost": 630,
+        "RecommendedLevel": 10,
+        "PowerIncrease": 24.96875781054735
+      }
+    ],
+    "PowerGrowthModel": 1,
+    "RecommendedFormula": "Flat linear: Bonus = Tier"
+  },
+  "Economy": {
+    "BaseGoldPerCombat": 10,
+    "GoldScalingCoefficient": 2.880557637606076,
+    "LevelSnapshots": [
+      {
+        "Level": 1,
+        "ExpectedGoldEarned": 108,
+        "CumulativeGold": 158,
+        "AffordableEquipmentTier": 2,
+        "RecommendedEquipmentTier": 0,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 2,
+        "ExpectedGoldEarned": 150,
+        "CumulativeGold": 278,
+        "AffordableEquipmentTier": 3,
+        "RecommendedEquipmentTier": 1,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 3,
+        "ExpectedGoldEarned": 158,
+        "CumulativeGold": 406,
+        "AffordableEquipmentTier": 4,
+        "RecommendedEquipmentTier": 1,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 4,
+        "ExpectedGoldEarned": 168,
+        "CumulativeGold": 469,
+        "AffordableEquipmentTier": 4,
+        "RecommendedEquipmentTier": 2,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 5,
+        "ExpectedGoldEarned": 144,
+        "CumulativeGold": 508,
+        "AffordableEquipmentTier": 4,
+        "RecommendedEquipmentTier": 2,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 6,
+        "ExpectedGoldEarned": 242,
+        "CumulativeGold": 520,
+        "AffordableEquipmentTier": 5,
+        "RecommendedEquipmentTier": 3,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 7,
+        "ExpectedGoldEarned": 300,
+        "CumulativeGold": 590,
+        "AffordableEquipmentTier": 5,
+        "RecommendedEquipmentTier": 3,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 8,
+        "ExpectedGoldEarned": 231,
+        "CumulativeGold": 416,
+        "AffordableEquipmentTier": 5,
+        "RecommendedEquipmentTier": 4,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 9,
+        "ExpectedGoldEarned": 355,
+        "CumulativeGold": 366,
+        "AffordableEquipmentTier": 5,
+        "RecommendedEquipmentTier": 4,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
+        "Level": 10,
+        "ExpectedGoldEarned": 304,
+        "CumulativeGold": 40,
+        "AffordableEquipmentTier": 5,
+        "RecommendedEquipmentTier": 5,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      }
+    ],
+    "GoldFormula": "BaseGold \u002B (EnemyLevel * 2.88)",
+    "CanAffordProgression": true,
+    "FirstUnaffordableTier": -1
+  },
+  "Loot": {
+    "BaseTreasureGold": 20,
+    "TreasurePerDungeonDepth": 30,
+    "EquipmentDropRate": 20,
+    "DungeonLoot": [],
+    "TreasureFormula": "BaseTreasure \u002B (Depth * 30)"
+  },
+  "Builds": {
+    "ViableBuilds": {
+      "GlassCannon": {
+        "MinBaseHP": 20,
+        "MaxBaseHP": 30,
+        "RecommendedRatio": {},
+        "ViabilityScore": 100
+      },
+      "Balanced": {
+        "MinBaseHP": 20,
+        "MaxBaseHP": 30,
+        "RecommendedRatio": {},
+        "ViabilityScore": 100
+      },
+      "Tank": {
+        "MinBaseHP": 20,
+        "MaxBaseHP": 30,
+        "RecommendedRatio": {},
+        "ViabilityScore": 100
+      }
+    },
+    "MostBalanced": "Balanced",
+    "Warnings": []
+  },
+  "Metadata": {
+    "Timestamp": "2025-11-17T13:41:01.19474-08:00",
+    "SimulationsRun": 218250,
+    "Generation": 21825,
+    "OverallFitness": 100,
+    "Version": "Generation 35"
+  }
+}

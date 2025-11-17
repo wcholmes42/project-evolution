@@ -3,7 +3,8 @@ using ProjectEvolution.Game;
 // Main menu
 Console.Clear();
 Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
-Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 33                 ║");
+Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 35                 ║");
+Console.WriteLine("║                  \"The UX Evolution Update\"                     ║");
 Console.WriteLine("╠════════════════════════════════════════════════════════════════╣");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("║  [P] Play Game (Normal Mode)                                   ║");
@@ -15,6 +16,10 @@ Console.WriteLine("║  [S] Single-Param Test (No Interference)                 
 Console.WriteLine("║  [R] Random Search (Explore Solution Space)                    ║");
 Console.WriteLine("║  [X] X-MEN MUTATION MODE 🦄 (Find The Unicorn!)                ║");
 Console.WriteLine("║  [F] Focused Class Optimizer (Boost Weakest to Top!)           ║");
+Console.WriteLine("║  [V] PROGRESSION TUNER (Test Levels & Builds) 🆕               ║");
+Console.WriteLine("║  [E] EVOLUTIONARY TUNER (Continuous Evolution) 🧬             ║");
+Console.WriteLine("║  [M] PROGRESSION RESEARCH (Formula Discovery) 📊              ║");
+Console.WriteLine("║  [B] CONTINUOUS RESEARCH → CODE GEN (Auto-evolve!) 🔄        ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -71,6 +76,30 @@ else if (menuChoice == ConsoleKey.F)
     FocusedClassOptimizer.RunFocusedOptimization();
     return;
 }
+else if (menuChoice == ConsoleKey.V)
+{
+    // NEW: Progression Tuner!
+    ProgressionTuner.RunProgressionTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.E)
+{
+    // NEW: Evolutionary Tuner!
+    EvolutionaryTuner.RunContinuousEvolution();
+    return;
+}
+else if (menuChoice == ConsoleKey.M)
+{
+    // NEW: Progression Research!
+    ProgressionResearch.RunProgressionResearch();
+    return;
+}
+else if (menuChoice == ConsoleKey.B)
+{
+    // NEW: Continuous Research → Code Generation!
+    ProgressionFrameworkResearcher.RunContinuousResearch();
+    return;
+}
 else if (menuChoice == ConsoleKey.Q)
 {
     return;
@@ -98,8 +127,9 @@ if (optimalConfig != null)
 }
 else
 {
-    // TUTORIAL MODE defaults!
-    game.SetPlayerStats(strength: 10, defense: 5);
+    // TUTORIAL MODE defaults - Balanced for learning!
+    game.SetPlayerStats(strength: 5, defense: 3);
+    // Note: Starting HP is 100 in MaxPlayerHP, but we'll keep it for tutorial ease
 }
 
 // Start world BEFORE UI (need world to render!)
@@ -116,12 +146,46 @@ logger.LogEvent("INIT", $"Player spawned at ({game.PlayerX},{game.PlayerY})");
 ui.Initialize();
 ui.RenderStatusBar(game);
 ui.RenderMap(game);
-ui.AddMessage("Welcome to Project Evolution!");
-ui.AddMessage("Explore the world, fight monsters, find treasure!");
-ui.AddMessage($"Towns at (5,5) and (15,15) | Dungeons at (10,5) and (10,15)");
+ui.AddMessage("Welcome to Project Evolution! Generation 35!");
+ui.AddMessage("† You're at the Temple - FREE healing & respawn point!");
+ui.AddMessage("Death is not the end! You'll respawn here (lose 50% gold & gear)");
+ui.AddMessage($"Towns at (5,5) & (15,15) | Dungeons at (10,5) & (10,15) | Press [H] for help");
 ui.RenderCommandBar(game.InDungeon);
 
 bool playing = true;
+
+// Helper: Handle death and respawn
+void HandleDeath(string killerName)
+{
+    // Track dropped items for UI
+    var droppedItems = new List<string>();
+    if (game.PlayerInventory.EquippedWeapon.BonusStrength > 0)
+        droppedItems.Add(game.PlayerInventory.EquippedWeapon.Name);
+    if (game.PlayerInventory.EquippedArmor.BonusDefense > 0)
+        droppedItems.Add(game.PlayerInventory.EquippedArmor.Name);
+
+    int goldBeforeDeath = game.PlayerGold;
+
+    // Handle death (drops equipment, loses gold, respawns)
+    game.HandlePlayerDeath();
+
+    int goldLost = goldBeforeDeath - game.PlayerGold;
+
+    // Show death screen
+    ui.RenderDeathScreen(game, killerName, goldLost, droppedItems);
+    Console.ReadKey(intercept: true);
+
+    logger.LogEvent("DEATH", $"Killed by {killerName}. Respawned at Temple. Deaths: {game.TotalDeaths}");
+
+    // Redraw game UI at temple
+    ui.Initialize();
+    ui.RenderStatusBar(game);
+    ui.RenderMap(game);
+    ui.AddMessage($"💀 You died! Respawned at Temple. Lost {goldLost}g.");
+    if (droppedItems.Count > 0)
+        ui.AddMessage($"💀 Return to your corpse to retrieve: {string.Join(", ", droppedItems)}");
+    ui.RenderCommandBar(false);
+}
 
 while (playing)
 {
@@ -136,6 +200,63 @@ while (playing)
     if (key == ConsoleKey.Q)
     {
         playing = false;
+        continue;
+    }
+
+    // NEW: Help Menu [H]
+    if (key == ConsoleKey.H)
+    {
+        ui.RenderHelpMenu(game.InDungeon);
+        Console.ReadKey(intercept: true);
+        // Redraw game UI
+        ui.Initialize();
+        ui.RenderStatusBar(game);
+        ui.RenderMap(game);
+        ui.RenderCommandBar(game.InDungeon);
+        continue;
+    }
+
+    // NEW: Character Sheet [I]
+    if (key == ConsoleKey.I)
+    {
+        ui.RenderFullCharacterSheet(game);
+        Console.ReadKey(intercept: true);
+        // Redraw game UI
+        ui.Initialize();
+        ui.RenderStatusBar(game);
+        ui.RenderMap(game);
+        ui.RenderCommandBar(game.InDungeon);
+        continue;
+    }
+
+    // NEW: Stat Allocation [L]
+    if (key == ConsoleKey.L && game.AvailableStatPoints > 0)
+    {
+        // Enter stat allocation mode
+        while (game.AvailableStatPoints > 0)
+        {
+            ui.RenderStatAllocationScreen(game);
+            var statKey = Console.ReadKey(intercept: true).Key;
+
+            if (statKey == ConsoleKey.S)
+            {
+                game.SpendStatPoint(StatType.Strength);
+            }
+            else if (statKey == ConsoleKey.D)
+            {
+                game.SpendStatPoint(StatType.Defense);
+            }
+            else if (statKey == ConsoleKey.Q)
+            {
+                break; // Exit allocation even if points remain
+            }
+        }
+
+        // Redraw game UI
+        ui.Initialize();
+        ui.RenderStatusBar(game);
+        ui.RenderMap(game);
+        ui.RenderCommandBar(game.InDungeon);
         continue;
     }
 
@@ -168,7 +289,40 @@ while (playing)
         else if (key == ConsoleKey.Enter)
         {
             var terrain = game.GetCurrentTerrain();
-            if (terrain == "Town")
+
+            // NEW: Temple interaction
+            if (terrain == "Temple")
+            {
+                ui.AddMessage("† Entered Temple of Respawn †");
+                ui.AddMessage("[P]ray for blessing (FREE heal) | [R]etrieve corpse items | [X]it");
+                Thread.Sleep(400);
+
+                var templeKey = Console.ReadKey(intercept: true).Key;
+                if (templeKey == ConsoleKey.P)
+                {
+                    // Free heal at temple
+                    game.SetHPForTesting(game.MaxPlayerHP);
+                    ui.AddMessage("✨ The gods have blessed you! Fully healed!");
+                    ui.RenderStatusBar(game);
+                    Thread.Sleep(800);
+                }
+                else if (templeKey == ConsoleKey.R)
+                {
+                    // Auto-retrieve if standing on corpse
+                    if (game.CanRetrieveDroppedItems())
+                    {
+                        string msg = game.RetrieveDroppedItems();
+                        ui.AddMessage($"✅ {msg}");
+                        ui.RenderStatusBar(game);
+                        Thread.Sleep(800);
+                    }
+                    else
+                    {
+                        ui.AddMessage("❌ No corpse here. Look for 💀 on map.");
+                    }
+                }
+            }
+            else if (terrain == "Town")
             {
                 ui.AddMessage("🏘️  Entered Town!");
                 ui.AddMessage("[I]nn (10g heal) | [B]uy Potion (5g) | [X]it");
@@ -223,6 +377,17 @@ while (playing)
 
         if (moved)
         {
+            // LIVING WORLD: Mobs move after player
+            game.UpdateWorldMobs();
+
+            // AUTO-RETRIEVE: Check if we're on our corpse
+            if (game.CanRetrieveDroppedItems())
+            {
+                string retrieved = game.RetrieveDroppedItems();
+                ui.AddMessage($"💀 {retrieved}");
+                Thread.Sleep(800);
+            }
+
             string terrain = game.GetCurrentTerrain();
             int turnCost = terrain switch
             {
@@ -238,7 +403,7 @@ while (playing)
             logger.LogEvent("MOVE", $"{direction} to ({game.PlayerX},{game.PlayerY}) - {terrain} (-{turnCost} turns)");
             ui.AddMessage(moveMsg);
             ui.RenderStatusBar(game);
-            ui.RenderMap(game);
+            ui.RenderMap(game); // Will show mobs in their new positions!
 
             // Check for mob encounter first (visible mobs on map)
             var mob = game.GetMobAt(game.PlayerX, game.PlayerY);
@@ -317,9 +482,7 @@ while (playing)
                         }
                         if (game.PlayerHP <= 0)
                         {
-                            ui.AddMessage("💀 DIED WHILE FLEEING!");
-                            Thread.Sleep(1200); // Dramatic pause for death
-                            playing = false;
+                            HandleDeath(game.EnemyName);
                             break;
                         }
                         continue;
@@ -360,11 +523,7 @@ while (playing)
                         }
                         else
                         {
-                            logger.LogEvent("DEATH", $"Killed by {game.EnemyName}. HP: 0");
-                            ui.AddMessage("💀 YOU DIED! GAME OVER!");
-                            ui.AddMessage($"Killed by: {game.EnemyName} [Lvl {game.EnemyLevel}]");
-                            Thread.Sleep(1500); // Dramatic pause for death
-                            playing = false;
+                            HandleDeath($"{game.EnemyName} [Lvl {game.EnemyLevel}]");
                         }
                     }
                     else
@@ -423,9 +582,85 @@ while (playing)
 
         if (dungeonMoved)
         {
+            // Mark explored tiles (fog of war)
+            game.MarkDungeonTileExplored(game.PlayerX, game.PlayerY);
+
+            // Move dungeon mobs after player moves!
+            game.MoveDungeonMobs();
+
             ui.AddMessage($"Explored {dungeonDirection}");
             ui.RenderStatusBar(game);
             ui.RenderMap(game); // Update dungeon view
+
+            // CHECK FOR DUNGEON MOB COLLISION FIRST!
+            var dungeonMob = game.GetDungeonMobAt(game.PlayerX, game.PlayerY);
+            if (dungeonMob != null)
+            {
+                // Walked into a dungeon mob!
+                game.TriggerDungeonCombat();
+                ui.AddMessage($"👹 {game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
+                Thread.Sleep(800);
+
+                while (!game.CombatEnded && playing)
+                {
+                    ui.RenderCombat(game);
+                    var combatKey = Console.ReadKey(intercept: true).Key;
+
+                    if (combatKey == ConsoleKey.P && game.UsePotion())
+                    {
+                        ui.AddMessage("🧪 +5 HP");
+                        ui.RenderStatusBar(game);
+                        Thread.Sleep(600);
+                        continue;
+                    }
+
+                    if (combatKey == ConsoleKey.F)
+                    {
+                        bool fled = game.AttemptFlee();
+                        ui.AddMessage(game.CombatLog);
+                        ui.RenderStatusBar(game);
+                        Thread.Sleep(fled ? 600 : 800);
+                        if (fled)
+                        {
+                            ui.RenderMap(game);
+                            break;
+                        }
+                        if (game.PlayerHP <= 0)
+                        {
+                            HandleDeath(game.EnemyName);
+                            break;
+                        }
+                        continue;
+                    }
+
+                    var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
+                    game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
+                    ui.AddMessage(game.CombatLog);
+                    Thread.Sleep(900);
+
+                    if (game.CombatEnded)
+                    {
+                        game.ProcessGameLoopVictory();
+                        if (game.IsWon)
+                        {
+                            ui.AddMessage("✅ Victory!");
+                            // Remove defeated dungeon mob!
+                            game.RemoveDungeonMob(dungeonMob);
+                            ui.RenderStatusBar(game);
+                            Thread.Sleep(1000);
+                            ui.RenderMap(game);
+                        }
+                        else
+                        {
+                            HandleDeath($"{game.EnemyName} [Lvl {game.EnemyLevel}]");
+                        }
+                    }
+                    ui.RenderStatusBar(game);
+                }
+
+                // Skip tile checking if we fought a mob
+                continue;
+            }
 
             // CHECK WHAT TILE WE'RE ON!
             string currentTile = game.GetDungeonTile(game.PlayerX, game.PlayerY);
@@ -454,9 +689,104 @@ while (playing)
 
                 if (game.PlayerHP <= 0)
                 {
-                    ui.AddMessage("💀 GAME OVER!");
+                    HandleDeath("Trap");
+                }
+            }
+            else if (currentTile == "Boss")
+            {
+                // Boss fight!
+                game.TriggerBossCombat();
+                ui.AddMessage(game.CombatLog);
+                Thread.Sleep(1200); // Dramatic pause for boss entrance
+
+                while (!game.CombatEnded && playing)
+                {
+                    ui.RenderCombat(game);
+                    var combatKey = Console.ReadKey(intercept: true).Key;
+
+                    if (combatKey == ConsoleKey.P && game.UsePotion())
+                    {
+                        ui.AddMessage("🧪 +5 HP");
+                        ui.RenderStatusBar(game);
+                        Thread.Sleep(600);
+                        continue;
+                    }
+
+                    if (combatKey == ConsoleKey.F)
+                    {
+                        bool fled = game.AttemptFlee();
+                        ui.AddMessage(game.CombatLog);
+                        ui.RenderStatusBar(game);
+                        Thread.Sleep(fled ? 600 : 800);
+                        if (fled)
+                        {
+                            ui.RenderMap(game);
+                            break;
+                        }
+                        if (game.PlayerHP <= 0)
+                        {
+                            HandleDeath(game.EnemyName);
+                            break;
+                        }
+                        continue;
+                    }
+
+                    var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
+                    game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
+                    ui.AddMessage(game.CombatLog);
+                    Thread.Sleep(900);
+
+                    if (game.CombatEnded)
+                    {
+                        game.ProcessGameLoopVictory();
+                        if (game.IsWon)
+                        {
+                            ui.AddMessage("🏆 BOSS DEFEATED!");
+                            game.MarkBossDefeated(); // Spawn artifact and portal!
+                            game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
+                            ui.RenderStatusBar(game);
+                            ui.RenderMap(game);
+                            Thread.Sleep(1500);
+                        }
+                        else
+                        {
+                            HandleDeath($"{game.EnemyName} [Lvl {game.EnemyLevel}]");
+                        }
+                    }
+                    ui.RenderStatusBar(game);
+                }
+            }
+            else if (currentTile == "Artifact")
+            {
+                // Collect artifact!
+                string msg = game.CollectArtifact();
+                ui.AddMessage(msg);
+                ui.RenderStatusBar(game);
+                Thread.Sleep(1200);
+                game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
+                ui.RenderMap(game);
+            }
+            else if (currentTile == "Portal")
+            {
+                // Use portal to complete dungeon
+                string msg = game.UseDungeonPortal();
+                ui.AddMessage(msg);
+
+                // Check for victory!
+                if (game.RunWon)
+                {
+                    ui.AddMessage("🎉🎉🎉 VICTORY! YOU WON THE GAME! 🎉🎉🎉");
+                    ui.AddMessage(game.GetVictoryProgress());
+                    Thread.Sleep(3000);
                     playing = false;
                 }
+
+                // Clear and re-render entire UI to avoid dungeon/world map blending
+                ui.Initialize();
+                ui.RenderStatusBar(game);
+                ui.RenderMap(game);
+                ui.RenderCommandBar(false);
+                Thread.Sleep(1000);
             }
             else if (currentTile == "Monster")
             {
@@ -511,6 +841,8 @@ while (playing)
                             if (game.IsWon)
                             {
                                 ui.AddMessage("✅ Victory!");
+                                // Remove defeated monster from map!
+                                game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
                                 ui.RenderStatusBar(game);
                                 Thread.Sleep(1000);
                                 ui.RenderMap(game);
@@ -523,7 +855,6 @@ while (playing)
                             }
                         }
                         ui.RenderStatusBar(game);
-                    ui.RenderMap(game); // Update to show monster gone
                     }
                 }
             }
@@ -540,6 +871,7 @@ while (playing)
                 game.DescendDungeon();
                 ui.AddMessage($"⬇️  Descended to Depth {game.DungeonDepth}!");
                 ui.RenderStatusBar(game);
+                ui.RenderMap(game); // Show new floor!
                 Thread.Sleep(600);
             }
             else

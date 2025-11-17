@@ -1,5 +1,28 @@
 namespace ProjectEvolution.Game;
 
+public class DungeonState
+{
+    public string[,] Map { get; set; }
+    public bool[,] FogOfWar { get; set; }
+    public int MaxDepth { get; set; }
+    public int CurrentDepth { get; set; }
+    public bool BossDefeated { get; set; }
+    public bool ArtifactCollected { get; set; }
+    public int PlayerStartX { get; set; }
+    public int PlayerStartY { get; set; }
+    public List<Mob> DungeonMobs { get; set; } = new List<Mob>();
+
+    public DungeonState(int width, int height, int maxDepth)
+    {
+        Map = new string[width, height];
+        FogOfWar = new bool[width, height]; // true = explored
+        MaxDepth = maxDepth;
+        CurrentDepth = 1;
+        BossDefeated = false;
+        ArtifactCollected = false;
+    }
+}
+
 public class RPGGame
 {
     private static readonly Random _random = new Random();
@@ -19,6 +42,7 @@ public class RPGGame
     public int PlayerStamina { get; private set; } = 12;
     public int EnemyDamage { get; private set; } = 1;
     public string EnemyName { get; private set; } = "Goblin";
+    public EnemyType CurrentEnemyType { get; private set; } = EnemyType.GoblinScout;
     public int PermanentGold { get; private set; } = 0;
     public int DeathCount { get; private set; } = 0;
     public int PlayerXP { get; private set; } = 0;
@@ -26,7 +50,7 @@ public class RPGGame
     public int XPForNextLevel { get; private set; } = 100;
     public int AvailableStatPoints { get; private set; } = 0;
     public int EnemyLevel { get; private set; } = 1;
-    public int MaxPlayerHP { get; private set; } = 100; // TUTORIAL MODE - can't die!
+    public int MaxPlayerHP { get; private set; } = 25; // Balanced starting HP
     private int _configuredMaxMobs = 29; // Can be overridden by tuning results
     private int _configuredMobDetection = 3; // Can be overridden
     public int CombatsWon { get; private set; } = 0;
@@ -39,8 +63,14 @@ public class RPGGame
     public bool InLocation { get; private set; } = false;
     public string CurrentLocation { get; private set; } = null;
     public int PotionCount { get; private set; } = 0;
+    public Inventory PlayerInventory { get; private set; } = new Inventory();
     public bool InDungeon { get; private set; } = false;
     public int DungeonDepth { get; private set; } = 0;
+    public int MaxDungeonDepth { get; private set; } = 3;
+    public bool BossDefeated { get; private set; } = false;
+    public bool ArtifactCollected { get; private set; } = false;
+    public int DungeonsCompleted { get; private set; } = 0;
+    public bool RunWon { get; private set; } = false;
     public int WorldTurn { get; private set; } = 0;
     private List<Mob> _activeMobs = new List<Mob>();
     private bool[,] _exploredTiles;
@@ -51,6 +81,16 @@ public class RPGGame
     private string[,] _dungeonMap;
     private int _dungeonWidth = 30;
     private int _dungeonHeight = 30;
+    private Dictionary<(int x, int y), Dictionary<int, DungeonState>> _persistentDungeons = new Dictionary<(int, int), Dictionary<int, DungeonState>>();
+    private (int x, int y) _currentDungeonLocation;
+    private DungeonState _currentDungeonState;
+
+    // NEW: Death/Respawn System
+    public int? DeathLocationX { get; private set; } = null;
+    public int? DeathLocationY { get; private set; } = null;
+    private Weapon? _droppedWeapon = null;
+    private Armor? _droppedArmor = null;
+    public int TotalDeaths { get; private set; } = 0;
 
     public void SetOptimalConfig(SimulationConfig config)
     {
@@ -60,6 +100,18 @@ public class RPGGame
         _mobDetectionRange = config.MobDetectionRange;
         PlayerStrength = config.PlayerStrength;
         PlayerDefense = config.PlayerDefense;
+    }
+
+    public int GetEffectiveStrength()
+    {
+        // Include equipment bonuses!
+        return PlayerInventory.GetTotalStrength(PlayerStrength);
+    }
+
+    public int GetEffectiveDefense()
+    {
+        // Include equipment bonuses!
+        return PlayerInventory.GetTotalDefense(PlayerDefense);
     }
 
     public void Start()
@@ -660,7 +712,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
 
@@ -686,7 +738,7 @@ public class RPGGame
             {
                 int baseDamage = 1; // Enemy base damage
                 int damage = enemyHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
 
                 if (enemyHitType == HitType.Critical)
@@ -807,7 +859,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
 
@@ -833,7 +885,7 @@ public class RPGGame
             {
                 int baseDamage = 1;
                 int damage = enemyHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
 
                 if (enemyHitType == HitType.Critical)
@@ -974,7 +1026,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
 
@@ -999,7 +1051,7 @@ public class RPGGame
             else
             {
                 int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
 
                 if (enemyHitType == HitType.Critical)
@@ -1046,6 +1098,8 @@ public class RPGGame
 
     private void InitializeEnemyWithVariableStats(EnemyType enemyType)
     {
+        CurrentEnemyType = enemyType; // Store the enemy type!
+
         switch (enemyType)
         {
             case EnemyType.GoblinScout:
@@ -1141,7 +1195,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
 
@@ -1166,7 +1220,7 @@ public class RPGGame
             else
             {
                 int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
 
                 if (enemyHitType == HitType.Critical)
@@ -1296,7 +1350,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
 
@@ -1321,7 +1375,7 @@ public class RPGGame
             else
             {
                 int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
 
                 if (enemyHitType == HitType.Critical)
@@ -1465,7 +1519,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
 
@@ -1490,7 +1544,7 @@ public class RPGGame
             else
             {
                 int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
 
                 if (enemyHitType == HitType.Critical)
@@ -1650,7 +1704,7 @@ public class RPGGame
             }
             else
             {
-                int baseDamage = PlayerStrength;
+                int baseDamage = GetEffectiveStrength(); // Include equipment bonuses!
                 int damage = playerHitType == HitType.Critical ? baseDamage * 2 : baseDamage;
                 EnemyHP = Math.Max(0, EnemyHP - damage);
                 CombatLog += playerHitType == HitType.Critical ? $"CRIT {damage}! " : $"Hit {damage}! ";
@@ -1666,7 +1720,7 @@ public class RPGGame
             else
             {
                 int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
                 CombatLog += enemyHitType == HitType.Critical ? $"{EnemyName} CRIT {actualDamage}! " : $"{EnemyName} {actualDamage}! ";
             }
@@ -1771,7 +1825,7 @@ public class RPGGame
             if (enemyHitType != HitType.Miss)
             {
                 int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-                int actualDamage = Math.Max(1, damage - PlayerDefense);
+                int actualDamage = Math.Max(1, damage - GetEffectiveDefense()); // Include equipment bonuses!
                 PlayerHP = Math.Max(0, PlayerHP - actualDamage);
                 CombatLog += enemyHitType == HitType.Critical ? $"{EnemyName} CRIT {actualDamage}! " : $"{EnemyName} {actualDamage}! ";
             }
@@ -1782,7 +1836,7 @@ public class RPGGame
         {
             IsWon = true;
             CombatEnded = true;
-            int xpGained = GetEnemyXPValue((EnemyType)Enum.Parse(typeof(EnemyType), EnemyName.Replace(" ", "")));
+            int xpGained = GetEnemyXPValue(CurrentEnemyType);
             PlayerXP += xpGained;
             PlayerGold += 10;
             CombatLog += $"Victory! +10g +{xpGained}xp!";
@@ -1882,7 +1936,7 @@ public class RPGGame
         {
             IsWon = true;
             CombatEnded = true;
-            int xpGained = GetEnemyXPValue((EnemyType)Enum.Parse(typeof(EnemyType), EnemyName.Replace(" ", "")));
+            int xpGained = GetEnemyXPValue(CurrentEnemyType);
             PlayerXP += xpGained;
             PlayerGold += 10;
             CombatLog += $"Victory! +10g +{xpGained}xp!";
@@ -1975,7 +2029,7 @@ public class RPGGame
         {
             IsWon = true;
             CombatEnded = true;
-            int xpGained = GetEnemyXPValue((EnemyType)Enum.Parse(typeof(EnemyType), EnemyName.Replace(" ", "")));
+            int xpGained = GetEnemyXPValue(CurrentEnemyType);
             PlayerXP += xpGained;
             PlayerGold += 10;
             CombatLog += $"Victory! +10g +{xpGained}xp!";
@@ -2081,7 +2135,7 @@ public class RPGGame
         {
             IsWon = true;
             CombatEnded = true;
-            int xpGained = GetEnemyXPValue((EnemyType)Enum.Parse(typeof(EnemyType), EnemyName.Replace(" ", "")));
+            int xpGained = GetEnemyXPValue(CurrentEnemyType);
             PlayerXP += xpGained;
             PlayerGold += 10;
             CombatLog += $"Victory! +10g +{xpGained}xp!";
@@ -2121,6 +2175,7 @@ public class RPGGame
         }
 
         // Place special locations
+        _worldMap[10, 10] = "Temple"; // RESPAWN POINT - Center of world
         _worldMap[5, 5] = "Town";
         _worldMap[15, 15] = "Town";
         _worldMap[10, 5] = "Dungeon";
@@ -2427,21 +2482,56 @@ public class RPGGame
     public void EnterDungeon()
     {
         InDungeon = true;
-        DungeonDepth = 1;
-        GenerateDungeonMap();
+        _currentDungeonLocation = (PlayerX, PlayerY);
 
-        // Place player on first floor tile (guaranteed to exist)
-        for (int x = 0; x < _dungeonWidth; x++)
+        // Calculate max depth based on player level (scales with progression)
+        MaxDungeonDepth = 3 + (PlayerLevel / 2); // Lvl 1 → 3 floors, Lvl 10 → 8 floors
+
+        // Check if dungeon exists at this location
+        if (!_persistentDungeons.ContainsKey(_currentDungeonLocation))
         {
-            for (int y = 0; y < _dungeonHeight; y++)
+            _persistentDungeons[_currentDungeonLocation] = new Dictionary<int, DungeonState>();
+        }
+
+        // Check if we have a saved state for depth 1
+        if (!_persistentDungeons[_currentDungeonLocation].ContainsKey(1))
+        {
+            // Create new dungeon for depth 1
+            _currentDungeonState = new DungeonState(_dungeonWidth, _dungeonHeight, MaxDungeonDepth);
+            _persistentDungeons[_currentDungeonLocation][1] = _currentDungeonState;
+            DungeonDepth = 1;
+            GenerateDungeonMap(); // Generate new floor
+
+            // Find starting position
+            for (int x = 0; x < _dungeonWidth; x++)
             {
-                if (_dungeonMap[x, y] == "Floor")
+                for (int y = 0; y < _dungeonHeight; y++)
                 {
-                    PlayerX = x;
-                    PlayerY = y;
-                    return;
+                    if (_dungeonMap[x, y] == "Floor")
+                    {
+                        PlayerX = x;
+                        PlayerY = y;
+                        _currentDungeonState.PlayerStartX = x;
+                        _currentDungeonState.PlayerStartY = y;
+                        break;
+                    }
                 }
+                if (_dungeonMap[PlayerX, PlayerY] == "Floor") break;
             }
+        }
+        else
+        {
+            // Load existing dungeon
+            _currentDungeonState = _persistentDungeons[_currentDungeonLocation][1];
+            DungeonDepth = _currentDungeonState.CurrentDepth;
+            MaxDungeonDepth = _currentDungeonState.MaxDepth;
+            BossDefeated = _currentDungeonState.BossDefeated;
+            ArtifactCollected = _currentDungeonState.ArtifactCollected;
+            _dungeonMap = _currentDungeonState.Map;
+
+            // Restore player position
+            PlayerX = _currentDungeonState.PlayerStartX;
+            PlayerY = _currentDungeonState.PlayerStartY;
         }
     }
 
@@ -2463,6 +2553,15 @@ public class RPGGame
 
         // Place visible features!
         PlaceDungeonFeatures();
+
+        // Save to current dungeon state
+        if (_currentDungeonState != null)
+        {
+            _currentDungeonState.Map = _dungeonMap;
+            _currentDungeonState.CurrentDepth = DungeonDepth;
+            _currentDungeonState.BossDefeated = BossDefeated;
+            _currentDungeonState.ArtifactCollected = ArtifactCollected;
+        }
     }
 
     private void PlaceDungeonFeatures()
@@ -2482,38 +2581,102 @@ public class RPGGame
 
         if (floorTiles.Count == 0) return;
 
-        // Place 3-5 treasure chests
-        int treasureCount = _random.Next(3, 6);
-        for (int i = 0; i < treasureCount && floorTiles.Count > 0; i++)
-        {
-            var tile = floorTiles[_random.Next(floorTiles.Count)];
-            _dungeonMap[tile.x, tile.y] = "Treasure";
-            floorTiles.Remove(tile);
-        }
+        // BOSS FLOOR: If on final depth, spawn boss instead of regular features
+        bool isBossFloor = (DungeonDepth == MaxDungeonDepth);
 
-        // Place 5-8 traps (visible!)
-        int trapCount = _random.Next(5, 9);
-        for (int i = 0; i < trapCount && floorTiles.Count > 0; i++)
+        if (isBossFloor && !BossDefeated)
         {
-            var tile = floorTiles[_random.Next(floorTiles.Count)];
-            _dungeonMap[tile.x, tile.y] = "Trap";
-            floorTiles.Remove(tile);
-        }
+            // Place boss in center of map
+            var bossTile = floorTiles[floorTiles.Count / 2];
+            _dungeonMap[bossTile.x, bossTile.y] = "Boss";
+            floorTiles.Remove(bossTile);
 
-        // Place 3-5 monsters
-        int monsterCount = _random.Next(3, 6);
-        for (int i = 0; i < monsterCount && floorTiles.Count > 0; i++)
-        {
-            var tile = floorTiles[_random.Next(floorTiles.Count)];
-            _dungeonMap[tile.x, tile.y] = "Monster";
-            floorTiles.Remove(tile);
-        }
+            // Fewer features on boss floor (2-3 treasures, 2-4 traps, no monsters)
+            int treasureCount = _random.Next(2, 4);
+            for (int i = 0; i < treasureCount && floorTiles.Count > 0; i++)
+            {
+                var tile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[tile.x, tile.y] = "Treasure";
+                floorTiles.Remove(tile);
+            }
 
-        // Place exit stairs
-        if (floorTiles.Count > 0)
+            int trapCount = _random.Next(2, 5);
+            for (int i = 0; i < trapCount && floorTiles.Count > 0; i++)
+            {
+                var tile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[tile.x, tile.y] = "Trap";
+                floorTiles.Remove(tile);
+            }
+        }
+        else if (isBossFloor && BossDefeated)
         {
-            var exitTile = floorTiles[_random.Next(floorTiles.Count)];
-            _dungeonMap[exitTile.x, exitTile.y] = "Stairs";
+            // Boss defeated! Place artifact and exit portal
+            if (!ArtifactCollected && floorTiles.Count > 0)
+            {
+                var artifactTile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[artifactTile.x, artifactTile.y] = "Artifact";
+                floorTiles.Remove(artifactTile);
+            }
+
+            // Exit portal appears
+            if (floorTiles.Count > 0)
+            {
+                var portalTile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[portalTile.x, portalTile.y] = "Portal";
+                floorTiles.Remove(portalTile);
+            }
+        }
+        else
+        {
+            // Normal floor features
+            // Place 3-5 treasure chests
+            int treasureCount = _random.Next(3, 6);
+            for (int i = 0; i < treasureCount && floorTiles.Count > 0; i++)
+            {
+                var tile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[tile.x, tile.y] = "Treasure";
+                floorTiles.Remove(tile);
+            }
+
+            // Place 5-8 traps (visible!)
+            int trapCount = _random.Next(5, 9);
+            for (int i = 0; i < trapCount && floorTiles.Count > 0; i++)
+            {
+                var tile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[tile.x, tile.y] = "Trap";
+                floorTiles.Remove(tile);
+            }
+
+            // Place 3-5 monsters as actual mob entities (not tiles!)
+            int monsterCount = _random.Next(3, 6);
+            if (_currentDungeonState != null)
+            {
+                _currentDungeonState.DungeonMobs.Clear(); // Clear old mobs
+
+                for (int i = 0; i < monsterCount && floorTiles.Count > 0; i++)
+                {
+                    var tile = floorTiles[_random.Next(floorTiles.Count)];
+
+                    // Create dungeon mob at this location
+                    int mobLevel = Math.Max(1, PlayerLevel + DungeonDepth);
+                    var mob = new Mob(
+                        tile.x, tile.y,
+                        "Dungeon Monster",
+                        mobLevel,
+                        (EnemyType)_random.Next(3)
+                    );
+                    _currentDungeonState.DungeonMobs.Add(mob);
+
+                    floorTiles.Remove(tile);
+                }
+            }
+
+            // Place exit stairs (not on boss floor)
+            if (floorTiles.Count > 0)
+            {
+                var exitTile = floorTiles[_random.Next(floorTiles.Count)];
+                _dungeonMap[exitTile.x, exitTile.y] = "Stairs";
+            }
         }
     }
 
@@ -2578,9 +2741,48 @@ public class RPGGame
 
     public void DescendDungeon()
     {
-        if (InDungeon)
+        if (!InDungeon) return;
+
+        DungeonDepth++;
+
+        // Check if we've been to this depth before
+        if (_persistentDungeons[_currentDungeonLocation].ContainsKey(DungeonDepth))
         {
-            DungeonDepth++;
+            // Load existing floor
+            _currentDungeonState = _persistentDungeons[_currentDungeonLocation][DungeonDepth];
+            _dungeonMap = _currentDungeonState.Map;
+            BossDefeated = _currentDungeonState.BossDefeated;
+            ArtifactCollected = _currentDungeonState.ArtifactCollected;
+
+            // Restore player position
+            PlayerX = _currentDungeonState.PlayerStartX;
+            PlayerY = _currentDungeonState.PlayerStartY;
+        }
+        else
+        {
+            // Create new floor
+            _currentDungeonState = new DungeonState(_dungeonWidth, _dungeonHeight, MaxDungeonDepth);
+            _currentDungeonState.CurrentDepth = DungeonDepth;
+            _persistentDungeons[_currentDungeonLocation][DungeonDepth] = _currentDungeonState;
+
+            // Generate new floor layout
+            GenerateDungeonMap();
+
+            // Place player on first floor tile
+            for (int x = 0; x < _dungeonWidth; x++)
+            {
+                for (int y = 0; y < _dungeonHeight; y++)
+                {
+                    if (_dungeonMap[x, y] == "Floor")
+                    {
+                        PlayerX = x;
+                        PlayerY = y;
+                        _currentDungeonState.PlayerStartX = x;
+                        _currentDungeonState.PlayerStartY = y;
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -2604,6 +2806,333 @@ public class RPGGame
         IsWon = false;
         CombatEnded = false;
         CombatLog = $"A monster lurks in the darkness (Depth {DungeonDepth})!";
+    }
+
+    public void TriggerBossCombat()
+    {
+        // Boss combat! Much harder than regular monsters
+        _combatStarted = true;
+        _hpCombat = true;
+        PlayerStamina = 12;
+
+        // Boss level scales with player level and dungeon depth
+        int bossLevel = PlayerLevel + MaxDungeonDepth;
+
+        // Boss type depends on depth
+        string bossName;
+        int bonusHP;
+        EnemyType bossBaseType;
+
+        if (MaxDungeonDepth <= 3)
+        {
+            bossName = "Goblin King";
+            bonusHP = 20;
+            bossBaseType = EnemyType.GoblinWarrior; // Warrior-type boss
+        }
+        else if (MaxDungeonDepth <= 6)
+        {
+            bossName = "Troll Chieftain";
+            bonusHP = 40;
+            bossBaseType = EnemyType.GoblinWarrior; // Strong boss
+        }
+        else
+        {
+            bossName = "Ancient Dragon";
+            bonusHP = 80;
+            bossBaseType = EnemyType.GoblinWarrior; // Epic boss
+        }
+
+        // Initialize boss with enhanced stats
+        InitializeEnemyWithLevel(bossBaseType, bossLevel);
+        EnemyName = bossName; // Override display name
+        EnemyHP += bonusHP; // Boss has extra HP!
+
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = $"💀 {bossName} [Lvl{bossLevel}] - Final Boss!";
+    }
+
+    public void MarkBossDefeated()
+    {
+        BossDefeated = true;
+        if (_currentDungeonState != null)
+        {
+            _currentDungeonState.BossDefeated = true;
+        }
+
+        // Regenerate map to spawn artifact and portal
+        GenerateDungeonMap();
+
+        // Place player on a floor tile (avoid spawning on artifact/portal)
+        for (int x = 0; x < _dungeonWidth; x++)
+        {
+            for (int y = 0; y < _dungeonHeight; y++)
+            {
+                if (_dungeonMap[x, y] == "Floor")
+                {
+                    PlayerX = x;
+                    PlayerY = y;
+                    if (_currentDungeonState != null)
+                    {
+                        _currentDungeonState.PlayerStartX = x;
+                        _currentDungeonState.PlayerStartY = y;
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    public void MarkDungeonTileExplored(int x, int y)
+    {
+        if (_currentDungeonState != null && x >= 0 && x < _dungeonWidth && y >= 0 && y < _dungeonHeight)
+        {
+            _currentDungeonState.FogOfWar[x, y] = true;
+        }
+    }
+
+    public bool IsDungeonTileExplored(int x, int y)
+    {
+        if (_currentDungeonState == null || x < 0 || x >= _dungeonWidth || y < 0 || y >= _dungeonHeight)
+            return false;
+        return _currentDungeonState.FogOfWar[x, y];
+    }
+
+    public List<Mob> GetDungeonMobs()
+    {
+        if (_currentDungeonState == null)
+            return new List<Mob>();
+        return new List<Mob>(_currentDungeonState.DungeonMobs);
+    }
+
+    public Mob? GetDungeonMobAt(int x, int y)
+    {
+        if (_currentDungeonState == null)
+            return null;
+        return _currentDungeonState.DungeonMobs.FirstOrDefault(m => m.X == x && m.Y == y);
+    }
+
+    public bool IsDungeonMobAt(int x, int y)
+    {
+        return GetDungeonMobAt(x, y) != null;
+    }
+
+    public void RemoveDungeonMob(Mob mob)
+    {
+        if (_currentDungeonState != null)
+        {
+            _currentDungeonState.DungeonMobs.Remove(mob);
+        }
+    }
+
+    public void MoveDungeonMobs()
+    {
+        if (_currentDungeonState == null || _currentDungeonState.DungeonMobs.Count == 0)
+            return;
+
+        foreach (var mob in _currentDungeonState.DungeonMobs.ToList())
+        {
+            // Simple random movement for dungeon mobs
+            int direction = _random.Next(5); // 0-3 = move, 4 = stay
+
+            int newX = mob.X;
+            int newY = mob.Y;
+
+            switch (direction)
+            {
+                case 0: newY--; break; // North
+                case 1: newY++; break; // South
+                case 2: newX++; break; // East
+                case 3: newX--; break; // West
+                case 4: continue; // Stay put
+            }
+
+            // Check if new position is valid (floor tile, no other mob there)
+            if (newX >= 0 && newX < _dungeonWidth && newY >= 0 && newY < _dungeonHeight)
+            {
+                string tile = _dungeonMap[newX, newY];
+                bool hasOtherMob = _currentDungeonState.DungeonMobs.Any(m => m != mob && m.X == newX && m.Y == newY);
+
+                if (tile == "Floor" && !hasOtherMob && (newX != PlayerX || newY != PlayerY))
+                {
+                    mob.X = newX;
+                    mob.Y = newY;
+                }
+            }
+        }
+    }
+
+    public string CollectArtifact()
+    {
+        if (ArtifactCollected) return "Already collected!";
+
+        ArtifactCollected = true;
+
+        // Determine equipment tier based on player level
+        int tierIndex = Math.Min(4, (PlayerLevel / 3) + 1); // Lvl 1-2 → tier 1, Lvl 3-5 → tier 2, etc.
+
+        // 50/50 chance for weapon or armor
+        bool giveWeapon = _random.Next(2) == 0;
+
+        string rewardMsg;
+        if (giveWeapon)
+        {
+            var weapon = Weapon.AllWeapons[tierIndex];
+            PlayerInventory.EquippedWeapon = weapon;
+            rewardMsg = $"⚔️  ARTIFACT: {weapon.Name} (+{weapon.BonusStrength} STR)!";
+        }
+        else
+        {
+            var armor = Armor.AllArmor[tierIndex];
+            PlayerInventory.EquippedArmor = armor;
+            rewardMsg = $"🛡️  ARTIFACT: {armor.Name} (+{armor.BonusDefense} DEF)!";
+        }
+
+        return rewardMsg;
+    }
+
+    public string UseDungeonPortal()
+    {
+        if (!ArtifactCollected)
+        {
+            return "The portal is sealed! Find the artifact first.";
+        }
+
+        // DUNGEON COMPLETED! Award bonuses
+        DungeonsCompleted++;
+
+        // Completion bonuses scale with dungeon depth
+        int goldBonus = MaxDungeonDepth * 50;
+        int xpBonus = MaxDungeonDepth * 30;
+
+        PlayerGold += goldBonus;
+        PlayerXP += xpBonus;
+
+        // Check for level up
+        ProcessLevelUp();
+
+        // Exit dungeon
+        ExitDungeon();
+
+        // Check if player won the game!
+        CheckVictoryCondition();
+
+        return $"✅ DUNGEON CLEARED! +{goldBonus}g, +{xpBonus}XP | Total: {DungeonsCompleted} completed";
+    }
+
+    public void CheckVictoryCondition()
+    {
+        // Victory condition: reach target level, gold, and dungeons
+        // These scale with player progression!
+        int targetLevel = 5 + (PlayerLevel / 4);
+        int targetGold = 100 * Math.Max(1, PlayerLevel / 2);
+        int targetDungeons = 2 + (PlayerLevel / 5);
+
+        bool levelGoal = PlayerLevel >= targetLevel;
+        bool goldGoal = PlayerGold >= targetGold;
+        bool dungeonGoal = DungeonsCompleted >= targetDungeons;
+
+        if (levelGoal && goldGoal && dungeonGoal && !RunWon)
+        {
+            RunWon = true;
+        }
+    }
+
+    public string GetVictoryProgress()
+    {
+        int targetLevel = 5 + (PlayerLevel / 4);
+        int targetGold = 100 * Math.Max(1, PlayerLevel / 2);
+        int targetDungeons = 2 + (PlayerLevel / 5);
+
+        return $"Goals: Lvl {PlayerLevel}/{targetLevel} | {PlayerGold}/{targetGold}g | {DungeonsCompleted}/{targetDungeons} dungeons";
+    }
+
+    // NEW: Death & Respawn System
+    public void HandlePlayerDeath()
+    {
+        TotalDeaths++;
+
+        // Mark death location
+        DeathLocationX = PlayerX;
+        DeathLocationY = PlayerY;
+
+        // Drop all equipment at death location
+        if (PlayerInventory.EquippedWeapon.BonusStrength > 0)
+        {
+            _droppedWeapon = PlayerInventory.EquippedWeapon;
+        }
+        else
+        {
+            _droppedWeapon = null;
+        }
+
+        if (PlayerInventory.EquippedArmor.BonusDefense > 0)
+        {
+            _droppedArmor = PlayerInventory.EquippedArmor;
+        }
+        else
+        {
+            _droppedArmor = null;
+        }
+
+        // Reset equipment to rags (starter gear)
+        PlayerInventory.EquippedWeapon = Weapon.AllWeapons[0]; // Rusty Dagger
+        PlayerInventory.EquippedArmor = Armor.AllArmor[0]; // Cloth Rags
+
+        // Lose some gold (50% penalty)
+        int goldLost = PlayerGold / 2;
+        PlayerGold -= goldLost;
+
+        // Respawn at Temple (10, 10)
+        PlayerX = 10;
+        PlayerY = 10;
+        PlayerHP = MaxPlayerHP; // Full heal on respawn
+
+        // Exit dungeon if we were in one
+        if (InDungeon)
+        {
+            ExitDungeon();
+        }
+
+        // Reset combat state
+        IsWon = false;
+        CombatEnded = false;
+        RunEnded = false;
+    }
+
+    public bool CanRetrieveDroppedItems()
+    {
+        return DeathLocationX.HasValue &&
+               DeathLocationX == PlayerX &&
+               DeathLocationY == PlayerY &&
+               (_droppedWeapon != null || _droppedArmor != null);
+    }
+
+    public string RetrieveDroppedItems()
+    {
+        if (!CanRetrieveDroppedItems())
+            return "No items here.";
+
+        var retrieved = new List<string>();
+
+        if (_droppedWeapon != null)
+        {
+            PlayerInventory.EquippedWeapon = _droppedWeapon;
+            retrieved.Add(_droppedWeapon.Name);
+            _droppedWeapon = null;
+        }
+
+        if (_droppedArmor != null)
+        {
+            PlayerInventory.EquippedArmor = _droppedArmor;
+            retrieved.Add(_droppedArmor.Name);
+            _droppedArmor = null;
+        }
+
+        DeathLocationX = null;
+        DeathLocationY = null;
+
+        return "Retrieved: " + string.Join(", ", retrieved) + "!";
     }
 
     public int RollForTreasure(int dungeonDepth)
@@ -2728,6 +3257,49 @@ public class RPGGame
     public void RemoveMob(Mob mob)
     {
         _activeMobs.Remove(mob);
+    }
+
+    // NEW: Active World - Mobs move toward player
+    public void UpdateWorldMobs()
+    {
+        foreach (var mob in _activeMobs.ToList()) // ToList to avoid modification during iteration
+        {
+            // Calculate distance to player
+            int dx = PlayerX - mob.X;
+            int dy = PlayerY - mob.Y;
+            int distance = Math.Abs(dx) + Math.Abs(dy); // Manhattan distance
+
+            // Only move if within detection range
+            if (distance <= _mobDetectionRange && distance > 0)
+            {
+                // Simple chase AI: Move one step toward player
+                int newX = mob.X;
+                int newY = mob.Y;
+
+                // Prioritize horizontal or vertical based on distance
+                if (Math.Abs(dx) > Math.Abs(dy))
+                {
+                    // Move horizontally toward player
+                    newX += dx > 0 ? 1 : -1;
+                }
+                else if (Math.Abs(dy) > 0)
+                {
+                    // Move vertically toward player
+                    newY += dy > 0 ? 1 : -1;
+                }
+
+                // Check bounds
+                if (newX >= 0 && newX < WorldWidth && newY >= 0 && newY < WorldHeight)
+                {
+                    // Check if another mob is already at this position
+                    if (!IsMobAt(newX, newY))
+                    {
+                        mob.X = newX;
+                        mob.Y = newY;
+                    }
+                }
+            }
+        }
     }
 
     public void TriggerMobEncounter(Mob mob)
@@ -2954,6 +3526,53 @@ public class RPGGame
     public void AddMobForTesting(Mob mob)
     {
         _activeMobs.Add(mob);
+    }
+
+    public Mob? GetNearestMob()
+    {
+        if (_activeMobs.Count == 0) return null;
+
+        Mob? nearest = null;
+        int minDistance = int.MaxValue;
+
+        foreach (var mob in _activeMobs)
+        {
+            int distance = Math.Abs(mob.X - PlayerX) + Math.Abs(mob.Y - PlayerY);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                nearest = mob;
+            }
+        }
+
+        return nearest;
+    }
+
+    public void SpawnMobForTesting()
+    {
+        int x, y;
+        string terrain;
+
+        // Find valid spawn location (not on player, not in town)
+        do
+        {
+            x = _random.Next(WorldWidth);
+            y = _random.Next(WorldHeight);
+            terrain = _worldMap[x, y];
+        }
+        while ((x == PlayerX && y == PlayerY) || terrain == "Town" || terrain == "Temple" || IsMobAt(x, y));
+
+        EnemyType type = (EnemyType)_random.Next(3);
+        string name = type switch
+        {
+            EnemyType.GoblinScout => "Goblin Scout",
+            EnemyType.GoblinWarrior => "Goblin Warrior",
+            EnemyType.GoblinArcher => "Goblin Archer",
+            _ => "Goblin Scout"
+        };
+        int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
+
+        _activeMobs.Add(new Mob(x, y, name, level, type));
     }
 
     public void SetDungeonTileForTesting(int x, int y, string tile)
