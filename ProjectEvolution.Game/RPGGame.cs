@@ -14,7 +14,7 @@ public class RPGGame
     public bool CombatEnded { get; private set; }
     public int PlayerGold { get; private set; }
     public int RemainingEnemies { get; private set; }
-    public int PlayerStrength { get; private set; } = 1;
+    public int PlayerStrength { get; private set; } = 10; // One-shot everything!
     public int PlayerDefense { get; private set; } = 0;
     public int PlayerStamina { get; private set; } = 12;
     public int EnemyDamage { get; private set; } = 1;
@@ -26,7 +26,7 @@ public class RPGGame
     public int XPForNextLevel { get; private set; } = 100;
     public int AvailableStatPoints { get; private set; } = 0;
     public int EnemyLevel { get; private set; } = 1;
-    public int MaxPlayerHP { get; private set; } = 25; // EASY MODE - learn the game!
+    public int MaxPlayerHP { get; private set; } = 100; // TUTORIAL MODE - can't die!
     private int _configuredMaxMobs = 29; // Can be overridden by tuning results
     private int _configuredMobDetection = 3; // Can be overridden
     public int CombatsWon { get; private set; } = 0;
@@ -46,8 +46,8 @@ public class RPGGame
     private bool[,] _exploredTiles;
     private int _mobDetectionRange = 2; // Easy mode
     private const int PlayerVisionRange = 3; // Player can see 3 tiles around
-    private int _maxMobsInWorld = 8; // EASY MODE - sparse mobs!
-    private const int MinMobsInWorld = 2;  // Very few mobs
+    private int _maxMobsInWorld = 3; // TUTORIAL - almost empty!
+    private const int MinMobsInWorld = 1;  // Bare minimum
     private string[,] _dungeonMap;
     private int _dungeonWidth = 30;
     private int _dungeonHeight = 30;

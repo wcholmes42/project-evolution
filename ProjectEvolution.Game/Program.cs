@@ -98,8 +98,8 @@ if (optimalConfig != null)
 }
 else
 {
-    // EASY MODE defaults!
-    game.SetPlayerStats(strength: 4, defense: 2);
+    // TUTORIAL MODE defaults!
+    game.SetPlayerStats(strength: 10, defense: 5);
 }
 
 // Start world BEFORE UI (need world to render!)
