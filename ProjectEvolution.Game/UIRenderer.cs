@@ -50,7 +50,7 @@ public class UIRenderer
         Console.Write(new string(' ', 76)); // Clear line
         Console.SetCursorPosition(2, 1);
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"PROJECT EVOLUTION - GENERATION 26: ULTIMATE ASCII UI");
+        Console.Write($"PROJECT EVOLUTION - GENERATION 33: ML-OPTIMIZED!");
         Console.ResetColor();
 
         Console.SetCursorPosition(2, 2);
