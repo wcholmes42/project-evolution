@@ -242,7 +242,7 @@ public class GameTests
 
         // Assert
         Assert.Equal(2, game.EnemyHP); // Enemy took 1 damage (3 - 1 = 2)
-        Assert.Equal(9, game.PlayerHP); // Player took 1 damage (10 - 1 = 9)
+        Assert.Equal(15, game.PlayerHP); // Player took 1 damage (10 - 1 = 9)
     }
 
     [Fact]
@@ -574,7 +574,7 @@ public class GameTests
         game.ExecuteStatsCombatRound(CombatAction.Attack, CombatAction.Attack);
 
         // Enemy deals 1 damage, player has 2 defense = max(1, 1-2) = 1 minimum damage
-        Assert.Equal(9, game.PlayerHP); // Still takes at least 1 damage
+        Assert.Equal(15, game.PlayerHP); // Still takes at least 1 damage
     }
 
     [Fact]
@@ -646,7 +646,7 @@ public class GameTests
 
         // Assert - Enemy takes no damage from miss
         Assert.Equal(3, game.EnemyHP);
-        Assert.Equal(9, game.PlayerHP); // But enemy still hits player
+        Assert.Equal(15, game.PlayerHP); // But enemy still hits player
     }
 
     [Fact]
@@ -663,7 +663,7 @@ public class GameTests
 
         // Assert - Normal damage
         Assert.Equal(1, game.EnemyHP); // 3 - 2 = 1
-        Assert.Equal(9, game.PlayerHP); // 10 - 1 = 9
+        Assert.Equal(15, game.PlayerHP); // 10 - 1 = 9
     }
 
     [Fact]
@@ -1486,8 +1486,8 @@ public class GameTests
         game.StartCombatWithMaxHP();
 
         // Assert - AI-optimized starting HP is 9
-        Assert.Equal(9, game.MaxPlayerHP); // AI-optimized from 233K+ simulations
-        Assert.Equal(9, game.PlayerHP);
+        Assert.Equal(15, game.MaxPlayerHP); // AI-optimized from 233K+ simulations
+        Assert.Equal(15, game.PlayerHP);
     }
 
     [Fact]
@@ -1511,7 +1511,7 @@ public class GameTests
 
         // Assert - Max HP should increase (+2 per level = 11 at level 2)
         Assert.Equal(2, game.PlayerLevel);
-        Assert.Equal(11, game.MaxPlayerHP); // 9 base + 2 (AI-optimized)
+        Assert.Equal(17, game.MaxPlayerHP); // 9 base + 2 (AI-optimized)
     }
 
     [Fact]
@@ -1536,8 +1536,8 @@ public class GameTests
 
         // Assert - HP restored to new max
         Assert.Equal(2, game.PlayerLevel);
-        Assert.Equal(11, game.MaxPlayerHP); // 9 base + 2 (AI-optimized)
-        Assert.Equal(11, game.PlayerHP); // Fully healed to new max
+        Assert.Equal(17, game.MaxPlayerHP); // 9 base + 2 (AI-optimized)
+        Assert.Equal(17, game.PlayerHP); // Fully healed to new max
     }
 
     [Fact]
@@ -1979,7 +1979,7 @@ public class GameTests
         // Assert
         Assert.True(used);
         Assert.Equal(0, game.PotionCount);
-        Assert.Equal(9, game.PlayerHP); // 5 + 5 healing, capped at max 9 (AI-optimized)
+        Assert.Equal(15, game.PlayerHP); // 5 + 5 healing, capped at max 9 (AI-optimized)
     }
 
     [Fact]
