@@ -1,8 +1,15 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-16
-**Current Generation**: 33 (Automated Testing!) 🎛️
-**Status**: ✅ AI-OPTIMIZED BALANCE - 233K+ games tested!
+**Current Generation**: 33 (ML Optimization Complete!) 🎛️
+**Status**: ✅ 9-Mode Self-Tuning System + 2M+ Games Tested!
+
+## 🎮 PLAYABLE DEFAULTS (Human-Friendly!)
+- **HP: 15** (forgiving, not brutal!)
+- **Strength: 3** (kill mobs faster)
+- **MaxMobs: 15** (half density, more exploration)
+- **Detection: 2** (easier escapes)
+- **Dungeons: Visible, less traps** (15% chance, 1-3 dmg)
 
 ## 🤖 AI-DISCOVERED OPTIMAL SETTINGS
 
