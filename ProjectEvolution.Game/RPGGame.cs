@@ -2278,6 +2278,13 @@ public class RPGGame
 
     public string GetCurrentTerrain()
     {
+        // In dungeon, return "Dungeon" (don't access world map!)
+        if (InDungeon) return "Dungeon";
+
+        // Bounds check for world map
+        if (PlayerX < 0 || PlayerX >= WorldWidth || PlayerY < 0 || PlayerY >= WorldHeight)
+            return "OutOfBounds";
+
         return _worldMap[PlayerX, PlayerY];
     }
 
