@@ -183,18 +183,45 @@ public class FocusedClassOptimizer
         var top20 = results.OrderByDescending(r => r.score).Take(20).ToList();
         var classCounts = new Dictionary<string, int>();
         var classBestScores = new Dictionary<string, double>();
+        var classTestCounts = new Dictionary<string, int>();
 
         foreach (var className in classes)
         {
             var classResults = top20.Where(r => r.className == className).ToList();
+            var allClassResults = results.Where(r => r.className == className).ToList();
+
             classCounts[className] = classResults.Count;
             classBestScores[className] = classResults.Any() ? classResults.Max(r => r.score) : 0;
+            classTestCounts[className] = allClassResults.Count;
         }
 
-        // Weakest = lowest representation OR lowest best score
-        return classes.OrderBy(c => classCounts.GetValueOrDefault(c, 0))
-                     .ThenBy(c => classBestScores.GetValueOrDefault(c, 0))
-                     .First();
+        // IMPROVED LOGIC: Don't keep testing already-strong classes!
+        // Filter out classes that are "good enough" (score > 95 AND 2+ in top 10)
+        var needsWork = classes.Where(c =>
+        {
+            var bestScore = classBestScores.GetValueOrDefault(c, 0);
+            var inTop10 = classCounts.GetValueOrDefault(c, 0);
+
+            // Good enough? Skip it!
+            if (bestScore > 95 && inTop10 >= 2) return false;
+
+            // Way overtested? Skip it!
+            if (classTestCounts[c] > 200 && bestScore > 90) return false;
+
+            return true; // Needs work!
+        }).ToArray();
+
+        // If all classes are good, use round-robin
+        if (needsWork.Length == 0)
+        {
+            // Round-robin: pick least tested
+            return classes.OrderBy(c => classTestCounts.GetValueOrDefault(c, 0)).First();
+        }
+
+        // Among classes that need work, pick weakest
+        return needsWork.OrderBy(c => classCounts.GetValueOrDefault(c, 0))
+                       .ThenBy(c => classBestScores.GetValueOrDefault(c, 0))
+                       .First();
     }
 
     private static void ShowClassStandings(string[] classes, List<(SimulationConfig, double, double, string)> results)
