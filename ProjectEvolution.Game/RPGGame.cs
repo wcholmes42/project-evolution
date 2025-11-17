@@ -2460,6 +2460,61 @@ public class RPGGame
 
         // Carve out rooms and corridors
         CarveRooms();
+
+        // Place visible features!
+        PlaceDungeonFeatures();
+    }
+
+    private void PlaceDungeonFeatures()
+    {
+        // Find all floor tiles
+        var floorTiles = new List<(int x, int y)>();
+        for (int x = 0; x < _dungeonWidth; x++)
+        {
+            for (int y = 0; y < _dungeonHeight; y++)
+            {
+                if (_dungeonMap[x, y] == "Floor")
+                {
+                    floorTiles.Add((x, y));
+                }
+            }
+        }
+
+        if (floorTiles.Count == 0) return;
+
+        // Place 3-5 treasure chests
+        int treasureCount = _random.Next(3, 6);
+        for (int i = 0; i < treasureCount && floorTiles.Count > 0; i++)
+        {
+            var tile = floorTiles[_random.Next(floorTiles.Count)];
+            _dungeonMap[tile.x, tile.y] = "Treasure";
+            floorTiles.Remove(tile);
+        }
+
+        // Place 5-8 traps (visible!)
+        int trapCount = _random.Next(5, 9);
+        for (int i = 0; i < trapCount && floorTiles.Count > 0; i++)
+        {
+            var tile = floorTiles[_random.Next(floorTiles.Count)];
+            _dungeonMap[tile.x, tile.y] = "Trap";
+            floorTiles.Remove(tile);
+        }
+
+        // Place 3-5 monsters
+        int monsterCount = _random.Next(3, 6);
+        for (int i = 0; i < monsterCount && floorTiles.Count > 0; i++)
+        {
+            var tile = floorTiles[_random.Next(floorTiles.Count)];
+            _dungeonMap[tile.x, tile.y] = "Monster";
+            floorTiles.Remove(tile);
+        }
+
+        // Place exit stairs
+        if (floorTiles.Count > 0)
+        {
+            var exitTile = floorTiles[_random.Next(floorTiles.Count)];
+            _dungeonMap[exitTile.x, exitTile.y] = "Stairs";
+        }
     }
 
     private void CarveRooms()

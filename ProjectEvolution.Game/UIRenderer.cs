@@ -237,8 +237,12 @@ public class UIRenderer
 
                     (string symbol, ConsoleColor color) = tile switch
                     {
-                        "Floor" => (" . ", ConsoleColor.Green),      // Green for walkable!
-                        "Wall" => (" # ", ConsoleColor.DarkGray),   // # more visible than █
+                        "Floor" => (" . ", ConsoleColor.DarkGreen),     // Floor
+                        "Wall" => (" # ", ConsoleColor.DarkGray),       // Walls
+                        "Treasure" => (" $ ", ConsoleColor.Yellow),     // Gold!
+                        "Trap" => (" ! ", ConsoleColor.Red),            // Danger!
+                        "Monster" => (" M ", ConsoleColor.Magenta),     // Enemy!
+                        "Stairs" => (" > ", ConsoleColor.Cyan),         // Exit!
                         "OutOfBounds" => ("   ", ConsoleColor.Black),
                         _ => ("   ", ConsoleColor.Black)
                     };
