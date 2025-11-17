@@ -255,12 +255,30 @@ while (playing)
             }
             else if (game.RollForEncounter())
             {
-                // Random encounter (less common now that we have visible mobs)
+                // Random encounter - SPAWN VISIBLE MOB!
                 logger.LogEvent("ENCOUNTER", $"Random encounter at ({game.PlayerX},{game.PlayerY})");
-                ui.AddMessage("💥 AMBUSH! Enemy appeared!");
+
+                // Spawn mob at adjacent tile
+                int spawnX = game.PlayerX + _random.Next(-1, 2);
+                int spawnY = game.PlayerY + _random.Next(-1, 2);
+                spawnX = Math.Clamp(spawnX, 0, game.WorldWidth - 1);
+                spawnY = Math.Clamp(spawnY, 0, game.WorldHeight - 1);
+
+                var encounterMob = new Mob(
+                    spawnX, spawnY,
+                    "Ambusher",
+                    Math.Max(1, game.PlayerLevel + _random.Next(-1, 2)),
+                    (EnemyType)_random.Next(3)
+                );
+
+                game.AddMobForTesting(encounterMob);
+
+                ui.AddMessage($"💥 {encounterMob.Name} [Lvl{encounterMob.Level}] appears!");
+                ui.RenderMap(game); // Show mob appearing!
                 Thread.Sleep(800);
-                game.TriggerEncounter();
-                hasEncounter = true;
+
+                // Combat happens next move if they walk into it
+                hasEncounter = false; // Don't trigger combat immediately
             }
 
             if (hasEncounter)
