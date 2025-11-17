@@ -228,19 +228,19 @@ public class UIRenderer
                 if (dx == 0 && dy == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write("@");
+                    Console.Write(" @ ");
                     Console.ResetColor();
                 }
                 else
                 {
                     string tile = game.GetDungeonTile(dungeonX, dungeonY);
 
-                    (char symbol, ConsoleColor color) = tile switch
+                    (string symbol, ConsoleColor color) = tile switch
                     {
-                        "Floor" => ('.', ConsoleColor.DarkGray),
-                        "Wall" => ('█', ConsoleColor.Gray),
-                        "OutOfBounds" => (' ', ConsoleColor.Black),
-                        _ => (' ', ConsoleColor.Black)
+                        "Floor" => (" . ", ConsoleColor.Green),      // Green for walkable!
+                        "Wall" => (" # ", ConsoleColor.DarkGray),   // # more visible than █
+                        "OutOfBounds" => ("   ", ConsoleColor.Black),
+                        _ => ("   ", ConsoleColor.Black)
                     };
 
                     Console.ForegroundColor = color;
