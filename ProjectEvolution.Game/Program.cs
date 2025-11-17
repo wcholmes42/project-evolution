@@ -98,11 +98,18 @@ if (optimalConfig != null)
 }
 else
 {
-    game.SetPlayerStats(strength: 2, defense: 1);
+    // EASY MODE defaults!
+    game.SetPlayerStats(strength: 4, defense: 2);
 }
 
 // Start world BEFORE UI (need world to render!)
 game.StartWorldExploration();
+
+// Give starting potions and gold!
+game.SetGoldForTesting(50);
+game.BuyPotion();
+game.BuyPotion();
+game.BuyPotion(); // Start with 3 potions!
 logger.LogEvent("INIT", $"Player spawned at ({game.PlayerX},{game.PlayerY})");
 
 // NOW initialize UI after world exists

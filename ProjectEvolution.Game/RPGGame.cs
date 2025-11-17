@@ -26,7 +26,7 @@ public class RPGGame
     public int XPForNextLevel { get; private set; } = 100;
     public int AvailableStatPoints { get; private set; } = 0;
     public int EnemyLevel { get; private set; } = 1;
-    public int MaxPlayerHP { get; private set; } = 15; // Playable default (AI can tune from here)
+    public int MaxPlayerHP { get; private set; } = 25; // EASY MODE - learn the game!
     private int _configuredMaxMobs = 29; // Can be overridden by tuning results
     private int _configuredMobDetection = 3; // Can be overridden
     public int CombatsWon { get; private set; } = 0;
@@ -44,10 +44,10 @@ public class RPGGame
     public int WorldTurn { get; private set; } = 0;
     private List<Mob> _activeMobs = new List<Mob>();
     private bool[,] _exploredTiles;
-    private int _mobDetectionRange = 2; // Playable default (AI can tune)
+    private int _mobDetectionRange = 2; // Easy mode
     private const int PlayerVisionRange = 3; // Player can see 3 tiles around
-    private int _maxMobsInWorld = 15; // Playable default (AI can tune)
-    private const int MinMobsInWorld = 3;  // Playable default
+    private int _maxMobsInWorld = 8; // EASY MODE - sparse mobs!
+    private const int MinMobsInWorld = 2;  // Very few mobs
     private string[,] _dungeonMap;
     private int _dungeonWidth = 30;
     private int _dungeonHeight = 30;
