@@ -2565,7 +2565,7 @@ public class RPGGame
 
     public int TriggerTrap()
     {
-        int damage = _random.Next(1, 6); // 1-5 damage
+        int damage = _random.Next(1, 4); // REDUCED: 1-3 damage (was 1-5!)
         PlayerHP = Math.Max(0, PlayerHP - damage);
         return damage;
     }

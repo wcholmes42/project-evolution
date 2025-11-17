@@ -402,9 +402,9 @@ while (playing)
             ui.RenderStatusBar(game);
             ui.RenderMap(game); // Update dungeon view
 
-            // Check for encounters/events in dungeons
+            // REDUCED: 30% → 15% chance for events (less punishing!)
             int eventRoll = _random.Next(100);
-            if (eventRoll < 30) // 30% chance for something to happen
+            if (eventRoll < 15) // 15% chance for something to happen
             {
                 int encounterType = _random.Next(3);
                 if (encounterType == 0) // Monster

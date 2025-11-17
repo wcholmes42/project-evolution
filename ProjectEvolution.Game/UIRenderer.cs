@@ -250,9 +250,16 @@ public class UIRenderer
             }
         }
 
-        // Legend
+        // Legend and COMMANDS - More visible in dungeon!
         Console.SetCursorPosition(2, startRow + 8);
-        Console.Write("Dungeon: @ = You  . = Floor  █ = Wall  [X] Exit                      ");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("DUNGEON: @ = You  . = Floor  █ = Wall                            ");
+        Console.ResetColor();
+
+        Console.SetCursorPosition(2, startRow + 9);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("CONTROLS: [N/S/E/W] Move  [P] Potion  [X] Exit  [Q] Quit         ");
+        Console.ResetColor();
     }
 
     private string GetTerrainAtPosition(RPGGame game, int x, int y)
