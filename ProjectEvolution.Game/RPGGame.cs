@@ -42,6 +42,7 @@ public class RPGGame
     public bool InDungeon { get; private set; } = false;
     public int DungeonDepth { get; private set; } = 0;
     public int WorldTurn { get; private set; } = 0;
+    private (int x, int y) _currentDungeonEntrance = (0, 0); // Track which dungeon we're in
     private List<Mob> _activeMobs = new List<Mob>();
     private bool[,] _exploredTiles;
     private int _mobDetectionRange = 2; // Easy mode
@@ -51,6 +52,18 @@ public class RPGGame
     private string[,] _dungeonMap;
     private int _dungeonWidth = 30;
     private int _dungeonHeight = 30;
+
+    // Goal Tracking
+    public int DungeonsExplored { get; private set; } = 0;
+    private HashSet<string> _collectedArtifacts = new HashSet<string>();
+    public bool HasWonGame { get; private set; } = false;
+
+    // HP Regeneration
+    private int _turnsSinceLastCombat = 0;
+    private const int TurnsPerHPRegen = 5; // Heal 1 HP every 5 turns
+
+    // Terrain Combat Modifiers
+    private string _currentCombatTerrain = "Grassland";
 
     public void SetOptimalConfig(SimulationConfig config)
     {
@@ -2060,9 +2073,14 @@ public class RPGGame
         bool enemyAttacks = enemyAction == CombatAction.Attack;
         bool enemyDefends = enemyAction == CombatAction.Defend;
 
+        // Apply terrain combat modifiers
+        var terrainMods = GetTerrainCombatModifiers(_currentCombatTerrain);
+        int playerStrengthMod = PlayerStrength + terrainMods.attackBonus;
+        int playerDefenseMod = PlayerDefense + terrainMods.defenseBonus;
+
         if (playerAttacks && !enemyDefends && playerHitType != HitType.Miss)
         {
-            int damage = playerHitType == HitType.Critical ? PlayerStrength * 2 : PlayerStrength;
+            int damage = playerHitType == HitType.Critical ? playerStrengthMod * 2 : playerStrengthMod;
             EnemyHP = Math.Max(0, EnemyHP - damage);
             CombatLog += playerHitType == HitType.Critical ? $"CRIT {damage}! " : $"Hit {damage}! ";
         }
@@ -2071,7 +2089,7 @@ public class RPGGame
         if (enemyAttacks && !playerDefends && enemyHitType != HitType.Miss)
         {
             int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-            int actualDamage = Math.Max(1, damage - PlayerDefense);
+            int actualDamage = Math.Max(1, damage - playerDefenseMod);
             PlayerHP = Math.Max(0, PlayerHP - actualDamage);
             CombatLog += enemyHitType == HitType.Critical ? $"{EnemyName} CRIT {actualDamage}! " : $"{EnemyName} {actualDamage}! ";
         }
@@ -2101,6 +2119,16 @@ public class RPGGame
         {
             CombatsWon++;
             ProcessMaxHPGrowth(); // Check for level up
+
+            // Post-Combat Healing: Restore 20% of max HP after victory
+            int healAmount = Math.Max(1, MaxPlayerHP / 5);
+            PlayerHP = Math.Min(MaxPlayerHP, PlayerHP + healAmount);
+
+            // Reset combat timer
+            _turnsSinceLastCombat = 0;
+
+            // Check victory condition after each combat
+            CheckVictoryCondition();
         }
     }
 
@@ -2258,6 +2286,20 @@ public class RPGGame
         PlayerX = newX;
         PlayerY = newY;
         WorldTurn++;
+        _turnsSinceLastCombat++;
+
+        // HP Regeneration in dungeons too
+        if (_turnsSinceLastCombat >= TurnsPerHPRegen)
+        {
+            int healsEarned = _turnsSinceLastCombat / TurnsPerHPRegen;
+            int hpToRestore = Math.Min(healsEarned, MaxPlayerHP - PlayerHP);
+            if (hpToRestore > 0)
+            {
+                PlayerHP += hpToRestore;
+                _turnsSinceLastCombat = _turnsSinceLastCombat % TurnsPerHPRegen;
+            }
+        }
+
         return true;
     }
 
@@ -2274,6 +2316,19 @@ public class RPGGame
             _ => 1
         };
         WorldTurn += turnCost;
+        _turnsSinceLastCombat += turnCost;
+
+        // HP Regeneration: Heal 1 HP every 5 turns outside of combat
+        if (_turnsSinceLastCombat >= TurnsPerHPRegen)
+        {
+            int healsEarned = _turnsSinceLastCombat / TurnsPerHPRegen;
+            int hpToRestore = Math.Min(healsEarned, MaxPlayerHP - PlayerHP);
+            if (hpToRestore > 0)
+            {
+                PlayerHP += hpToRestore;
+                _turnsSinceLastCombat = _turnsSinceLastCombat % TurnsPerHPRegen; // Keep remainder
+            }
+        }
     }
 
     public string GetCurrentTerrain()
@@ -2428,6 +2483,7 @@ public class RPGGame
     {
         InDungeon = true;
         DungeonDepth = 1;
+        _currentDungeonEntrance = (PlayerX, PlayerY); // Remember which dungeon we entered
         GenerateDungeonMap();
 
         // Place player on first floor tile (guaranteed to exist)
@@ -2481,6 +2537,28 @@ public class RPGGame
         }
 
         if (floorTiles.Count == 0) return;
+
+        // SPECIAL: Place artifact on depth 1 of main dungeons (10,5) and (10,15)
+        if (DungeonDepth == 1)
+        {
+            bool isMainDungeon = (_currentDungeonEntrance.x == 10 && _currentDungeonEntrance.y == 5) ||
+                                (_currentDungeonEntrance.x == 10 && _currentDungeonEntrance.y == 15);
+
+            if (isMainDungeon && floorTiles.Count > 0)
+            {
+                string artifactId = _currentDungeonEntrance.x == 10 && _currentDungeonEntrance.y == 5
+                    ? "Artifact_North"
+                    : "Artifact_South";
+
+                // Only place if not already collected
+                if (!_collectedArtifacts.Contains(artifactId))
+                {
+                    var artifactTile = floorTiles[_random.Next(floorTiles.Count)];
+                    _dungeonMap[artifactTile.x, artifactTile.y] = "Artifact";
+                    floorTiles.Remove(artifactTile);
+                }
+            }
+        }
 
         // Place 3-5 treasure chests
         int treasureCount = _random.Next(3, 6);
@@ -2584,6 +2662,62 @@ public class RPGGame
         }
     }
 
+    public bool CollectArtifact()
+    {
+        // Determine which artifact based on current dungeon
+        string artifactId = _currentDungeonEntrance.x == 10 && _currentDungeonEntrance.y == 5
+            ? "Artifact_North"
+            : "Artifact_South";
+
+        if (!_collectedArtifacts.Contains(artifactId))
+        {
+            _collectedArtifacts.Add(artifactId);
+            DungeonsExplored++;
+            CheckVictoryCondition();
+            return true;
+        }
+        return false; // Already collected
+    }
+
+    // Goal System
+    public bool CheckGoalProgress()
+    {
+        return PlayerLevel >= 5 && PlayerGold >= 500 && DungeonsExplored >= 2;
+    }
+
+    private void CheckVictoryCondition()
+    {
+        if (CheckGoalProgress())
+        {
+            HasWonGame = true;
+        }
+    }
+
+    public string GetGoalProgress()
+    {
+        return $"Level: {PlayerLevel}/5 | Gold: {PlayerGold}/500 | Dungeons: {DungeonsExplored}/2";
+    }
+
+    // Terrain Combat Modifiers
+    public (int attackBonus, int defenseBonus, string description) GetTerrainCombatModifiers(string terrain)
+    {
+        return terrain switch
+        {
+            "Forest" => (0, 1, "Forest Cover: +1 DEF"),
+            "Mountain" => (1, 1, "High Ground: +1 ATK, +1 DEF"),
+            "Grassland" => (1, 0, "Open Field: +1 ATK"),
+            _ => (0, 0, "")
+        };
+    }
+
+    public void StartCombatOnTerrain()
+    {
+        _currentCombatTerrain = GetCurrentTerrain();
+        _turnsSinceLastCombat = 0; // Reset regen timer when combat starts
+    }
+
+    public string GetCurrentCombatTerrain() => _currentCombatTerrain;
+
     public string RollForRoom()
     {
         // Warhammer Quest style room table
@@ -2598,6 +2732,7 @@ public class RPGGame
         // Combat in dungeons uses depth for enemy scaling
         _combatStarted = true;
         _hpCombat = true;
+        StartCombatOnTerrain(); // Dungeons have no terrain bonus
         PlayerStamina = 12;
         int enemyLevel = Math.Max(1, PlayerLevel + DungeonDepth); // Depth makes enemies harder!
         InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
@@ -2735,6 +2870,9 @@ public class RPGGame
         // CRITICAL: Set combat flags!
         _combatStarted = true;
         _hpCombat = true;
+
+        // Store terrain for combat modifiers
+        StartCombatOnTerrain();
 
         // Initialize combat with the mob using its stored type
         InitializeEnemyWithVariableStats(mob.Type);

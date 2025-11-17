@@ -356,6 +356,15 @@ while (playing)
 
                             ui.RenderStatusBar(game);
                             Thread.Sleep(1000); // Celebrate victory!
+
+                            // Check for game victory!
+                            if (game.HasWonGame)
+                            {
+                                ui.AddMessage("🎉 ALL GOALS COMPLETE! YOU WIN! 🎉");
+                                Thread.Sleep(2000);
+                                playing = false;
+                            }
+
                             ui.RenderMap(game); // Return to map view after combat
                         }
                         else
@@ -439,6 +448,32 @@ while (playing)
                 Thread.Sleep(800);
 
                 // Remove treasure from map
+                game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
+            }
+            else if (currentTile == "Artifact")
+            {
+                // Found quest artifact!
+                bool wasNew = game.CollectArtifact();
+                if (wasNew)
+                {
+                    ui.AddMessage($"⭐ LEGENDARY ARTIFACT FOUND! Dungeon explored ({game.DungeonsExplored}/2)!");
+                    ui.RenderStatusBar(game);
+                    Thread.Sleep(1200); // Dramatic pause!
+
+                    // Check if player has won!
+                    if (game.HasWonGame)
+                    {
+                        ui.AddMessage("🎉 ALL GOALS COMPLETE! YOU WIN! 🎉");
+                        Thread.Sleep(2000);
+                        playing = false;
+                    }
+                }
+                else
+                {
+                    ui.AddMessage("Already collected this artifact.");
+                }
+
+                // Remove artifact from map
                 game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
             }
             else if (currentTile == "Trap")

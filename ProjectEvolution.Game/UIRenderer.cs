@@ -95,6 +95,11 @@ public class UIRenderer
         Console.SetCursorPosition(2, 5);
         Console.Write($"📍 ({game.PlayerX,2},{game.PlayerY,2})  ");
 
+        // GOAL PROGRESS
+        Console.ForegroundColor = game.CheckGoalProgress() ? ConsoleColor.Green : ConsoleColor.Gray;
+        Console.Write($"🎯 GOALS: Lvl {game.PlayerLevel}/5 | {game.PlayerGold}/500g | {game.DungeonsExplored}/2★");
+        Console.ResetColor();
+
         var terrain = game.GetCurrentTerrain();
         Console.ForegroundColor = terrain switch
         {
@@ -246,6 +251,7 @@ public class UIRenderer
                         "Trap" => (" ! ", ConsoleColor.Red),            // Danger!
                         "Monster" => (" M ", ConsoleColor.Magenta),     // Enemy!
                         "Stairs" => (" > ", ConsoleColor.Cyan),         // Exit!
+                        "Artifact" => (" ★ ", ConsoleColor.Magenta),    // QUEST ITEM!
                         "OutOfBounds" => ("   ", ConsoleColor.Black),
                         _ => ("   ", ConsoleColor.Black)
                     };
