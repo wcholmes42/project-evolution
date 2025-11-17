@@ -250,11 +250,8 @@ public class UIRenderer
             }
         }
 
-        // Just legend - commands go in command bar at bottom!
-        Console.SetCursorPosition(2, startRow + 8);
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("DUNGEON: @ = You  . = Floor  █ = Wall                                ");
-        Console.ResetColor();
+        // No legend needed in dungeon - symbols are obvious!
+        // Legend would overlap map view - command bar at bottom shows controls
     }
 
     private string GetTerrainAtPosition(RPGGame game, int x, int y)
