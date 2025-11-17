@@ -53,6 +53,9 @@ public class UIRenderer
         Console.Write($"PROJECT EVOLUTION - GENERATION 33: ML-OPTIMIZED!");
         Console.ResetColor();
 
+        // Render character sheet panel on the right!
+        RenderCharacterPanel(game);
+
         Console.SetCursorPosition(2, 2);
         Console.Write(new string(' ', 76));
         Console.SetCursorPosition(2, 2);
@@ -509,6 +512,88 @@ public class UIRenderer
         Console.Write("╚═══════════════════════════════════╝");
     }
 
+    public void RenderCharacterPanel(RPGGame game)
+    {
+        int panelX = 82;
+        int startY = 1;
+
+        // Header
+        Console.SetCursorPosition(panelX, startY);
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("╔═══════════════════════════════════╗");
+        Console.SetCursorPosition(panelX, startY + 1);
+        Console.Write("║      CHARACTER SHEET 📜           ║");
+        Console.SetCursorPosition(panelX, startY + 2);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.ResetColor();
+
+        // Stats
+        Console.SetCursorPosition(panelX, startY + 3);
+        Console.Write("║ ⭐ LEVEL:                         ║");
+        Console.SetCursorPosition(panelX, startY + 4);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write($"║    Level {game.PlayerLevel}  ({game.PlayerXP}/{game.XPForNextLevel} XP)           ║");
+        Console.ResetColor();
+
+        Console.SetCursorPosition(panelX, startY + 5);
+        Console.Write("║ ❤️  VITALITY:                     ║");
+        Console.SetCursorPosition(panelX, startY + 6);
+        Console.ForegroundColor = game.PlayerHP < game.MaxPlayerHP * 0.3 ? ConsoleColor.Red : ConsoleColor.Green;
+        Console.Write($"║    HP: {game.PlayerHP,3}/{game.MaxPlayerHP,-3}                   ║");
+        Console.ResetColor();
+
+        Console.SetCursorPosition(panelX, startY + 7);
+        Console.Write("║ ⚔️  COMBAT:                       ║");
+        Console.SetCursorPosition(panelX, startY + 8);
+        Console.Write($"║    STR: {game.PlayerStrength,2}  DEF: {game.PlayerDefense,2}             ║");
+        Console.SetCursorPosition(panelX, startY + 9);
+        Console.Write($"║    Victories: {game.CombatsWon,3}                 ║");
+
+        // Inventory
+        Console.SetCursorPosition(panelX, startY + 10);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.SetCursorPosition(panelX, startY + 11);
+        Console.Write("║ 💼 INVENTORY:                     ║");
+        Console.SetCursorPosition(panelX, startY + 12);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write($"║    💰 Gold: {game.PlayerGold,5}g               ║");
+        Console.ResetColor();
+        Console.SetCursorPosition(panelX, startY + 13);
+        Console.ForegroundColor = game.PotionCount > 0 ? ConsoleColor.Green : ConsoleColor.Red;
+        Console.Write($"║    🧪 Potions: {game.PotionCount,2}                  ║");
+        Console.ResetColor();
+
+        // Skills (placeholder for future)
+        Console.SetCursorPosition(panelX, startY + 14);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.SetCursorPosition(panelX, startY + 15);
+        Console.Write("║ ⚡ SKILLS: (Coming Soon!)         ║");
+        Console.SetCursorPosition(panelX, startY + 16);
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write("║    [1] Whirlwind (Locked)         ║");
+        Console.SetCursorPosition(panelX, startY + 17);
+        Console.Write("║    [2] Heal (Locked)              ║");
+        Console.SetCursorPosition(panelX, startY + 18);
+        Console.Write("║    [3] Stealth (Locked)           ║");
+        Console.ResetColor();
+
+        // Quest (placeholder)
+        Console.SetCursorPosition(panelX, startY + 19);
+        Console.Write("╠═══════════════════════════════════╣");
+        Console.SetCursorPosition(panelX, startY + 20);
+        Console.Write("║ 📜 QUEST:                         ║");
+        Console.SetCursorPosition(panelX, startY + 21);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("║    Explore the world!             ║");
+        Console.SetCursorPosition(panelX, startY + 22);
+        Console.Write("║    Find the dungeons!             ║");
+        Console.ResetColor();
+
+        // Footer
+        Console.SetCursorPosition(panelX, startY + 23);
+        Console.Write("╚═══════════════════════════════════╝");
+    }
+
     public void Cleanup()
     {
         Console.Clear();
@@ -516,5 +601,6 @@ public class UIRenderer
         Console.ResetColor();
     }
 }
+
 
 
