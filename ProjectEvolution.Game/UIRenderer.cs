@@ -250,15 +250,10 @@ public class UIRenderer
             }
         }
 
-        // Legend and COMMANDS - More visible in dungeon!
+        // Just legend - commands go in command bar at bottom!
         Console.SetCursorPosition(2, startRow + 8);
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("DUNGEON: @ = You  . = Floor  █ = Wall                            ");
-        Console.ResetColor();
-
-        Console.SetCursorPosition(2, startRow + 9);
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write("CONTROLS: [N/S/E/W] Move  [P] Potion  [X] Exit  [Q] Quit         ");
+        Console.Write("DUNGEON: @ = You  . = Floor  █ = Wall                                ");
         Console.ResetColor();
     }
 
@@ -324,8 +319,8 @@ public class UIRenderer
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write("[N/S/E/W] Move  [X] Exit Dungeon  [P] Use Potion  [Q] Quit");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("🏰 DUNGEON: [N/S/E/W] Move  [P] Potion  [X] Exit  [Q] Quit");
         }
         Console.ResetColor();
     }
