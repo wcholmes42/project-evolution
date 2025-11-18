@@ -146,6 +146,10 @@ public class ProgressionFrameworkResearcher
     private const int UI_UPDATE_INTERVAL = 5; // Update UI every N generations
     private const int CYCLE_DELAY_MS = 100; // Delay between generations (balance flicker vs speed)
 
+    // PARALLEL EVOLUTION: Run multiple candidates simultaneously
+    private const int POPULATION_SIZE = 16; // Number of parallel candidates (use CPU core count)
+    private static readonly object _bestLock = new object(); // Thread-safe best tracking
+
     // TUNING THE TUNER: Progressive difficulty based on champion performance
     public static double GetDifficultyMultiplier()
     {
@@ -305,55 +309,72 @@ public class ProgressionFrameworkResearcher
 
         while (true)
         {
-            _generation++;
+            _generation += POPULATION_SIZE; // Increment by population size since we eval multiple
 
-            // PHASE 1: Mutate current best framework
-            // If stuck too long, do random restart
-            ProgressionFrameworkData framework;
+            // PHASE 1: Generate population of candidates in parallel
+            ProgressionFrameworkData[]? candidates;
             if (_generationsSinceImprovement > 100)
             {
                 _currentPhase = "🔄 RANDOM RESTART - Exploring new space...";
                 if (_generation % UI_UPDATE_INTERVAL == 0) UpdateStatusLine();
-                framework = CreateBaselineFramework(); // Start fresh
+                // Create fresh population
+                candidates = Enumerable.Range(0, POPULATION_SIZE)
+                    .Select(_ => CreateBaselineFramework())
+                    .ToArray();
                 _generationsSinceImprovement = 0;
-                Thread.Sleep(500); // Let user see restart
+                Thread.Sleep(500);
             }
             else
             {
-                _currentPhase = "🔬 Mutating parameters...";
-                framework = MutateFramework(_bestFramework ?? CreateBaselineFramework());
+                _currentPhase = $"🧬 Mutating {POPULATION_SIZE} candidates (parallel)...";
+                // Mutate population from best
+                var parent = _bestFramework ?? CreateBaselineFramework();
+                candidates = Enumerable.Range(0, POPULATION_SIZE)
+                    .Select(i => MutateFramework(parent))
+                    .ToArray();
             }
-            _totalSimulations += 50;
 
-            // PHASE 2: Evaluate fitness
-            _currentPhase = "📊 Evaluating...";
+            // PHASE 2: Evaluate ALL candidates in PARALLEL 🚀
+            _currentPhase = $"⚡ Evaluating {POPULATION_SIZE} frameworks (using all cores)...";
 
-            double fitness = EvaluateFramework(framework);
-            _totalSimulations += 15;
+            var results = new (ProgressionFrameworkData framework, double fitness)[POPULATION_SIZE];
 
-            // PHASE 3: Update if better
+            Parallel.For(0, POPULATION_SIZE, i =>
+            {
+                double fitness = EvaluateFramework(candidates[i]);
+                results[i] = (candidates[i], fitness);
+            });
+
+            // Find best from population
+            var bestCandidate = results.OrderByDescending(r => r.fitness).First();
+            _totalSimulations += POPULATION_SIZE * 65; // Each candidate runs ~65 simulations
+
+            // PHASE 3: Update if best from population beats current best
             bool improved = false;
-            if (fitness > _bestFitness || _bestFramework == null)
+            lock (_bestLock) // Thread-safe update
             {
-                _currentPhase = "🌟 NEW BEST! Saving & generating code...";
+                if (bestCandidate.fitness > _bestFitness || _bestFramework == null)
+                {
+                    _currentPhase = $"🌟 NEW BEST! Fitness: {bestCandidate.fitness:F2} (from {POPULATION_SIZE} candidates)";
 
-                _bestFitness = fitness;
-                _bestFramework = framework;
-                _generationsSinceImprovement = 0;
-                improved = true;
+                    _bestFitness = bestCandidate.fitness;
+                    _bestFramework = bestCandidate.framework;
+                    _generationsSinceImprovement = 0;
+                    improved = true;
 
-                SaveFrameworkToJSON(framework);
-                GenerateGameCode(framework);
-                _lastSaveTime = DateTime.Now;
+                    SaveFrameworkToJSON(bestCandidate.framework);
+                    GenerateGameCode(bestCandidate.framework);
+                    _lastSaveTime = DateTime.Now;
 
-                // Full redraw when improved to show new formulas
-                Console.SetCursorPosition(0, 0);
-                RenderResearchDashboard();
-                Thread.Sleep(300); // Brief pause to see new values
-            }
-            else
-            {
-                _generationsSinceImprovement++;
+                    // Full redraw when improved to show new formulas
+                    Console.SetCursorPosition(0, 0);
+                    RenderResearchDashboard();
+                    Thread.Sleep(300); // Brief pause to see new values
+                }
+                else
+                {
+                    _generationsSinceImprovement += POPULATION_SIZE;
+                }
             }
 
             // PHASE 4: Auto-save every 5 generations
@@ -368,14 +389,14 @@ public class ProgressionFrameworkResearcher
             }
 
             // PHASE 5: Update status (only every N generations to reduce flicker)
-            _currentPhase = improved ? "✅ Improved!" : "🔄 Searching...";
+            _currentPhase = improved ? "✅ Improved!" : $"🔄 Searching ({POPULATION_SIZE} parallel)...";
             if (_generation % UI_UPDATE_INTERVAL == 0)
             {
                 UpdateStatusLine();
             }
 
-            // Log progress to file
-            LogProgress(framework, fitness, improved);
+            // Log progress to file (log best from population)
+            LogProgress(bestCandidate.framework, bestCandidate.fitness, improved);
 
             // Check for ESC or R (reset)
             if (Console.KeyAvailable)
@@ -1346,8 +1367,10 @@ public class ProgressionFrameworkResearcher
 
         // Clear and redraw header only
         Console.Clear();
+        int cpuCores = Environment.ProcessorCount;
         Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
         Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
+        Console.WriteLine($"║           PARALLEL MODE: {POPULATION_SIZE} Candidates × {cpuCores} CPU Cores            ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
         Console.WriteLine();
 
@@ -1433,14 +1456,16 @@ public class ProgressionFrameworkResearcher
             _lastConsoleWidth = consoleWidth;
             _lastConsoleHeight = consoleHeight;
 
-            // Clear and redraw header on resize (don't return early - continue to render content)
+            // Clear and redraw header on resize
             try
             {
                 Console.Clear();
                 Console.SetCursorPosition(0, 0);
+                int cpuCores = Environment.ProcessorCount;
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
                 Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
+                Console.WriteLine($"║           PARALLEL MODE: {POPULATION_SIZE} Candidates × {cpuCores} CPU Cores            ║");
                 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
                 Console.WriteLine();
                 Console.ResetColor();
@@ -1509,11 +1534,16 @@ public class ProgressionFrameworkResearcher
         string fitnessDisplay = _champion != null
             ? $"Fitness: {_bestFitness,6:F2} | 🏆 Champion: {_championFitness:F2} (Gen {_championGeneration})"
             : $"Fitness: {_bestFitness,6:F2}";
-        SafeWriteLine(4, $"⏱️  RUNTIME: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}  |  Gen: {_generation,4}  |  {fitnessDisplay}", ConsoleColor.Yellow);
+
+        // Calculate throughput
+        double genPerSec = _generation / Math.Max(1, elapsed.TotalSeconds);
+        string throughput = genPerSec >= 10 ? $"{genPerSec:F0} gen/s" : $"{genPerSec:F1} gen/s";
+
+        SafeWriteLine(4, $"⏱️  {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2} | Gen: {_generation,5} ({throughput}) | {fitnessDisplay}", ConsoleColor.Yellow);
         SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
 
         string resetInfo = _resetCount > 0 ? $"  |  Resets: {_resetCount}" : "";
-        SafeWriteLine(7, $"Last save: {sinceSave.TotalSeconds:F0}s ago  |  No improvement: {_generationsSinceImprovement} gens{resetInfo}", ConsoleColor.DarkGray);
+        SafeWriteLine(7, $"Stuck: {_generationsSinceImprovement} gens | Saved: {sinceSave.TotalSeconds:F0}s ago{resetInfo}", ConsoleColor.DarkGray);
 
         // === ENHANCED PARAMETER DISPLAY (NON-SCROLLING) ===
         int row = 9;
@@ -2248,21 +2278,25 @@ public static class FitnessEvaluator
 
     public static (double totalFitness, List<MetricResult> results) EvaluateComprehensive(ProgressionFrameworkData framework)
     {
-        var results = new List<MetricResult>();
-        double totalWeightedScore = 0;
+        // PARALLEL METRIC EVALUATION - Run all 6 metrics simultaneously! 🚀
+        var metricResults = new MetricResult[_metrics.Count];
 
-        foreach (var metric in _metrics)
+        Parallel.For(0, _metrics.Count, i =>
         {
-            var result = metric.Evaluate(framework);
-            results.Add(result);
-            totalWeightedScore += result.WeightedScore;
+            metricResults[i] = _metrics[i].Evaluate(framework);
+        });
 
-            // Critical failures
-            if (result.Critical && result.Score < 50)
-            {
-                return (0, results); // Instant failure
-            }
+        var results = metricResults.ToList();
+
+        // Check for critical failures first
+        bool hasCriticalFailure = results.Any(r => r.Critical && r.Score < 50);
+        if (hasCriticalFailure)
+        {
+            return (0, results); // Instant failure
         }
+
+        // Sum weighted scores
+        double totalWeightedScore = results.Sum(r => r.WeightedScore);
 
         // Sum of weighted scores already represents 0-100 scale
         // (each metric: score 0-100 × weight, all weights sum to 1.0)

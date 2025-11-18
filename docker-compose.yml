@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  project-evolution:
+    build: .
+    image: project-evolution:latest
+    container_name: project-evolution-research
+    stdin_open: true
+    tty: true
+
+    # CPU affinity - use all cores
+    cpuset: "0-23"  # Adjust based on your i9 core count
+    cpu_count: 24   # i9-14900K has 24 threads
+
+    # Memory limits
+    mem_limit: 8g
+    mem_reservation: 4g
+
+    # Mount Unraid share for research output
+    volumes:
+      - /mnt/user/GameResearch:/data
+      # Alternative: Use Docker volume
+      # - game-research-data:/data
+
+    # Environment variables
+    environment:
+      - DOTNET_gcServer=1          # Server GC for better multi-core perf
+      - DOTNET_gcConcurrent=1       # Concurrent GC
+      - DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=6  # Optimize thread pool
+
+    # Restart policy for long-running research
+    restart: unless-stopped
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional: Named volume instead of Unraid share
+# volumes:
+#   game-research-data:
+#     driver: local
