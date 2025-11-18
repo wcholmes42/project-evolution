@@ -1397,7 +1397,19 @@ public class ProgressionFrameworkResearcher
 
     private static void UpdateStatusLine()
     {
-        if (_bestFramework == null) return;
+        if (_bestFramework == null)
+        {
+            // Should never happen, but if it does, show error
+            try
+            {
+                Console.SetCursorPosition(0, 6);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("⚠️ ERROR: No framework data available!".PadRight(80));
+                Console.ResetColor();
+            }
+            catch { }
+            return;
+        }
 
         TimeSpan elapsed = DateTime.Now - _startTime;
         TimeSpan sinceSave = DateTime.Now - _lastSaveTime;
@@ -1439,21 +1451,44 @@ public class ProgressionFrameworkResearcher
             }
         }
 
-        // Minimum width to display properly
-        if (consoleWidth < 80)
+        // Minimum dimensions to display properly
+        const int MIN_WIDTH = 80;
+        const int MIN_HEIGHT = 35; // Need at least 35 lines for full display (header + params + metrics + footer)
+
+        if (consoleWidth < MIN_WIDTH || consoleHeight < MIN_HEIGHT)
         {
             Console.Clear();
-            Console.WriteLine("⚠️  Window too narrow! Please resize to at least 80 characters wide.");
-            Console.WriteLine("   Current width: {0}, Minimum required: 80", consoleWidth);
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("⚠️  WINDOW TOO SMALL!");
+            Console.ResetColor();
+            Console.WriteLine($"   Current:  {consoleWidth}×{consoleHeight}");
+            Console.WriteLine($"   Minimum:  {MIN_WIDTH}×{MIN_HEIGHT}");
+            Console.WriteLine();
+            Console.WriteLine("Please resize your terminal window to see full display.");
+            Console.WriteLine("Some parameters are being cut off!");
             return;
         }
 
-        // Helper to safely write a line
+        // Helper to safely write a line with better error visibility
         void SafeWriteLine(int row, string content, ConsoleColor color = ConsoleColor.White)
         {
             try
             {
-                if (row >= consoleHeight) return;
+                // CRITICAL: Don't silently skip - warn if window too short
+                if (row >= consoleHeight)
+                {
+                    // This shouldn't happen if we check MIN_HEIGHT above
+                    // But just in case, try to write to last line as warning
+                    if (row == consoleHeight && consoleHeight > 0)
+                    {
+                        Console.SetCursorPosition(0, consoleHeight - 1);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write("⚠️ Window too short - resize taller!".PadRight(consoleWidth - 1));
+                        Console.ResetColor();
+                    }
+                    return;
+                }
+
                 Console.SetCursorPosition(0, row);
                 Console.ForegroundColor = color;
                 // Truncate or pad to fit window width
@@ -1564,9 +1599,15 @@ public class ProgressionFrameworkResearcher
         SafeWriteLine(row++, "[ESC] Stop & Save  |  [R] Manual Reset → New Champion", ConsoleColor.Yellow);
 
         // Clear any remaining lines from previous longer displays
-        for (int i = row; i < consoleHeight - 1; i++)
+        for (int i = row; i < Math.Min(consoleHeight - 1, 50); i++)
         {
             SafeWriteLine(i, "", ConsoleColor.Black);
+        }
+
+        // DEBUG: Show if we're running out of vertical space
+        if (row >= consoleHeight - 2)
+        {
+            SafeWriteLine(consoleHeight - 1, $"⚠️ Display truncated at row {row}/{consoleHeight} - RESIZE TALLER!", ConsoleColor.Red);
         }
     }
 }
