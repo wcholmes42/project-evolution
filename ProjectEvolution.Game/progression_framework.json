@@ -110,12 +110,12 @@
   },
   "Economy": {
     "BaseGoldPerCombat": 10,
-    "GoldScalingCoefficient": 3.732963456182258,
+    "GoldScalingCoefficient": 3.6934117724622655,
     "LevelSnapshots": [
       {
         "Level": 1,
-        "ExpectedGoldEarned": 91,
-        "CumulativeGold": 141,
+        "ExpectedGoldEarned": 104,
+        "CumulativeGold": 154,
         "AffordableEquipmentTier": 2,
         "RecommendedEquipmentTier": 0,
         "EconomyHealthy": true,
@@ -123,8 +123,8 @@
       },
       {
         "Level": 2,
-        "ExpectedGoldEarned": 136,
-        "CumulativeGold": 247,
+        "ExpectedGoldEarned": 102,
+        "CumulativeGold": 226,
         "AffordableEquipmentTier": 3,
         "RecommendedEquipmentTier": 1,
         "EconomyHealthy": true,
@@ -133,16 +133,16 @@
       {
         "Level": 3,
         "ExpectedGoldEarned": 176,
-        "CumulativeGold": 393,
-        "AffordableEquipmentTier": 4,
+        "CumulativeGold": 372,
+        "AffordableEquipmentTier": 3,
         "RecommendedEquipmentTier": 1,
         "EconomyHealthy": true,
         "Notes": "\u2705 Can afford progression"
       },
       {
         "Level": 4,
-        "ExpectedGoldEarned": 120,
-        "CumulativeGold": 408,
+        "ExpectedGoldEarned": 144,
+        "CumulativeGold": 411,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 2,
         "EconomyHealthy": true,
@@ -151,7 +151,7 @@
       {
         "Level": 5,
         "ExpectedGoldEarned": 140,
-        "CumulativeGold": 443,
+        "CumulativeGold": 446,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 2,
         "EconomyHealthy": true,
@@ -159,8 +159,8 @@
       },
       {
         "Level": 6,
-        "ExpectedGoldEarned": 336,
-        "CumulativeGold": 549,
+        "ExpectedGoldEarned": 240,
+        "CumulativeGold": 456,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 3,
         "EconomyHealthy": true,
@@ -168,8 +168,8 @@
       },
       {
         "Level": 7,
-        "ExpectedGoldEarned": 180,
-        "CumulativeGold": 499,
+        "ExpectedGoldEarned": 315,
+        "CumulativeGold": 541,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 3,
         "EconomyHealthy": true,
@@ -177,8 +177,8 @@
       },
       {
         "Level": 8,
-        "ExpectedGoldEarned": 390,
-        "CumulativeGold": 484,
+        "ExpectedGoldEarned": 351,
+        "CumulativeGold": 487,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 4,
         "EconomyHealthy": true,
@@ -187,7 +187,7 @@
       {
         "Level": 9,
         "ExpectedGoldEarned": 454,
-        "CumulativeGold": 533,
+        "CumulativeGold": 536,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 4,
         "EconomyHealthy": true,
@@ -195,22 +195,22 @@
       },
       {
         "Level": 10,
-        "ExpectedGoldEarned": 470,
-        "CumulativeGold": 373,
+        "ExpectedGoldEarned": 276,
+        "CumulativeGold": 182,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 5,
         "EconomyHealthy": true,
         "Notes": "\u2705 Can afford progression"
       }
     ],
-    "GoldFormula": "BaseGold \u002B (EnemyLevel * 3.73)",
+    "GoldFormula": "BaseGold \u002B (EnemyLevel * 3.69)",
     "CanAffordProgression": true,
     "FirstUnaffordableTier": -1
   },
   "Loot": {
     "BaseTreasureGold": 10,
     "TreasurePerDungeonDepth": 55,
-    "EquipmentDropRate": 17,
+    "EquipmentDropRate": 13,
     "DungeonLoot": [],
     "TreasureFormula": "BaseTreasure \u002B (Depth * 55)"
   },
@@ -239,10 +239,10 @@
     "Warnings": []
   },
   "Metadata": {
-    "Timestamp": "2025-11-18T08:19:57.312713-08:00",
-    "SimulationsRun": 1803800,
-    "Generation": 180380,
-    "OverallFitness": 66.89453131971831,
+    "Timestamp": "2025-11-18T08:53:18.391378-08:00",
+    "SimulationsRun": 2752600,
+    "Generation": 275260,
+    "OverallFitness": 67.14096180817779,
     "Version": "Generation 35"
   }
 }

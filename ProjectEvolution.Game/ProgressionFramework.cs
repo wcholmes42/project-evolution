@@ -1044,18 +1044,8 @@ public class ProgressionFrameworkResearcher
             int totalSTR = baseSTR + strPoints + equipmentBonus;
             int totalDEF = baseDEF + defPoints + equipmentBonus;
 
-            // Test this build against scaled enemies (level 5-7 for variance)
-            double totalViability = 0;
-            for (int enemyLvl = 5; enemyLvl <= 7; enemyLvl++)
-            {
-                int scaledEnemyHP = framework.EnemyProgression.BaseHP + (int)(enemyLvl * framework.EnemyProgression.HPScalingCoefficient);
-                int scaledEnemyDMG = framework.EnemyProgression.BaseDamage + (int)(enemyLvl * framework.EnemyProgression.DamageScalingCoefficient);
-
-                double winRate = QuickCombatTest(baseHP, totalSTR, totalDEF, enemyLvl, scaledEnemyHP, scaledEnemyDMG);
-                totalViability += winRate;
-            }
-
-            double viabilityScore = (totalViability / 3.0); // Average across 3 enemy levels
+            // FAST: Test against single enemy level (not 3 levels - that 3× the cost!)
+            double viabilityScore = QuickCombatTest(baseHP, totalSTR, totalDEF, testLevel, enemyHP, enemyDMG);
 
             viability.ViableBuilds[name] = new BuildRequirements
             {
@@ -1750,7 +1740,7 @@ public class MetricResult
 public class CombatBalanceMetric : IFitnessMetric
 {
     public string Name => "Combat Balance";
-    public double Weight => 0.25;
+    public double Weight => 0.30;
 
     public MetricResult Evaluate(ProgressionFrameworkData framework)
     {
@@ -1926,7 +1916,7 @@ public class CombatBalanceMetric : IFitnessMetric
 public class EconomicHealthMetric : IFitnessMetric
 {
     public string Name => "Economic Health";
-    public double Weight => 0.20;
+    public double Weight => 0.25;
 
     public MetricResult Evaluate(ProgressionFrameworkData framework)
     {
@@ -2126,7 +2116,7 @@ public class DifficultyPacingMetric : IFitnessMetric
 public class SkillBalanceMetric : IFitnessMetric
 {
     public string Name => "Skill Balance";
-    public double Weight => 0.15;
+    public double Weight => 0.20;
 
     public MetricResult Evaluate(ProgressionFrameworkData framework)
     {
@@ -2404,23 +2394,23 @@ public static class FitnessEvaluator
 {
     private static readonly List<IFitnessMetric> _metrics = new()
     {
-        new CombatBalanceMetric(),      // 25% (was 30%)
-        new EconomicHealthMetric(),     // 20% (was 25%)
+        new CombatBalanceMetric(),      // 30% (increased - most important)
+        new EconomicHealthMetric(),     // 25% (increased - critical)
         new EquipmentCurveMetric(),     // 15%
-        new DifficultyPacingMetric(),   // 10% (was 15%)
-        new SkillBalanceMetric(),       // 15% (NEW - Gen 35)
-        new BuildDiversityMetric()      // 15%
+        new SkillBalanceMetric(),       // 20% (increased - important)
+        new DifficultyPacingMetric()    // 10%
+        // BuildDiversityMetric DISABLED - stuck at 50.0, too expensive (3× combat sims)
         // Total: 100% - add new metrics here as features are added!
     };
 
     public static (double totalFitness, List<MetricResult> results) EvaluateComprehensive(ProgressionFrameworkData framework)
     {
-        // PARALLEL METRIC EVALUATION - Run all 6 metrics simultaneously! 🚀
+        // PARALLEL METRIC EVALUATION - Run all 5 metrics simultaneously! 🚀
         var metricResults = new MetricResult[_metrics.Count];
 
         var parallelOptions = new ParallelOptions
         {
-            MaxDegreeOfParallelism = 6 // 6 metrics max - full speed!
+            MaxDegreeOfParallelism = 5 // 5 metrics (BuildDiversity disabled)
         };
 
         Parallel.For(0, _metrics.Count, parallelOptions, i =>

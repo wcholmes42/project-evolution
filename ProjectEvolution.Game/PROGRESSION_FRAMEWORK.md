@@ -1,7 +1,7 @@
 ﻿# PROGRESSION FRAMEWORK - AUTO-GENERATED
-**Generated:** 11/18/2025 8:19:57 AM
-**Generation:** 4680
-**Fitness Score:** 66.89
+**Generated:** 11/18/2025 8:53:18 AM
+**Generation:** 260700
+**Fitness Score:** 67.14
 **Economy Status:** ✅ HEALTHY
 
 ## Player Progression
@@ -19,27 +19,27 @@
 
 ## Economy & Gold
 - **Base Gold per Combat:** 10g
-- **Gold Scaling:** +3.73g per enemy level
-- **Gold Formula:** `BaseGold + (EnemyLevel * 3.73)`
+- **Gold Scaling:** +3.69g per enemy level
+- **Gold Formula:** `BaseGold + (EnemyLevel * 3.69)`
 
 ### Economic Progression Simulation:
 | Level | Gold Earned | Cumulative | Can Afford | Status |
 |-------|-------------|------------|------------|--------|
-|  1 |     91g |     141g | Tier 2 | ✅ |
-|  2 |    136g |     247g | Tier 3 | ✅ |
-|  3 |    176g |     393g | Tier 4 | ✅ |
-|  4 |    120g |     408g | Tier 4 | ✅ |
-|  5 |    140g |     443g | Tier 4 | ✅ |
-|  6 |    336g |     549g | Tier 5 | ✅ |
-|  7 |    180g |     499g | Tier 5 | ✅ |
-|  8 |    390g |     484g | Tier 5 | ✅ |
-|  9 |    454g |     533g | Tier 5 | ✅ |
-| 10 |    470g |     373g | Tier 5 | ✅ |
+|  1 |    104g |     154g | Tier 2 | ✅ |
+|  2 |    102g |     226g | Tier 3 | ✅ |
+|  3 |    176g |     372g | Tier 3 | ✅ |
+|  4 |    144g |     411g | Tier 4 | ✅ |
+|  5 |    140g |     446g | Tier 4 | ✅ |
+|  6 |    240g |     456g | Tier 5 | ✅ |
+|  7 |    315g |     541g | Tier 5 | ✅ |
+|  8 |    351g |     487g | Tier 5 | ✅ |
+|  9 |    454g |     536g | Tier 5 | ✅ |
+| 10 |    276g |     182g | Tier 5 | ✅ |
 
 ## Loot & Treasure
 - **Base Treasure:** 10g
 - **Treasure per Depth:** +55g
-- **Equipment Drop Rate:** 17%
+- **Equipment Drop Rate:** 13%
 - **Treasure Formula:** `BaseTreasure + (Depth * 55)`
 
 ### Dungeon Loot Tables:
@@ -66,12 +66,12 @@
 ## Build Viability
 ### GlassCannon
 - **Min HP Required:** 23
-- **Recommended Ratio:** 100:20
+- **Recommended Ratio:** 120:0
 - **Viability Score:** 100.0%
 
 ### Balanced
 - **Min HP Required:** 23
-- **Recommended Ratio:** 60:60
+- **Recommended Ratio:** 70:50
 - **Viability Score:** 100.0%
 
 ### Tank
