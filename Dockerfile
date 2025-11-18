@@ -30,13 +30,19 @@ COPY --from=build /app/publish .
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 ENV DOTNET_gcServer=1
 ENV DOTNET_gcConcurrent=1
+ENV DOTNET_ThreadPool_EnableWorkerTracking=0
+
+# Run with low CPU priority (nice value)
+# Use 'nice -n 19' to run at idle priority (lowest)
+RUN echo '#!/bin/sh\nnice -n 19 dotnet ProjectEvolution.Game.dll "$@"' > /app/run.sh && \
+    chmod +x /app/run.sh
 
 # Create volume mount point for research output (Unraid share)
 VOLUME /data
 
-# Auto-run progression research on container start
-# Uses -it for interactive terminal (required for Console apps)
-ENTRYPOINT ["dotnet", "ProjectEvolution.Game.dll"]
+# Auto-run progression research on container start with low priority
+# Uses nice -n 19 (idle priority) so it doesn't interfere with other containers
+ENTRYPOINT ["/app/run.sh"]
 
-# Default: auto-start research mode
+# Default: auto-start research mode at idle priority
 # Override with: docker run -it project-evolution
