@@ -149,6 +149,8 @@ public class ProgressionFrameworkResearcher
     private static int _resetCount = 0;
     private const double AUTO_RESET_THRESHOLD = 85.0; // Reset if stuck near optimal
     private const int AUTO_RESET_STUCK_GENS = 150; // Must be stuck this long
+    private const double AUTO_RESET_TREND_THRESHOLD = 0.05; // Reset if trend < +0.05/1k gens (plateau)
+    private const int AUTO_RESET_MIN_IMPROVEMENTS = 20; // Need this many data points to trust trend
 
     // Anti-flicker settings
     private const int UI_UPDATE_INTERVAL = 10; // Update UI every N generations (reduce for speed)
@@ -169,6 +171,21 @@ public class ProgressionFrameworkResearcher
     }
 
     public static double GetChampionFitness() => _championFitness;
+
+    private static double CalculateFitnessTrend()
+    {
+        // Calculate slope of fitness improvements over last N generations
+        if (_fitnessHistory.Count < 10) return 10.0; // Not enough data, assume improving
+
+        var recent = _fitnessHistory.ToArray();
+        var oldest = recent[0];
+        var newest = recent[recent.Length - 1];
+
+        double genDelta = newest.generation - oldest.generation;
+        double fitnessDelta = newest.fitness - oldest.fitness;
+
+        return genDelta > 0 ? fitnessDelta / genDelta * 1000 : 0; // fitness gain per 1000 gens
+    }
 
     public static void RunContinuousResearch()
     {
@@ -424,9 +441,32 @@ public class ProgressionFrameworkResearcher
                 }
             }
 
-            // AUTOMATED RESET: If stuck near optimal, reset and explore new space
+            // AUTOMATED RESET: Multiple triggers to force continuous improvement!
+            bool shouldAutoReset = false;
+            string resetReason = "";
+
+            // Trigger 1: Stuck at high fitness
             if (_bestFitness >= AUTO_RESET_THRESHOLD && _generationsSinceImprovement >= AUTO_RESET_STUCK_GENS)
             {
+                shouldAutoReset = true;
+                resetReason = $"Stuck at {_bestFitness:F1} for {_generationsSinceImprovement} gens";
+            }
+
+            // Trigger 2: Plateau detected (low improvement slope)
+            double trend = CalculateFitnessTrend();
+            if (_fitnessHistory.Count >= AUTO_RESET_MIN_IMPROVEMENTS &&
+                trend < AUTO_RESET_TREND_THRESHOLD &&
+                _generationsSinceImprovement >= 100)
+            {
+                shouldAutoReset = true;
+                resetReason = $"Plateau detected (trend: +{trend:F2}/1k, stuck: {_generationsSinceImprovement})";
+            }
+
+            if (shouldAutoReset)
+            {
+                _currentPhase = $"🔄 AUTO-RESET: {resetReason}";
+                if (_generation % UI_UPDATE_INTERVAL == 0) UpdateStatusLine();
+                Thread.Sleep(1000); // Show message
                 PerformReset(manual: false);
             }
 
@@ -1580,85 +1620,79 @@ public class ProgressionFrameworkResearcher
         SafeWriteLine(4, $"⏱️  {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2} | Gen: {_generation,5} ({throughput}) | {fitnessDisplay}", ConsoleColor.Yellow);
         SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
 
-        // Calculate fitness trend (slope of improvements)
+        // Calculate fitness trend using helper method
+        double slope = CalculateFitnessTrend();
         string trendDisplay = "";
         ConsoleColor trendColor = ConsoleColor.Gray;
+
         if (_fitnessHistory.Count >= 10)
         {
-            var recent = _fitnessHistory.ToArray();
-            var oldest = recent[0];
-            var newest = recent[recent.Length - 1];
-
-            double genDelta = newest.generation - oldest.generation;
-            double fitnessDelta = newest.fitness - oldest.fitness;
-            double slope = genDelta > 0 ? fitnessDelta / genDelta * 1000 : 0; // fitness gain per 1000 gens
-
             if (slope > 0.5)
             {
-                trendDisplay = $"📈 +{slope:F2}/1k gens";
+                trendDisplay = $"📈 +{slope:F2}/1k";
                 trendColor = ConsoleColor.Green;
             }
             else if (slope > 0.1)
             {
-                trendDisplay = $"📊 +{slope:F2}/1k gens";
+                trendDisplay = $"📊 +{slope:F2}/1k";
                 trendColor = ConsoleColor.Yellow;
             }
             else if (slope >= 0)
             {
-                trendDisplay = $"📉 +{slope:F2}/1k gens (plateau)";
+                trendDisplay = $"📉 +{slope:F2}/1k (PLATEAU!)";
                 trendColor = ConsoleColor.DarkYellow;
             }
             else
             {
-                trendDisplay = $"⚠️  {slope:F2}/1k gens (declining!)";
+                trendDisplay = $"⚠️  {slope:F2}/1k (declining)";
                 trendColor = ConsoleColor.Red;
             }
         }
         else if (_fitnessHistory.Count > 0)
         {
-            trendDisplay = $"📊 {_fitnessHistory.Count} improvements tracked...";
+            trendDisplay = $"📊 {_fitnessHistory.Count}/10 improvements...";
             trendColor = ConsoleColor.Cyan;
         }
 
-        string resetInfo = _resetCount > 0 ? $"  |  Resets: {_resetCount}" : "";
-        SafeWriteLine(7, $"Stuck: {_generationsSinceImprovement} gens | Saved: {sinceSave.TotalSeconds:F0}s ago{resetInfo} | {trendDisplay}", trendColor);
+        string resetInfo = _resetCount > 0 ? $" | Resets: {_resetCount}" : "";
+        SafeWriteLine(7, $"Stuck: {_generationsSinceImprovement}{resetInfo} | {trendDisplay}", trendColor);
 
         // === ENHANCED PARAMETER DISPLAY (NON-SCROLLING) ===
         int row = 9;
 
-        // Fitness trend mini-graph (sparkline!)
-        if (_fitnessHistory.Count >= 5)
+        // Fitness trend mini-graph (sparkline!) - ALWAYS show if we have data
+        if (_fitnessHistory.Count >= 3)
         {
-            SafeWriteLine(row++, "📈 FITNESS TREND (last 20 improvements):", ConsoleColor.Cyan);
+            var graphData = _fitnessHistory.Count >= 20
+                ? _fitnessHistory.TakeLast(20).ToArray()
+                : _fitnessHistory.ToArray();
 
-            var graphData = _fitnessHistory.TakeLast(20).ToArray();
-            double minFit = graphData.Min(d => d.fitness);
-            double maxFit = graphData.Max(d => d.fitness);
+            double minFit = graphData.Length > 0 ? graphData.Min(d => d.fitness) : 0;
+            double maxFit = graphData.Length > 0 ? graphData.Max(d => d.fitness) : 100;
             double range = maxFit - minFit;
 
-            // Draw sparkline (8 height levels)
-            string sparkline = "   ";
+            // Draw sparkline (8 height levels using Unicode blocks)
+            string sparkline = "   TREND: ";
             foreach (var point in graphData)
             {
-                // Normalize to 0-7 scale
-                int level = range > 0 ? (int)((point.fitness - minFit) / range * 7) : 4;
+                int level = range > 0.01 ? (int)((point.fitness - minFit) / range * 7) : 4;
                 char bar = level switch
                 {
-                    0 => '▁',
-                    1 => '▂',
-                    2 => '▃',
-                    3 => '▄',
-                    4 => '▅',
-                    5 => '▆',
-                    6 => '▇',
-                    _ => '█'
+                    0 => '▁', 1 => '▂', 2 => '▃', 3 => '▄',
+                    4 => '▅', 5 => '▆', 6 => '▇', _ => '█'
                 };
                 sparkline += bar;
             }
-            sparkline += $"  ({minFit:F1} → {maxFit:F1})";
+
+            sparkline += $"  ({minFit:F1}→{maxFit:F1})";
+            if (graphData.Length >= 10)
+                sparkline += $"  Δ+{slope:F2}/1k";
 
             SafeWriteLine(row++, sparkline, trendColor);
-            SafeWriteLine(row++, "", ConsoleColor.Black); // Spacing
+        }
+        else
+        {
+            SafeWriteLine(row++, "   TREND: Collecting data... (need 3+ improvements)", ConsoleColor.DarkGray);
         }
 
         // Player Progression Parameters
@@ -1733,12 +1767,28 @@ public class ProgressionFrameworkResearcher
                                 diffMult >= 1.3 ? ConsoleColor.Yellow :
                                 diffMult >= 1.1 ? ConsoleColor.Cyan :
                                 ConsoleColor.Green;
-        SafeWriteLine(row++, $"Tuner Difficulty: {diffTier} ({diffMult:F1}×) - Thresholds get stricter as champion improves", diffColor);
+        SafeWriteLine(row++, $"Tuner Difficulty: {diffTier} ({diffMult:F1}×)", diffColor);
 
-        string autoResetStatus = _bestFitness >= AUTO_RESET_THRESHOLD
-            ? $"Auto-reset in {AUTO_RESET_STUCK_GENS - _generationsSinceImprovement} gens (fitness ≥{AUTO_RESET_THRESHOLD})"
-            : $"Auto-reset at fitness ≥{AUTO_RESET_THRESHOLD} + {AUTO_RESET_STUCK_GENS} stuck gens";
-        SafeWriteLine(row++, autoResetStatus, ConsoleColor.DarkCyan);
+        // Auto-reset status with both triggers
+        string autoResetLine = "🔄 AUTO-RESET: ";
+        bool trigger1 = _bestFitness >= AUTO_RESET_THRESHOLD && _generationsSinceImprovement >= AUTO_RESET_STUCK_GENS;
+        bool trigger2 = _fitnessHistory.Count >= AUTO_RESET_MIN_IMPROVEMENTS &&
+                       slope < AUTO_RESET_TREND_THRESHOLD &&
+                       _generationsSinceImprovement >= 100;
+
+        if (trigger1 || trigger2)
+        {
+            autoResetLine += "READY! ";
+            if (trigger1) autoResetLine += $"[Stuck at {_bestFitness:F0}] ";
+            if (trigger2) autoResetLine += $"[Plateau {slope:F2}/1k] ";
+            SafeWriteLine(row++, autoResetLine, ConsoleColor.Red);
+        }
+        else
+        {
+            autoResetLine += $"fitness ≥{AUTO_RESET_THRESHOLD} + stuck {AUTO_RESET_STUCK_GENS} OR trend <{AUTO_RESET_TREND_THRESHOLD}/1k + stuck 100";
+            SafeWriteLine(row++, autoResetLine, ConsoleColor.DarkCyan);
+        }
+
         SafeWriteLine(row++, "[ESC] Stop & Save  |  [R] Manual Reset → New Champion", ConsoleColor.Yellow);
 
         // Clear any remaining lines from previous longer displays
