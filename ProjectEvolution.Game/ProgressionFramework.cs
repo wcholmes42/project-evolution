@@ -130,6 +130,9 @@ public class ProgressionFrameworkResearcher
     private static int _generationsSinceImprovement = 0;
     private static DateTime _lastSaveTime = DateTime.Now;
     private const int AUTO_SAVE_INTERVAL_GENERATIONS = 5;
+    private static List<MetricResult>? _latestMetricResults = null;
+    private static int _lastConsoleWidth = 0;
+    private static int _lastConsoleHeight = 0;
 
     public static void RunContinuousResearch()
     {
@@ -445,12 +448,35 @@ public class ProgressionFrameworkResearcher
         var random = new Random(_generation * 7); // Different seed each generation
         var mutated = new ProgressionFrameworkData();
 
-        // Mutate player progression (20% chance each)
-        mutated.PlayerProgression.BaseHP = random.Next(100) < 20
-            ? Math.Clamp(parent.PlayerProgression.BaseHP + random.Next(-3, 4), 15, 40)
+        // ADAPTIVE MUTATION: Increase exploration if stuck, fine-tune if improving
+        double mutationRate = 0.3; // Base rate
+        double mutationStrength = 1.0;
+
+        if (_generationsSinceImprovement > 100)
+        {
+            // Stuck! Explore more aggressively
+            mutationRate = 0.7;
+            mutationStrength = 2.0;
+        }
+        else if (_generationsSinceImprovement > 50)
+        {
+            // Getting stuck, increase exploration
+            mutationRate = 0.5;
+            mutationStrength = 1.5;
+        }
+        else if (_generationsSinceImprovement < 10)
+        {
+            // Improving! Fine-tune
+            mutationRate = 0.2;
+            mutationStrength = 0.5;
+        }
+
+        // Mutate player progression
+        mutated.PlayerProgression.BaseHP = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.PlayerProgression.BaseHP + (int)((random.Next(-3, 4) * mutationStrength)), 15, 40)
             : parent.PlayerProgression.BaseHP;
 
-        mutated.PlayerProgression.HPPerLevel = random.Next(100) < 20
+        mutated.PlayerProgression.HPPerLevel = random.NextDouble() < mutationRate
             ? Math.Clamp(parent.PlayerProgression.HPPerLevel + random.Next(-1, 2), 1, 5)
             : parent.PlayerProgression.HPPerLevel;
 
@@ -458,46 +484,46 @@ public class ProgressionFrameworkResearcher
         mutated.PlayerProgression.BaseDEF = parent.PlayerProgression.BaseDEF;
         mutated.PlayerProgression.StatPointsPerLevel = parent.PlayerProgression.StatPointsPerLevel;
 
-        // Mutate enemy progression (30% chance each)
-        mutated.EnemyProgression.BaseHP = random.Next(100) < 30
-            ? Math.Clamp(parent.EnemyProgression.BaseHP + random.Next(-2, 3), 3, 12)
+        // Mutate enemy progression
+        mutated.EnemyProgression.BaseHP = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.EnemyProgression.BaseHP + (int)((random.Next(-2, 3) * mutationStrength)), 3, 12)
             : parent.EnemyProgression.BaseHP;
 
-        mutated.EnemyProgression.HPScalingCoefficient = random.Next(100) < 30
-            ? Math.Clamp(parent.EnemyProgression.HPScalingCoefficient + (random.NextDouble() - 0.5) * 0.5, 0.5, 3.0)
+        mutated.EnemyProgression.HPScalingCoefficient = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.EnemyProgression.HPScalingCoefficient + (random.NextDouble() - 0.5) * 0.5 * mutationStrength, 0.5, 3.0)
             : parent.EnemyProgression.HPScalingCoefficient;
 
-        mutated.EnemyProgression.BaseDamage = random.Next(100) < 30
-            ? Math.Clamp(parent.EnemyProgression.BaseDamage + random.Next(-1, 2), 1, 5)
+        mutated.EnemyProgression.BaseDamage = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.EnemyProgression.BaseDamage + (int)((random.Next(-1, 2) * mutationStrength)), 1, 5)
             : parent.EnemyProgression.BaseDamage;
 
-        mutated.EnemyProgression.DamageScalingCoefficient = random.Next(100) < 30
-            ? Math.Clamp(parent.EnemyProgression.DamageScalingCoefficient + (random.NextDouble() - 0.5) * 0.3, 0.1, 1.0)
+        mutated.EnemyProgression.DamageScalingCoefficient = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.EnemyProgression.DamageScalingCoefficient + (random.NextDouble() - 0.5) * 0.3 * mutationStrength, 0.1, 1.0)
             : parent.EnemyProgression.DamageScalingCoefficient;
 
-        // CRITICAL: Mutate ECONOMY parameters (60% chance each - VERY high priority!)
+        // CRITICAL: Mutate ECONOMY parameters (higher rate for critical system)
         var economy = new EconomicProgression();
-        economy.BaseGoldPerCombat = random.Next(100) < 60
-            ? Math.Clamp(parent.Economy.BaseGoldPerCombat + random.Next(-3, 4), 8, 20) // Never below 8!
+        economy.BaseGoldPerCombat = random.NextDouble() < (mutationRate * 1.5) // 1.5x higher chance
+            ? Math.Clamp(parent.Economy.BaseGoldPerCombat + (int)((random.Next(-3, 4) * mutationStrength)), 8, 20)
             : parent.Economy.BaseGoldPerCombat;
 
-        economy.GoldScalingCoefficient = random.Next(100) < 60
-            ? Math.Clamp(parent.Economy.GoldScalingCoefficient + (random.NextDouble() - 0.5) * 2.0, 2.0, 6.0) // Never below 2.0!
+        economy.GoldScalingCoefficient = random.NextDouble() < (mutationRate * 1.5)
+            ? Math.Clamp(parent.Economy.GoldScalingCoefficient + (random.NextDouble() - 0.5) * 2.0 * mutationStrength, 2.0, 6.0)
             : parent.Economy.GoldScalingCoefficient;
 
         mutated.Economy = economy;
 
-        // Mutate LOOT parameters (40% chance each)
+        // Mutate LOOT parameters
         var loot = new LootProgression();
-        loot.BaseTreasureGold = random.Next(100) < 40
-            ? Math.Clamp(parent.Loot.BaseTreasureGold + random.Next(-10, 11), 10, 50)
+        loot.BaseTreasureGold = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Loot.BaseTreasureGold + (int)((random.Next(-10, 11) * mutationStrength)), 10, 50)
             : parent.Loot.BaseTreasureGold;
 
-        loot.TreasurePerDungeonDepth = random.Next(100) < 40
-            ? Math.Clamp(parent.Loot.TreasurePerDungeonDepth + random.Next(-10, 11), 15, 60)
+        loot.TreasurePerDungeonDepth = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Loot.TreasurePerDungeonDepth + (int)((random.Next(-10, 11) * mutationStrength)), 15, 60)
             : parent.Loot.TreasurePerDungeonDepth;
 
-        loot.EquipmentDropRate = random.Next(100) < 40
+        loot.EquipmentDropRate = random.NextDouble() < mutationRate
             ? Math.Clamp(parent.Loot.EquipmentDropRate + random.Next(-5, 6), 10, 40)
             : parent.Loot.EquipmentDropRate;
 
@@ -790,52 +816,18 @@ public class ProgressionFrameworkResearcher
 
     private static double EvaluateFramework(ProgressionFrameworkData framework)
     {
-        // CRITICAL: Broken economy = INSTANT FAILURE
-        if (framework.Economy.GoldScalingCoefficient <= 0.1 || framework.Economy.BaseGoldPerCombat <= 0)
+        // Use the new comprehensive metric system
+        var (totalFitness, metricResults) = FitnessEvaluator.EvaluateComprehensive(framework);
+
+        // Store latest metric results for dashboard
+        _latestMetricResults = metricResults;
+
+        // Log detailed breakdown every 50 generations for analysis
+        if (_generation % 50 == 0 && totalFitness > _bestFitness)
         {
-            return 0; // Invalid configuration
+            var report = FitnessEvaluator.GetDetailedReport(metricResults);
+            SafeFileWriter.SafeAppendAllText("progression_research.log", report);
         }
-
-        if (!framework.Economy.CanAffordProgression)
-        {
-            return 10; // Broken economy is terrible
-        }
-
-        // 1. Economic health - MOST IMPORTANT (50%)
-        int healthyLevels = framework.Economy.LevelSnapshots.Count(s => s.EconomyHealthy);
-        int totalLevels = framework.Economy.LevelSnapshots.Count;
-        double economicScore = totalLevels > 0 ? (healthyLevels / (double)totalLevels) * 100 : 0;
-
-        // Bonus for healthy economy throughout
-        if (healthyLevels == totalLevels)
-        {
-            economicScore = 100; // Perfect economy
-        }
-
-        // 2. Combat balance across levels (30%)
-        double combatScore = 0;
-        int combatTests = 0;
-        foreach (int level in new[] { 1, 3, 5 })
-        {
-            int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
-            int playerSTR = framework.PlayerProgression.BaseSTR + level;
-            int playerDEF = framework.PlayerProgression.BaseDEF + level;
-
-            int enemyHP = framework.EnemyProgression.BaseHP + (int)(level * framework.EnemyProgression.HPScalingCoefficient);
-            int enemyDMG = framework.EnemyProgression.BaseDamage + (int)(level * framework.EnemyProgression.DamageScalingCoefficient);
-
-            double score = QuickCombatTest(playerHP, playerSTR, playerDEF, level, enemyHP, enemyDMG);
-            combatScore += score;
-            combatTests++;
-        }
-        combatScore = combatTests > 0 ? combatScore / combatTests : 0;
-
-        // 3. Build diversity (20%)
-        int viableBuilds = framework.Builds.ViableBuilds.Count(b => b.Value.ViabilityScore > 60);
-        double buildScore = (viableBuilds / 3.0) * 100;
-
-        // Combined fitness: 50% ECONOMY, 30% combat, 20% build diversity
-        double totalFitness = (economicScore * 0.5) + (combatScore * 0.3) + (buildScore * 0.2);
 
         return totalFitness;
     }
@@ -1170,6 +1162,35 @@ public class ProgressionFrameworkResearcher
         Console.WriteLine($"{"─",64}");
         Console.WriteLine();
 
+        // NEW: Real-time Metrics Breakdown
+        if (_latestMetricResults != null)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("⚡ LIVE METRICS BREAKDOWN:");
+            Console.ResetColor();
+            Console.WriteLine($"{"─",64}");
+
+            foreach (var metric in _latestMetricResults)
+            {
+                // Color based on score
+                ConsoleColor color = metric.Score >= 80 ? ConsoleColor.Green :
+                                    metric.Score >= 60 ? ConsoleColor.Yellow :
+                                    metric.Score >= 40 ? ConsoleColor.DarkYellow :
+                                    ConsoleColor.Red;
+
+                Console.ForegroundColor = color;
+                string bar = GenerateBar(metric.Score, 20);
+                Console.Write($"  {metric.MetricName,-20}");
+                Console.ResetColor();
+                Console.Write($" {bar} ");
+                Console.ForegroundColor = color;
+                Console.WriteLine($"{metric.Score,5:F1} → {metric.WeightedScore,5:F2}");
+                Console.ResetColor();
+            }
+
+            Console.WriteLine();
+        }
+
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("📊 CURRENT BEST FORMULAS:");
         Console.ResetColor();
@@ -1240,6 +1261,13 @@ public class ProgressionFrameworkResearcher
         Console.ResetColor();
     }
 
+    private static string GenerateBar(double value, int width)
+    {
+        int filled = (int)Math.Round((value / 100.0) * width);
+        filled = Math.Clamp(filled, 0, width);
+        return new string('█', filled) + new string('░', width - filled);
+    }
+
     private static void LogProgress(ProgressionFrameworkData framework, double fitness, bool improved)
     {
         TimeSpan elapsed = DateTime.Now - _startTime;
@@ -1280,28 +1308,778 @@ public class ProgressionFrameworkResearcher
         TimeSpan elapsed = DateTime.Now - _startTime;
         TimeSpan sinceSave = DateTime.Now - _lastSaveTime;
 
+        // Detect window size and adapt
+        int consoleWidth = 80;
+        int consoleHeight = 30;
+        try
+        {
+            consoleWidth = Console.WindowWidth;
+            consoleHeight = Console.WindowHeight;
+        }
+        catch
+        {
+            // If console size detection fails, use defaults
+        }
+
+        // Detect window resize and trigger full redraw
+        if (_lastConsoleWidth != consoleWidth || _lastConsoleHeight != consoleHeight)
+        {
+            _lastConsoleWidth = consoleWidth;
+            _lastConsoleHeight = consoleHeight;
+
+            // Clear screen on resize
+            try
+            {
+                Console.Clear();
+                Console.SetCursorPosition(0, 0);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
+                Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
+                Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
+                Console.WriteLine();
+                Console.ResetColor();
+            }
+            catch
+            {
+                // Ignore errors during resize
+            }
+        }
+
+        // Minimum width to display properly
+        if (consoleWidth < 80)
+        {
+            Console.Clear();
+            Console.WriteLine("⚠️  Window too narrow! Please resize to at least 80 characters wide.");
+            Console.WriteLine("   Current width: {0}, Minimum required: 80", consoleWidth);
+            return;
+        }
+
+        // Helper to safely write a line
+        void SafeWriteLine(int row, string content, ConsoleColor color = ConsoleColor.White)
+        {
+            try
+            {
+                if (row >= consoleHeight) return;
+                Console.SetCursorPosition(0, row);
+                Console.ForegroundColor = color;
+                // Truncate or pad to fit window width
+                if (content.Length > consoleWidth - 1)
+                    content = content.Substring(0, consoleWidth - 1);
+                else
+                    content = content.PadRight(consoleWidth - 1);
+                Console.Write(content);
+                Console.ResetColor();
+            }
+            catch
+            {
+                // Ignore cursor positioning errors during resize
+            }
+        }
+
         // Update just the status lines without clearing screen
-        Console.SetCursorPosition(0, 4);
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"⏱️  RUNTIME: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}  |  Gen: {_generation,4}  |  Sims: {_totalSimulations,6}  |  Fitness: {_bestFitness,6:F2}");
-        Console.ResetColor();
+        SafeWriteLine(4, $"⏱️  RUNTIME: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}  |  Gen: {_generation,4}  |  Sims: {_totalSimulations,6}  |  Fitness: {_bestFitness,6:F2}", ConsoleColor.Yellow);
+        SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
+        SafeWriteLine(7, $"Last save: {sinceSave.TotalSeconds:F0}s ago  |  No improvement: {_generationsSinceImprovement} gens", ConsoleColor.DarkGray);
 
-        Console.SetCursorPosition(0, 6);
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write(_currentPhase.PadRight(70));
-        Console.ResetColor();
+        // === ENHANCED PARAMETER DISPLAY (NON-SCROLLING) ===
+        int row = 9;
 
-        Console.SetCursorPosition(0, 7);
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write($"Last save: {sinceSave.TotalSeconds:F0}s ago  |  No improvement for: {_generationsSinceImprovement} gens".PadRight(70));
-        Console.ResetColor();
+        // Player Progression Parameters
+        SafeWriteLine(row++, "👤 PLAYER:", ConsoleColor.Green);
+        SafeWriteLine(row++, $"   BaseHP={_bestFramework.PlayerProgression.BaseHP,3}  HPPerLvl={_bestFramework.PlayerProgression.HPPerLevel:F1}  BaseSTR={_bestFramework.PlayerProgression.BaseSTR,2}  BaseDEF={_bestFramework.PlayerProgression.BaseDEF,2}", ConsoleColor.Green);
 
-        // Show current test values on line 8
-        Console.SetCursorPosition(0, 8);
-        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        // Enemy Progression Parameters
+        SafeWriteLine(row++, "👹 ENEMY:", ConsoleColor.Red);
+        SafeWriteLine(row++, $"   BaseHP={_bestFramework.EnemyProgression.BaseHP,3}  HPScale={_bestFramework.EnemyProgression.HPScalingCoefficient:F2}  BaseDMG={_bestFramework.EnemyProgression.BaseDamage,2}  DMGScale={_bestFramework.EnemyProgression.DamageScalingCoefficient:F2}", ConsoleColor.Red);
+
+        // Economy Parameters
         string economyStatus = _bestFramework.Economy.CanAffordProgression ? "✅" : "❌";
-        Console.Write($"Economy: {economyStatus}  Gold: {_bestFramework.Economy.BaseGoldPerCombat}g+(×{_bestFramework.Economy.GoldScalingCoefficient:F2})  Treasure: {_bestFramework.Loot.BaseTreasureGold}g+(×{_bestFramework.Loot.TreasurePerDungeonDepth})".PadRight(70));
-        Console.ResetColor();
+        SafeWriteLine(row++, $"💰 ECONOMY {economyStatus}:", ConsoleColor.Yellow);
+        SafeWriteLine(row++, $"   BaseGold={_bestFramework.Economy.BaseGoldPerCombat,3}g  GoldScale={_bestFramework.Economy.GoldScalingCoefficient:F2}  [Formula: {_bestFramework.Economy.BaseGoldPerCombat}+Lvl×{_bestFramework.Economy.GoldScalingCoefficient:F2}]", ConsoleColor.Yellow);
+
+        // Loot Parameters
+        SafeWriteLine(row++, "🎁 LOOT:", ConsoleColor.Magenta);
+        SafeWriteLine(row++, $"   BaseTreasure={_bestFramework.Loot.BaseTreasureGold,3}g  DepthScale={_bestFramework.Loot.TreasurePerDungeonDepth,3}g  DropRate={_bestFramework.Loot.EquipmentDropRate:F0}%", ConsoleColor.Magenta);
+
+        // Equipment Tiers (show first 3 tiers)
+        SafeWriteLine(row++, "⚔️  EQUIPMENT:", ConsoleColor.Cyan);
+        var wepTiers = _bestFramework.Equipment.WeaponTiers.Take(3).ToList();
+        SafeWriteLine(row++, $"   Weapons T0-2: [{string.Join(", ", wepTiers.Select(t => $"+{t.BonusValue}={t.RecommendedCost}g"))}]", ConsoleColor.Cyan);
+        var armTiers = _bestFramework.Equipment.ArmorTiers.Take(3).ToList();
+        SafeWriteLine(row++, $"   Armor   T0-2: [{string.Join(", ", armTiers.Select(t => $"+{t.BonusValue}={t.RecommendedCost}g"))}]", ConsoleColor.Cyan);
+
+        // Live Metrics (if available)
+        if (_latestMetricResults != null && _latestMetricResults.Count > 0)
+        {
+            SafeWriteLine(row++, "⚡ METRICS:", ConsoleColor.White);
+
+            foreach (var metric in _latestMetricResults)
+            {
+                ConsoleColor color = metric.Score >= 80 ? ConsoleColor.Green :
+                                    metric.Score >= 60 ? ConsoleColor.Yellow :
+                                    ConsoleColor.Red;
+                string bar = GenerateBar(metric.Score, 15);
+                // Fixed width formatting: name(22) + bar(15) + score(6) + arrow(3) + weighted(6)
+                string metricName = metric.MetricName.PadRight(22);
+                SafeWriteLine(row++, $"   {metricName} {bar} {metric.Score,6:F1} → {metric.WeightedScore,6:F2}", color);
+            }
+        }
+
+        // Mutation strategy indicator
+        string strategy = _generationsSinceImprovement > 100 ? "🔥 AGGRESSIVE EXPLORATION" :
+                         _generationsSinceImprovement > 50 ? "🔍 MODERATE SEARCH" :
+                         _generationsSinceImprovement < 10 ? "🎯 FINE-TUNING" :
+                         "⚖️  BALANCED";
+        SafeWriteLine(row++, $"Strategy: {strategy}", ConsoleColor.DarkGray);
+
+        // Clear any remaining lines from previous longer displays
+        for (int i = row; i < consoleHeight - 1; i++)
+        {
+            SafeWriteLine(i, "", ConsoleColor.Black);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXTENSIBLE FITNESS METRIC SYSTEM
+// Add new metrics as features are added - they automatically integrate
+//
+// DOCUMENTATION: See ../FITNESS_SYSTEM.md for comprehensive guide on:
+//   - Metric architecture and how it works
+//   - How to add new metrics (2 simple steps)
+//   - Expected improvements and testing guidance
+//   - Future metric ideas (DungeonBalance, SkillTree, etc.)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+public interface IFitnessMetric
+{
+    string Name { get; }
+    double Weight { get; } // Contribution to total fitness (0.0 - 1.0)
+    MetricResult Evaluate(ProgressionFrameworkData framework);
+}
+
+public class MetricResult
+{
+    public string MetricName { get; set; } = "";
+    public double Score { get; set; } // 0-100
+    public double WeightedScore { get; set; } // Score * Weight
+    public List<string> Details { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+    public bool Critical { get; set; } // If true and score < 50, entire fitness = 0
+}
+
+public class CombatBalanceMetric : IFitnessMetric
+{
+    public string Name => "Combat Balance";
+    public double Weight => 0.25;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name };
+        var scores = new List<double>();
+
+        // Test ALL levels 1-10, not just 1,3,5
+        for (int level = 1; level <= 10; level++)
+        {
+            int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
+            int playerSTR = framework.PlayerProgression.BaseSTR + level;
+            int playerDEF = framework.PlayerProgression.BaseDEF + level;
+
+            int enemyHP = framework.EnemyProgression.BaseHP + (int)(level * framework.EnemyProgression.HPScalingCoefficient);
+            int enemyDMG = framework.EnemyProgression.BaseDamage + (int)(level * framework.EnemyProgression.DamageScalingCoefficient);
+
+            var combat = SimulateCombatDetailed(playerHP, playerSTR, playerDEF, enemyHP, enemyDMG, level);
+
+            // Granular scoring based on combat quality
+            double levelScore = 0;
+
+            // 1. Win rate (0-40 points)
+            levelScore += combat.WinRate * 40;
+
+            // 2. Time to kill - target 3-7 turns (0-40 points)
+            double ttkScore = 0;
+            if (combat.AvgTurns >= 3 && combat.AvgTurns <= 7)
+                ttkScore = 40; // Perfect range
+            else if (combat.AvgTurns < 3)
+                ttkScore = Math.Max(0, 40 - (3 - combat.AvgTurns) * 20); // Too fast = boring
+            else if (combat.AvgTurns > 7)
+                ttkScore = Math.Max(0, 40 - (combat.AvgTurns - 7) * 5); // Too slow = grindy
+            levelScore += ttkScore;
+
+            // 3. Consistency (0-20 points) - low variance is good
+            double varianceScore = Math.Max(0, 20 - combat.TurnVariance * 2);
+            levelScore += varianceScore;
+
+            scores.Add(levelScore);
+
+            if (level % 3 == 1) // Sample details
+            {
+                result.Details.Add($"L{level}: {combat.WinRate:P0} wins, {combat.AvgTurns:F1} turns±{combat.TurnVariance:F1} ({levelScore:F0}/100)");
+            }
+
+            // Check for critical failures
+            if (combat.WinRate < 0.3)
+                result.Warnings.Add($"Level {level}: Only {combat.WinRate:P0} win rate - too hard!");
+            if (combat.AvgTurns < 2)
+                result.Warnings.Add($"Level {level}: {combat.AvgTurns:F1} turns - combat too fast/boring!");
+            if (combat.AvgTurns > 15)
+                result.Warnings.Add($"Level {level}: {combat.AvgTurns:F1} turns - combat too grindy!");
+        }
+
+        result.Score = scores.Average();
+        result.WeightedScore = result.Score * Weight;
+        return result;
+    }
+
+    private CombatStats SimulateCombatDetailed(int playerHP, int playerSTR, int playerDEF, int enemyHP, int enemyDMG, int level)
+    {
+        const int SIMULATIONS = 20; // More sims for better statistics
+        int wins = 0;
+        var turnCounts = new List<int>();
+
+        for (int sim = 0; sim < SIMULATIONS; sim++)
+        {
+            int hp = playerHP;
+            int ehp = enemyHP;
+            int turns = 0;
+
+            while (ehp > 0 && hp > 0 && turns < 50) // Prevent infinite loops
+            {
+                turns++;
+                ehp -= playerSTR;
+                if (ehp > 0)
+                    hp -= Math.Max(1, enemyDMG - playerDEF);
+            }
+
+            if (hp > 0)
+            {
+                wins++;
+                turnCounts.Add(turns);
+            }
+        }
+
+        double avgTurns = turnCounts.Count > 0 ? turnCounts.Average() : 50;
+        double variance = turnCounts.Count > 1 ? Math.Sqrt(turnCounts.Select(t => Math.Pow(t - avgTurns, 2)).Average()) : 0;
+
+        return new CombatStats
+        {
+            WinRate = wins / (double)SIMULATIONS,
+            AvgTurns = avgTurns,
+            TurnVariance = variance
+        };
+    }
+
+    private class CombatStats
+    {
+        public double WinRate { get; set; }
+        public double AvgTurns { get; set; }
+        public double TurnVariance { get; set; }
+    }
+}
+
+public class EconomicHealthMetric : IFitnessMetric
+{
+    public string Name => "Economic Health";
+    public double Weight => 0.20;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name, Critical = true };
+
+        // Hard failures
+        if (framework.Economy.GoldScalingCoefficient <= 0.1 || framework.Economy.BaseGoldPerCombat <= 0)
+        {
+            result.Score = 0;
+            result.Warnings.Add("CRITICAL: Invalid economy parameters");
+            result.WeightedScore = 0;
+            return result;
+        }
+
+        var scores = new List<double>();
+        int affordableCount = 0;
+        double totalSurplus = 0;
+
+        foreach (var snapshot in framework.Economy.LevelSnapshots)
+        {
+            double levelScore = 0;
+
+            // 1. Can afford recommended tier? (0-50 points)
+            if (snapshot.EconomyHealthy && snapshot.AffordableEquipmentTier >= snapshot.RecommendedEquipmentTier)
+            {
+                levelScore += 50;
+                affordableCount++;
+            }
+            else
+            {
+                result.Warnings.Add($"Level {snapshot.Level}: Cannot afford tier {snapshot.RecommendedEquipmentTier}");
+            }
+
+            // 2. Economic surplus - how much extra gold? (0-50 points)
+            var recommendedTier = framework.Equipment.WeaponTiers.FirstOrDefault(t => t.Tier == snapshot.RecommendedEquipmentTier);
+            if (recommendedTier != null)
+            {
+                double surplus = snapshot.CumulativeGold - recommendedTier.RecommendedCost;
+                double surplusRatio = surplus / Math.Max(1, recommendedTier.RecommendedCost);
+
+                // Ideal: 20-50% surplus (not too much, not too little)
+                if (surplusRatio >= 0.2 && surplusRatio <= 0.5)
+                    levelScore += 50;
+                else if (surplusRatio > 0.5)
+                    levelScore += Math.Max(0, 50 - (surplusRatio - 0.5) * 50); // Too much = inflation
+                else if (surplusRatio >= 0)
+                    levelScore += surplusRatio / 0.2 * 50; // Gradient from 0-20%
+
+                totalSurplus += surplusRatio;
+            }
+
+            scores.Add(levelScore);
+        }
+
+        result.Score = scores.Count > 0 ? scores.Average() : 0;
+        result.WeightedScore = result.Score * Weight;
+
+        double affordableRate = affordableCount / (double)Math.Max(1, framework.Economy.LevelSnapshots.Count);
+        result.Details.Add($"{affordableRate:P0} of levels can afford progression");
+        result.Details.Add($"Avg economic surplus: {(totalSurplus / scores.Count):P0}");
+
+        return result;
+    }
+}
+
+public class EquipmentCurveMetric : IFitnessMetric
+{
+    public string Name => "Equipment Progression";
+    public double Weight => 0.15;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name };
+        var scores = new List<double>();
+
+        // Validate weapon tiers
+        scores.Add(EvaluateEquipmentTiers(framework.Equipment.WeaponTiers, "Weapon", result));
+
+        // Validate armor tiers
+        scores.Add(EvaluateEquipmentTiers(framework.Equipment.ArmorTiers, "Armor", result));
+
+        result.Score = scores.Average();
+        result.WeightedScore = result.Score * Weight;
+        return result;
+    }
+
+    private double EvaluateEquipmentTiers(List<EquipmentTier> tiers, string type, MetricResult result)
+    {
+        if (tiers.Count < 3)
+        {
+            result.Warnings.Add($"{type}: Too few tiers ({tiers.Count})");
+            return 0;
+        }
+
+        var tierScores = new List<double>();
+
+        for (int i = 1; i < tiers.Count; i++)
+        {
+            var prev = tiers[i - 1];
+            var curr = tiers[i];
+
+            double tierScore = 100;
+
+            // 1. Power increase validation (should be 15-50% per tier for meaningful upgrades)
+            double powerIncrease = (curr.BonusValue - prev.BonusValue) / (double)Math.Max(1, prev.BonusValue);
+
+            if (powerIncrease >= 0.15 && powerIncrease <= 0.5)
+                tierScore = 100; // Perfect
+            else if (powerIncrease < 0.15)
+            {
+                tierScore = Math.Max(0, 100 - (0.15 - powerIncrease) * 200); // Too small = boring
+                if (i == 1) result.Details.Add($"{type} T{i}: Only {powerIncrease:P0} upgrade - feels weak");
+            }
+            else if (powerIncrease > 0.5)
+            {
+                tierScore = Math.Max(0, 100 - (powerIncrease - 0.5) * 100); // Too large = P2W feel
+                result.Details.Add($"{type} T{i}: {powerIncrease:P0} upgrade - too powerful!");
+            }
+
+            // 2. Cost scaling (should grow but not exponentially)
+            if (i > 0)
+            {
+                double costRatio = curr.RecommendedCost / (double)Math.Max(1, prev.RecommendedCost);
+                if (costRatio < 1.5 || costRatio > 5.0)
+                {
+                    tierScore *= 0.8; // Penalty for bad cost scaling
+                    result.Warnings.Add($"{type} T{i}: Cost ratio {costRatio:F1}x is extreme");
+                }
+            }
+
+            tierScores.Add(tierScore);
+        }
+
+        return tierScores.Average();
+    }
+}
+
+public class DifficultyPacingMetric : IFitnessMetric
+{
+    public string Name => "Difficulty Pacing";
+    public double Weight => 0.10;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name };
+
+        // Measure difficulty curve smoothness across levels
+        var difficulties = new List<double>();
+
+        for (int level = 1; level <= 10; level++)
+        {
+            int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
+            int playerPower = framework.PlayerProgression.BaseSTR + level;
+
+            int enemyHP = framework.EnemyProgression.BaseHP + (int)(level * framework.EnemyProgression.HPScalingCoefficient);
+            int enemyPower = framework.EnemyProgression.BaseDamage + (int)(level * framework.EnemyProgression.DamageScalingCoefficient);
+
+            // Difficulty = enemy threat / player survivability
+            double difficulty = (enemyHP * enemyPower) / (double)(playerHP * playerPower);
+            difficulties.Add(difficulty);
+        }
+
+        // 1. Smoothness - check for spikes (0-60 points)
+        double maxSpike = 0;
+        for (int i = 1; i < difficulties.Count; i++)
+        {
+            double change = Math.Abs(difficulties[i] - difficulties[i - 1]) / difficulties[i - 1];
+            maxSpike = Math.Max(maxSpike, change);
+        }
+
+        double smoothnessScore = Math.Max(0, 60 - maxSpike * 200); // Penalize spikes > 30%
+
+        if (maxSpike > 0.3)
+            result.Warnings.Add($"Difficulty spike detected: {maxSpike:P0} jump between levels");
+
+        // 2. Trend - should gradually increase (0-40 points)
+        double avgIncrease = 0;
+        int increases = 0;
+        for (int i = 1; i < difficulties.Count; i++)
+        {
+            if (difficulties[i] > difficulties[i - 1])
+                increases++;
+            avgIncrease += difficulties[i] - difficulties[i - 1];
+        }
+
+        double trendScore = (increases / (double)(difficulties.Count - 1)) * 40;
+
+        result.Score = smoothnessScore + trendScore;
+        result.WeightedScore = result.Score * Weight;
+        result.Details.Add($"Difficulty curve: {increases}/{difficulties.Count - 1} levels increase");
+        result.Details.Add($"Max spike: {maxSpike:P0}");
+
+        return result;
+    }
+}
+
+public class SkillBalanceMetric : IFitnessMetric
+{
+    public string Name => "Skill Balance";
+    public double Weight => 0.15;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name };
+        var scores = new List<double>();
+
+        // Test skill usage across levels 1-10
+        for (int level = 1; level <= 10; level++)
+        {
+            int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
+            int playerSTR = framework.PlayerProgression.BaseSTR + level;
+            int playerDEF = framework.PlayerProgression.BaseDEF + level;
+
+            int enemyHP = framework.EnemyProgression.BaseHP + (int)(level * framework.EnemyProgression.HPScalingCoefficient);
+            int enemyDMG = framework.EnemyProgression.BaseDamage + (int)(level * framework.EnemyProgression.DamageScalingCoefficient);
+
+            double levelScore = 0;
+
+            // Test 1: Power Strike viability (should help but not trivialize)
+            double powerStrikeBenefit = TestSkillBenefit(playerHP, playerSTR, playerDEF, enemyHP, enemyDMG, "PowerStrike");
+            if (powerStrikeBenefit > 0.1 && powerStrikeBenefit < 0.4) // 10-40% improvement is good
+                levelScore += 25;
+            else if (powerStrikeBenefit > 0.4)
+            {
+                result.Warnings.Add($"L{level}: Power Strike too powerful ({powerStrikeBenefit:P0} advantage)");
+                levelScore += 10;
+            }
+            else
+                levelScore += 5;
+
+            // Test 2: Shield Bash stun effectiveness (with resistance)
+            double stunBenefit = TestStunResistance(playerHP, playerSTR, playerDEF, enemyHP, enemyDMG);
+            if (stunBenefit > 0.05 && stunBenefit < 0.30) // 5-30% improvement from stuns
+                levelScore += 25;
+            else if (stunBenefit > 0.30)
+            {
+                result.Warnings.Add($"L{level}: Stun-lock possible ({stunBenefit:P0} advantage)");
+                levelScore += 10;
+            }
+            else
+                levelScore += 15;
+
+            // Test 3: Berserker Rage risk/reward (should be risky but rewarding)
+            double rageBenefit = TestBerserkerRage(playerHP, playerSTR, playerDEF, enemyHP, enemyDMG);
+            if (rageBenefit > -0.1 && rageBenefit < 0.3) // Slightly positive to moderate gain
+                levelScore += 25;
+            else if (rageBenefit < -0.1)
+            {
+                result.Details.Add($"L{level}: Berserker Rage too risky ({rageBenefit:P0})");
+                levelScore += 5;
+            }
+            else
+                levelScore += 15;
+
+            // Test 4: Skills don't break stamina economy
+            double skillStaminaBalance = TestStaminaEconomy(playerSTR, enemyHP);
+            if (skillStaminaBalance > 0.7) // Player has enough stamina for skills
+                levelScore += 25;
+            else
+            {
+                result.Warnings.Add($"L{level}: Skill stamina too limited");
+                levelScore += 10;
+            }
+
+            scores.Add(levelScore);
+        }
+
+        result.Score = scores.Average();
+        result.WeightedScore = result.Score * Weight;
+        result.Details.Add($"Average skill balance: {result.Score:F0}/100");
+
+        return result;
+    }
+
+    private double TestSkillBenefit(int hp, int str, int def, int enemyHP, int enemyDMG, string skill)
+    {
+        // Simulate combat with and without Power Strike
+        double normalWinRate = SimulateCombat(hp, str, def, enemyHP, enemyDMG, false);
+        double skillWinRate = SimulateCombat(hp, str, def, enemyHP, enemyDMG, true);
+        return skillWinRate - normalWinRate;
+    }
+
+    private double TestStunResistance(int hp, int str, int def, int enemyHP, int enemyDMG)
+    {
+        // Simulate repeated stun attempts (resistance builds up)
+        int wins = 0;
+        const int sims = 20;
+
+        for (int i = 0; i < sims; i++)
+        {
+            int playerHP = hp;
+            int eHP = enemyHP;
+            int stunResistance = 0;
+            int stamina = 12;
+
+            while (playerHP > 0 && eHP > 0)
+            {
+                // Try Shield Bash if we have stamina
+                if (stamina >= 4 && new Random().Next(100) < (100 - stunResistance * 25))
+                {
+                    stamina -= 4;
+                    stunResistance++;
+                    eHP -= (int)(str * 0.7); // Bash damage
+                    // Enemy stunned, skips turn
+                }
+                else
+                {
+                    // Normal attack
+                    stamina = Math.Max(0, stamina - 3);
+                    eHP -= str;
+                    playerHP -= Math.Max(1, enemyDMG - def);
+                }
+
+                if (stamina < 3) stamina = 12; // Regenerate if depleted
+            }
+
+            if (playerHP > 0) wins++;
+        }
+
+        double stunWinRate = wins / (double)sims;
+        double normalWinRate = SimulateCombat(hp, str, def, enemyHP, enemyDMG, false);
+        return stunWinRate - normalWinRate;
+    }
+
+    private double TestBerserkerRage(int hp, int str, int def, int enemyHP, int enemyDMG)
+    {
+        // Simulate combat with Berserker Rage (2x damage, 1.5x damage taken)
+        int wins = 0;
+        const int sims = 20;
+
+        for (int i = 0; i < sims; i++)
+        {
+            int playerHP = hp;
+            int eHP = enemyHP;
+            int rageTurns = 3; // Rage lasts 3 turns
+
+            while (playerHP > 0 && eHP > 0)
+            {
+                if (rageTurns > 0)
+                {
+                    // Rage active
+                    eHP -= str * 2;
+                    playerHP -= (int)(Math.Max(1, enemyDMG - def) * 1.5);
+                    rageTurns--;
+                }
+                else
+                {
+                    // Normal combat
+                    eHP -= str;
+                    playerHP -= Math.Max(1, enemyDMG - def);
+                }
+            }
+
+            if (playerHP > 0) wins++;
+        }
+
+        double rageWinRate = wins / (double)sims;
+        double normalWinRate = SimulateCombat(hp, str, def, enemyHP, enemyDMG, false);
+        return rageWinRate - normalWinRate;
+    }
+
+    private double TestStaminaEconomy(int str, int enemyHP)
+    {
+        // Can player afford to use skills? (Power Strike costs 5 stamina)
+        int turnsToKill = (int)Math.Ceiling(enemyHP / (double)(str * 1.5)); // With Power Strike
+        int staminaNeeded = turnsToKill * 5;
+        int staminaAvailable = 12; // Starting stamina
+
+        return Math.Min(1.0, staminaAvailable / (double)staminaNeeded);
+    }
+
+    private double SimulateCombat(int hp, int str, int def, int enemyHP, int enemyDMG, bool useSkills)
+    {
+        int wins = 0;
+        const int sims = 10;
+
+        for (int i = 0; i < sims; i++)
+        {
+            int playerHP = hp;
+            int eHP = enemyHP;
+
+            while (playerHP > 0 && eHP > 0)
+            {
+                int damage = useSkills ? (int)(str * 1.5) : str; // Power Strike
+                eHP -= damage;
+                if (eHP > 0)
+                    playerHP -= Math.Max(1, enemyDMG - def);
+            }
+
+            if (playerHP > 0) wins++;
+        }
+
+        return wins / (double)sims;
+    }
+}
+
+public class BuildDiversityMetric : IFitnessMetric
+{
+    public string Name => "Build Diversity";
+    public double Weight => 0.15;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name };
+
+        // Count viable builds (score > 60)
+        int viableCount = framework.Builds.ViableBuilds.Count(b => b.Value.ViabilityScore > 60);
+
+        // 1. Viability count (0-50 points)
+        double viabilityScore = (viableCount / 3.0) * 50;
+
+        // 2. Differentiation (0-50 points) - builds should have DIFFERENT scores, not all 100
+        var scores = framework.Builds.ViableBuilds.Select(b => b.Value.ViabilityScore).ToList();
+        double variance = scores.Count > 1 ? Math.Sqrt(scores.Select(s => Math.Pow(s - scores.Average(), 2)).Average()) : 0;
+
+        // Perfect variance: 10-20 points (builds viable but different)
+        double differentiationScore = 0;
+        if (variance >= 10 && variance <= 20)
+            differentiationScore = 50;
+        else if (variance < 10)
+            differentiationScore = variance / 10.0 * 50; // Too similar
+        else
+            differentiationScore = Math.Max(0, 50 - (variance - 20) * 2); // Too different = some unviable
+
+        result.Score = viabilityScore + differentiationScore;
+        result.WeightedScore = result.Score * Weight;
+
+        result.Details.Add($"{viableCount}/3 builds viable (>{60}% score)");
+        result.Details.Add($"Build differentiation: {variance:F1} variance");
+
+        foreach (var build in framework.Builds.ViableBuilds)
+        {
+            if (build.Value.ViabilityScore < 60)
+                result.Warnings.Add($"{build.Key}: Only {build.Value.ViabilityScore:F0}% viable");
+        }
+
+        return result;
+    }
+}
+
+public static class FitnessEvaluator
+{
+    private static readonly List<IFitnessMetric> _metrics = new()
+    {
+        new CombatBalanceMetric(),      // 25% (was 30%)
+        new EconomicHealthMetric(),     // 20% (was 25%)
+        new EquipmentCurveMetric(),     // 15%
+        new DifficultyPacingMetric(),   // 10% (was 15%)
+        new SkillBalanceMetric(),       // 15% (NEW - Gen 35)
+        new BuildDiversityMetric()      // 15%
+        // Total: 100% - add new metrics here as features are added!
+    };
+
+    public static (double totalFitness, List<MetricResult> results) EvaluateComprehensive(ProgressionFrameworkData framework)
+    {
+        var results = new List<MetricResult>();
+        double totalWeightedScore = 0;
+
+        foreach (var metric in _metrics)
+        {
+            var result = metric.Evaluate(framework);
+            results.Add(result);
+            totalWeightedScore += result.WeightedScore;
+
+            // Critical failures
+            if (result.Critical && result.Score < 50)
+            {
+                return (0, results); // Instant failure
+            }
+        }
+
+        // Sum of weighted scores already represents 0-100 scale
+        // (each metric: score 0-100 × weight, all weights sum to 1.0)
+        double totalFitness = totalWeightedScore;
+
+        return (totalFitness, results);
+    }
+
+    public static string GetDetailedReport(List<MetricResult> results)
+    {
+        var report = new System.Text.StringBuilder();
+        report.AppendLine("\n╔═══════════════════════════════════════════════════════════════╗");
+        report.AppendLine("║                  FITNESS METRIC BREAKDOWN                     ║");
+        report.AppendLine("╚═══════════════════════════════════════════════════════════════╝\n");
+
+        foreach (var result in results)
+        {
+            report.AppendLine($"📊 {result.MetricName}: {result.Score:F1}/100 (weighted: {result.WeightedScore:F1})");
+
+            foreach (var detail in result.Details)
+                report.AppendLine($"   ✓ {detail}");
+
+            foreach (var warning in result.Warnings)
+                report.AppendLine($"   ⚠️  {warning}");
+
+            report.AppendLine();
+        }
+
+        return report.ToString();
     }
 }
 

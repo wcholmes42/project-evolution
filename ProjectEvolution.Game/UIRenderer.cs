@@ -458,6 +458,18 @@ public class UIRenderer
         Console.SetCursorPosition(2, startRow + 5);
         Console.Write($"  💪 ATK: {game.GetEffectiveStrength()}  🛡️  DEF: {game.GetEffectiveDefense()}");
 
+        // GENERATION 35: Show active buffs
+        Console.SetCursorPosition(2, startRow + 6);
+        Console.Write(new string(' ', 76));
+        string buffs = game.GetActiveBuffsDisplay();
+        if (!string.IsNullOrEmpty(buffs))
+        {
+            Console.SetCursorPosition(2, startRow + 6);
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write($"  {buffs}");
+            Console.ResetColor();
+        }
+
         // VS
         Console.SetCursorPosition(35, startRow + 3);
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -492,12 +504,106 @@ public class UIRenderer
         Console.SetCursorPosition(45, startRow + 5);
         Console.Write($"⚔️  DMG: {game.EnemyDamage}");
 
-        // Combat options
-        Console.SetCursorPosition(2, startRow + 7);
+        // Combat options (GENERATION 35: Added Skills)
+        Console.SetCursorPosition(2, startRow + 8);
         Console.Write(new string(' ', 76));
-        Console.SetCursorPosition(2, startRow + 7);
+        Console.SetCursorPosition(2, startRow + 8);
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("[A] Attack  [D] Defend  [P] Potion  [F] Flee (50% chance)");
+        Console.Write("[A] Attack  [D] Defend  [S] Skills  [P] Potion  [F] Flee");
+        Console.ResetColor();
+    }
+
+    // GENERATION 35: Skills Menu
+    public void RenderSkillsMenu(RPGGame game)
+    {
+        int startRow = StatusBarHeight + 2;
+        int menuWidth = 60;
+        int menuLeft = (80 - menuWidth) / 2; // Center on 80-column console
+
+        // Draw skills menu box
+        Console.SetCursorPosition(menuLeft, startRow);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("╔" + new string('═', menuWidth - 2) + "╗");
+
+        Console.SetCursorPosition(menuLeft, startRow + 1);
+        Console.Write("║");
+        Console.SetCursorPosition(menuLeft + menuWidth / 2 - 5, startRow + 1);
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("⚡ SKILLS ⚡");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.SetCursorPosition(menuLeft + menuWidth - 1, startRow + 1);
+        Console.Write("║");
+
+        Console.SetCursorPosition(menuLeft, startRow + 2);
+        Console.Write("╠" + new string('═', menuWidth - 2) + "╣");
+        Console.ResetColor();
+
+        var skills = game.GetAvailableSkills();
+        int row = startRow + 3;
+
+        foreach (var skill in skills)
+        {
+            Console.SetCursorPosition(menuLeft, row);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("║");
+            Console.ResetColor();
+
+            Console.SetCursorPosition(menuLeft + 2, row);
+
+            bool canUse = game.CanUseSkill(skill);
+            Console.ForegroundColor = canUse ? ConsoleColor.Green : ConsoleColor.DarkGray;
+
+            // Show skill number (1-5)
+            int skillNum = skills.IndexOf(skill) + 1;
+            Console.Write($"[{skillNum}] ");
+
+            Console.ForegroundColor = canUse ? ConsoleColor.White : ConsoleColor.DarkGray;
+            Console.Write($"{skill.Name,-20}");
+
+            Console.ForegroundColor = canUse ? ConsoleColor.Cyan : ConsoleColor.DarkGray;
+            Console.Write($" ({skill.StaminaCost} ⚡)");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.SetCursorPosition(menuLeft + menuWidth - 1, row);
+            Console.Write("║");
+            Console.ResetColor();
+
+            // Skill description on next line
+            row++;
+            Console.SetCursorPosition(menuLeft, row);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("║");
+            Console.SetCursorPosition(menuLeft + 5, row);
+            Console.ForegroundColor = canUse ? ConsoleColor.Gray : ConsoleColor.DarkGray;
+            string desc = skill.Description;
+            if (desc.Length > menuWidth - 8) desc = desc.Substring(0, menuWidth - 11) + "...";
+            Console.Write(desc);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.SetCursorPosition(menuLeft + menuWidth - 1, row);
+            Console.Write("║");
+            Console.ResetColor();
+
+            row++;
+        }
+
+        // Bottom border
+        Console.SetCursorPosition(menuLeft, row);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("╠" + new string('═', menuWidth - 2) + "╣");
+
+        Console.SetCursorPosition(menuLeft, row + 1);
+        Console.Write("║");
+        Console.SetCursorPosition(menuLeft + 2, row + 1);
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write($"Stamina: {game.PlayerStamina}/12");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write($"  |  [1-5] Use Skill  [ESC] Cancel");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.SetCursorPosition(menuLeft + menuWidth - 1, row + 1);
+        Console.Write("║");
+
+        Console.SetCursorPosition(menuLeft, row + 2);
+        Console.Write("╚" + new string('═', menuWidth - 2) + "╝");
         Console.ResetColor();
     }
 

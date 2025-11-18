@@ -10,6 +10,13 @@ game_log.txt
 *.swp
 *~
 
+# Progression Research (can be very large)
+progression_research.log
+progression_summary.log
+progression_framework.json
+PROGRESSION_FRAMEWORK.md
+GeneratedCode/
+
 # Build results
 [Dd]ebug/
 [Rr]elease/

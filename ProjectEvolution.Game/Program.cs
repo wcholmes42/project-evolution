@@ -4,22 +4,18 @@ using ProjectEvolution.Game;
 Console.Clear();
 Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
 Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 35                 ║");
-Console.WriteLine("║                  \"The UX Evolution Update\"                     ║");
+Console.WriteLine("║                \"Skills & Abilities Update\"                     ║");
 Console.WriteLine("╠════════════════════════════════════════════════════════════════╣");
 Console.WriteLine("║                                                                ║");
-Console.WriteLine("║  [P] Play Game (Normal Mode)                                   ║");
-Console.WriteLine("║  [T] Manual Testing & Tuning (Interactive)                     ║");
-Console.WriteLine("║  [A] Automated Tuning (10 Cycles)                              ║");
-Console.WriteLine("║  [C] Continuous Tuning (Infinite - ESC to stop)                ║");
-Console.WriteLine("║  [G] Gradient Descent (Backpropagation - Leaderboard)          ║");
-Console.WriteLine("║  [S] Single-Param Test (No Interference)                       ║");
-Console.WriteLine("║  [R] Random Search (Explore Solution Space)                    ║");
-Console.WriteLine("║  [X] X-MEN MUTATION MODE 🦄 (Find The Unicorn!)                ║");
-Console.WriteLine("║  [F] Focused Class Optimizer (Boost Weakest to Top!)           ║");
-Console.WriteLine("║  [V] PROGRESSION TUNER (Test Levels & Builds) 🆕               ║");
-Console.WriteLine("║  [E] EVOLUTIONARY TUNER (Continuous Evolution) 🧬             ║");
-Console.WriteLine("║  [M] PROGRESSION RESEARCH (Formula Discovery) 📊              ║");
-Console.WriteLine("║  [B] CONTINUOUS RESEARCH → CODE GEN (Auto-evolve!) 🔄        ║");
+Console.WriteLine("║  🎮 [P] PLAY GAME                                              ║");
+Console.WriteLine("║      Experience the evolved RPG with skills & progression      ║");
+Console.WriteLine("║                                                                ║");
+Console.WriteLine("║  🧬 [R] PROGRESSION FRAMEWORK RESEARCH                         ║");
+Console.WriteLine("║      Continuous evolution of game balance & formulas           ║");
+Console.WriteLine("║      → Tests combat, economy, equipment, skills, builds        ║");
+Console.WriteLine("║      → Auto-generates balanced code & progression curves       ║");
+Console.WriteLine("║      → Adaptive mutation finds optimal parameters              ║");
+Console.WriteLine("║                                                                ║");
 Console.WriteLine("║  [Q] Quit                                                      ║");
 Console.WriteLine("║                                                                ║");
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
@@ -28,75 +24,9 @@ Console.Write("\nChoice: ");
 var menuChoice = Console.ReadKey(intercept: true).Key;
 Console.Clear();
 
-if (menuChoice == ConsoleKey.T)
+if (menuChoice == ConsoleKey.R)
 {
-    // Run simulation/tuning mode
-    SimulationRunner.RunInteractiveTuning();
-    return;
-}
-else if (menuChoice == ConsoleKey.A)
-{
-    // Run automated tuning
-    AutoTuner.RunAutoTuning(10);
-    return;
-}
-else if (menuChoice == ConsoleKey.C)
-{
-    // Run continuous tuning
-    ContinuousTuner.RunContinuousTuning();
-    return;
-}
-else if (menuChoice == ConsoleKey.G)
-{
-    // Run gradient descent tuning
-    GradientTuner.RunGradientTuning();
-    return;
-}
-else if (menuChoice == ConsoleKey.S)
-{
-    // Run single-parameter tuning
-    SingleParamTuner.RunSingleParamOptimization();
-    return;
-}
-else if (menuChoice == ConsoleKey.R)
-{
-    // Run random search
-    RandomSearchTuner.RunRandomSearch(50);
-    return;
-}
-else if (menuChoice == ConsoleKey.X)
-{
-    // X-MEN MUTATION MODE!
-    XMenMutationMode.UnleashTheMutants();
-    return;
-}
-else if (menuChoice == ConsoleKey.F)
-{
-    // Focused Class Optimizer!
-    FocusedClassOptimizer.RunFocusedOptimization();
-    return;
-}
-else if (menuChoice == ConsoleKey.V)
-{
-    // NEW: Progression Tuner!
-    ProgressionTuner.RunProgressionTuning();
-    return;
-}
-else if (menuChoice == ConsoleKey.E)
-{
-    // NEW: Evolutionary Tuner!
-    EvolutionaryTuner.RunContinuousEvolution();
-    return;
-}
-else if (menuChoice == ConsoleKey.M)
-{
-    // NEW: Progression Research!
-    ProgressionResearch.RunProgressionResearch();
-    return;
-}
-else if (menuChoice == ConsoleKey.B)
-{
-    // NEW: Continuous Research → Code Generation!
+    // Progression Framework Research - encompasses all tuning!
     ProgressionFrameworkResearcher.RunContinuousResearch();
     return;
 }
@@ -146,7 +76,7 @@ logger.LogEvent("INIT", $"Player spawned at ({game.PlayerX},{game.PlayerY})");
 ui.Initialize();
 ui.RenderStatusBar(game);
 ui.RenderMap(game);
-ui.AddMessage("Welcome to Project Evolution! Generation 35!");
+ui.AddMessage("Welcome to Project Evolution! Generation 35: Skills & Abilities!");
 ui.AddMessage("† You're at the Temple - FREE healing & respawn point!");
 ui.AddMessage("Death is not the end! You'll respawn here (lose 50% gold & gear)");
 ui.AddMessage($"Towns at (5,5) & (15,15) | Dungeons at (10,5) & (10,15) | Press [H] for help");
@@ -488,16 +418,65 @@ while (playing)
                         continue;
                     }
 
-                    var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
-                    int hpBefore = game.PlayerHP;
-                    game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
-                    int hpAfter = game.PlayerHP;
-
-                    if (hpAfter < hpBefore)
+                    // GENERATION 35: Skills Menu
+                    if (combatKey == ConsoleKey.S)
                     {
-                        logger.LogEvent("DAMAGE", $"Player took {hpBefore - hpAfter} damage. HP: {hpAfter}/{game.MaxPlayerHP}");
+                        ui.RenderSkillsMenu(game);
+                        var skillKey = Console.ReadKey(intercept: true).Key;
+
+                        if (skillKey == ConsoleKey.Escape)
+                        {
+                            // Cancel - redraw combat
+                            ui.RenderStatusBar(game);
+                            ui.RenderCombat(game);
+                            continue;
+                        }
+
+                        // Try to use skill 1-5
+                        int skillIndex = skillKey switch
+                        {
+                            ConsoleKey.D1 or ConsoleKey.NumPad1 => 0,
+                            ConsoleKey.D2 or ConsoleKey.NumPad2 => 1,
+                            ConsoleKey.D3 or ConsoleKey.NumPad3 => 2,
+                            ConsoleKey.D4 or ConsoleKey.NumPad4 => 3,
+                            ConsoleKey.D5 or ConsoleKey.NumPad5 => 4,
+                            _ => -1
+                        };
+
+                        if (skillIndex >= 0)
+                        {
+                            var skills = game.GetAvailableSkills();
+                            if (skillIndex < skills.Count)
+                            {
+                                var skill = skills[skillIndex];
+                                game.QueueSkillForNextRound(skill);
+                                // Use skill action
+                                game.ExecuteGameLoopRoundWithRandomHits(CombatAction.UseSkill, CombatAction.Attack);
+                                logger.LogEvent("SKILL", $"Used {skill.Name}");
+                            }
+                            else
+                            {
+                                // Invalid skill - redraw combat
+                                ui.RenderStatusBar(game);
+                                ui.RenderCombat(game);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            // Invalid key - redraw combat
+                            ui.RenderStatusBar(game);
+                            ui.RenderCombat(game);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
+                        game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
                     }
 
+                    // Common combat result handling
                     logger.LogEvent("COMBAT_ROUND", game.CombatLog);
                     ui.AddMessage(game.CombatLog);
                     Thread.Sleep(900); // Pause to read combat results

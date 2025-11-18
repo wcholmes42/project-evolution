@@ -3,5 +3,6 @@ namespace ProjectEvolution.Game;
 public enum CombatAction
 {
     Attack,
-    Defend
+    Defend,
+    UseSkill  // Generation 35: Skills system
 }

@@ -92,6 +92,14 @@ public class RPGGame
     private Armor? _droppedArmor = null;
     public int TotalDeaths { get; private set; } = 0;
 
+    // NEW: Skill & Buff System (Generation 35)
+    public List<ActiveBuff> PlayerBuffs { get; private set; } = new List<ActiveBuff>();
+    public List<ActiveBuff> EnemyBuffs { get; private set; } = new List<ActiveBuff>();
+    private HashSet<string> _usedOncePerCombatSkills = new HashSet<string>();
+    public string LastSkillUsed { get; private set; } = "";
+    public Skill? QueuedSkill { get; private set; } = null;
+    private int _enemyStunResistance = 0; // Builds up each time enemy is stunned (anti-stun-lock)
+
     public void SetOptimalConfig(SimulationConfig config)
     {
         // Apply tuning results to the game!
@@ -113,6 +121,204 @@ public class RPGGame
         // Include equipment bonuses!
         return PlayerInventory.GetTotalDefense(PlayerDefense);
     }
+
+    // ════════════════════════════════════════════════════════════════════
+    // SKILL SYSTEM (Generation 35)
+    // ════════════════════════════════════════════════════════════════════
+
+    public bool CanUseSkill(Skill skill)
+    {
+        // Check level requirement
+        if (PlayerLevel < skill.MinLevel) return false;
+
+        // Check stamina
+        if (PlayerStamina < skill.StaminaCost) return false;
+
+        // Check once-per-combat restriction
+        if (skill.OncePerCombat && _usedOncePerCombatSkills.Contains(skill.Name)) return false;
+
+        return true;
+    }
+
+    public (bool success, string message) UseSkill(Skill skill)
+    {
+        if (!CanUseSkill(skill))
+        {
+            if (PlayerStamina < skill.StaminaCost)
+                return (false, $"Not enough stamina! Need {skill.StaminaCost}, have {PlayerStamina}");
+            if (skill.OncePerCombat && _usedOncePerCombatSkills.Contains(skill.Name))
+                return (false, $"{skill.Name} already used this combat!");
+            return (false, $"Cannot use {skill.Name}!");
+        }
+
+        // Deduct stamina
+        PlayerStamina -= skill.StaminaCost;
+        LastSkillUsed = skill.Name;
+
+        // Mark as used if once per combat
+        if (skill.OncePerCombat)
+        {
+            _usedOncePerCombatSkills.Add(skill.Name);
+        }
+
+        // Execute skill effect
+        string message = "";
+        switch (skill.PrimaryEffect)
+        {
+            case SkillEffect.Damage:
+                // Damage skill - will be applied in ExecuteGameLoopRound
+                message = $"Used {skill.Name}!";
+                break;
+
+            case SkillEffect.Heal:
+                int healAmount = skill.HealAmount;
+                int actualHeal = Math.Min(healAmount, MaxPlayerHP - PlayerHP);
+                PlayerHP = Math.Min(MaxPlayerHP, PlayerHP + healAmount);
+                message = $"Used {skill.Name}! Restored {actualHeal} HP!";
+                break;
+
+            case SkillEffect.Buff:
+                var buff = new ActiveBuff(skill.BuffApplied, skill.BuffDuration, skill.BuffValue);
+                PlayerBuffs.Add(buff);
+                message = $"Used {skill.Name}! Active for {skill.BuffDuration} turns!";
+                break;
+
+            case SkillEffect.Stun:
+                // Apply stun to enemy with resistance check (anti-stun-lock)
+                var random = new Random();
+                int stunChance = 100 - (_enemyStunResistance * 25); // 100%, 75%, 50%, 25%, 0%...
+                if (random.Next(100) < stunChance)
+                {
+                    var stunBuff = new ActiveBuff(BuffType.Stunned, skill.BuffDuration);
+                    EnemyBuffs.Add(stunBuff);
+                    _enemyStunResistance++; // Build resistance
+                    message = $"Used {skill.Name}! Enemy stunned!";
+                }
+                else
+                {
+                    message = $"Used {skill.Name}! Enemy resisted stun! (Resist: {_enemyStunResistance})";
+                }
+                break;
+        }
+
+        return (true, message);
+    }
+
+    public int CalculateSkillDamage(Skill skill, int baseStrength)
+    {
+        // Apply skill multiplier
+        double damageMultiplier = skill.DamageMultiplier;
+
+        // Apply Berserker Rage if active
+        var rageBuff = PlayerBuffs.FirstOrDefault(b => b.Type == BuffType.BerserkerRage);
+        if (rageBuff != null)
+        {
+            damageMultiplier *= 2.0; // Berserker doubles damage
+        }
+
+        return (int)(baseStrength * damageMultiplier);
+    }
+
+    public int ApplyDefenseBuffs(int baseDefense)
+    {
+        int totalDefense = baseDefense;
+
+        // Apply Defensive Stance
+        var defenseBuff = PlayerBuffs.FirstOrDefault(b => b.Type == BuffType.DefensiveStance);
+        if (defenseBuff != null)
+        {
+            totalDefense += defenseBuff.Value; // +5 defense
+        }
+
+        return totalDefense;
+    }
+
+    public int ApplyIncomingDamageModifiers(int damage)
+    {
+        // Berserker Rage increases damage taken by 50%
+        var rageBuff = PlayerBuffs.FirstOrDefault(b => b.Type == BuffType.BerserkerRage);
+        if (rageBuff != null)
+        {
+            damage = (int)(damage * 1.5);
+        }
+
+        return damage;
+    }
+
+    public bool IsEnemyStunned()
+    {
+        return EnemyBuffs.Any(b => b.Type == BuffType.Stunned);
+    }
+
+    public bool IsInDefensiveStance()
+    {
+        return PlayerBuffs.Any(b => b.Type == BuffType.DefensiveStance);
+    }
+
+    public void TickBuffs()
+    {
+        // Decrement player buff durations
+        for (int i = PlayerBuffs.Count - 1; i >= 0; i--)
+        {
+            PlayerBuffs[i].TurnsRemaining--;
+            if (PlayerBuffs[i].TurnsRemaining <= 0)
+            {
+                PlayerBuffs.RemoveAt(i);
+            }
+        }
+
+        // Decrement enemy buff durations
+        for (int i = EnemyBuffs.Count - 1; i >= 0; i--)
+        {
+            EnemyBuffs[i].TurnsRemaining--;
+            if (EnemyBuffs[i].TurnsRemaining <= 0)
+            {
+                EnemyBuffs.RemoveAt(i);
+            }
+        }
+    }
+
+    public void ClearCombatBuffsAndSkills()
+    {
+        PlayerBuffs.Clear();
+        EnemyBuffs.Clear();
+        _usedOncePerCombatSkills.Clear();
+        LastSkillUsed = "";
+        _enemyStunResistance = 0; // Reset stun resistance for new combat
+    }
+
+    public List<Skill> GetAvailableSkills()
+    {
+        return Skill.GetAvailableSkills(PlayerLevel);
+    }
+
+    public string GetActiveBuffsDisplay()
+    {
+        var buffs = new List<string>();
+        foreach (var buff in PlayerBuffs)
+        {
+            string buffName = buff.Type switch
+            {
+                BuffType.BerserkerRage => "🔥RAGE",
+                BuffType.DefensiveStance => "🛡️DEF",
+                _ => buff.Type.ToString()
+            };
+            buffs.Add($"{buffName}({buff.TurnsRemaining})");
+        }
+        return buffs.Count > 0 ? string.Join(" ", buffs) : "";
+    }
+
+    public void QueueSkillForNextRound(Skill skill)
+    {
+        QueuedSkill = skill;
+    }
+
+    public void ClearQueuedSkill()
+    {
+        QueuedSkill = null;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
 
     public void Start()
     {
@@ -2099,37 +2305,101 @@ public class RPGGame
 
         CombatLog = string.Empty;
 
-        CombatAction actualPlayerAction = playerAction;
-        if (PlayerStamina < 3 && playerAction == CombatAction.Attack)
+        // === GENERATION 35: SKILL SYSTEM ===
+        // Handle skill usage
+        if (playerAction == CombatAction.UseSkill && QueuedSkill != null)
         {
-            actualPlayerAction = CombatAction.Defend;
-            CombatLog += "No stamina! ";
+            var (success, message) = UseSkill(QueuedSkill);
+            CombatLog += message + " ";
+
+            // Skills consume stamina via UseSkill, so we don't deduct again
+            // For damage skills, we'll apply damage below
+            ClearQueuedSkill();
+        }
+        else
+        {
+            // Normal action stamina costs
+            CombatAction actualPlayerAction = playerAction;
+            if (PlayerStamina < 3 && playerAction == CombatAction.Attack)
+            {
+                actualPlayerAction = CombatAction.Defend;
+                CombatLog += "No stamina! ";
+            }
+
+            if (actualPlayerAction == CombatAction.Attack) PlayerStamina = Math.Max(0, PlayerStamina - 3);
+            else PlayerStamina = Math.Max(0, PlayerStamina - 1);
         }
 
-        if (actualPlayerAction == CombatAction.Attack) PlayerStamina = Math.Max(0, PlayerStamina - 3);
-        else PlayerStamina = Math.Max(0, PlayerStamina - 1);
+        bool playerAttacks = playerAction == CombatAction.Attack ||
+                            (playerAction == CombatAction.UseSkill && LastSkillUsed == "Power Strike") ||
+                            (playerAction == CombatAction.UseSkill && LastSkillUsed == "Shield Bash");
+        bool playerDefends = playerAction == CombatAction.Defend;
 
-        bool playerAttacks = actualPlayerAction == CombatAction.Attack;
-        bool playerDefends = actualPlayerAction == CombatAction.Defend;
+        // Defensive Stance prevents attacking
+        if (IsInDefensiveStance() && playerAttacks)
+        {
+            playerAttacks = false;
+            CombatLog += "[Defensive Stance] ";
+        }
+
         bool enemyAttacks = enemyAction == CombatAction.Attack;
         bool enemyDefends = enemyAction == CombatAction.Defend;
 
+        // Enemy is stunned - skips turn
+        bool enemyStunned = IsEnemyStunned();
+        if (enemyStunned)
+        {
+            enemyAttacks = false;
+            CombatLog += "[Enemy Stunned] ";
+        }
+
+        // Player attacks (with skill damage multipliers)
         if (playerAttacks && !enemyDefends && playerHitType != HitType.Miss)
         {
-            int damage = playerHitType == HitType.Critical ? PlayerStrength * 2 : PlayerStrength;
-            EnemyHP = Math.Max(0, EnemyHP - damage);
-            CombatLog += playerHitType == HitType.Critical ? $"CRIT {damage}! " : $"Hit {damage}! ";
+            int baseDamage = playerHitType == HitType.Critical ? GetEffectiveStrength() * 2 : GetEffectiveStrength();
+
+            // Apply skill damage multiplier if using a damage skill
+            if (LastSkillUsed == "Power Strike")
+            {
+                baseDamage = CalculateSkillDamage(Skill.PowerStrike, GetEffectiveStrength());
+                if (playerHitType == HitType.Critical) baseDamage *= 2;
+            }
+            else if (LastSkillUsed == "Shield Bash")
+            {
+                baseDamage = CalculateSkillDamage(Skill.ShieldBash, GetEffectiveStrength());
+                if (playerHitType == HitType.Critical) baseDamage *= 2;
+            }
+
+            // Apply Berserker Rage if active (for normal attacks)
+            if (LastSkillUsed == "" && PlayerBuffs.Any(b => b.Type == BuffType.BerserkerRage))
+            {
+                baseDamage *= 2;
+                CombatLog += "[RAGE] ";
+            }
+
+            EnemyHP = Math.Max(0, EnemyHP - baseDamage);
+            CombatLog += playerHitType == HitType.Critical ? $"CRIT {baseDamage}! " : $"Hit {baseDamage}! ";
         }
         else if (playerAttacks) CombatLog += "MISS! ";
 
+        // Enemy attacks (with defense buffs applied)
         if (enemyAttacks && !playerDefends && enemyHitType != HitType.Miss)
         {
             int damage = enemyHitType == HitType.Critical ? EnemyDamage * 2 : EnemyDamage;
-            int actualDamage = Math.Max(1, damage - PlayerDefense);
+            int effectiveDefense = ApplyDefenseBuffs(GetEffectiveDefense());
+            int actualDamage = Math.Max(1, damage - effectiveDefense);
+
+            // Apply damage modifiers (Berserker Rage increases damage taken)
+            actualDamage = ApplyIncomingDamageModifiers(actualDamage);
+
             PlayerHP = Math.Max(0, PlayerHP - actualDamage);
             CombatLog += enemyHitType == HitType.Critical ? $"{EnemyName} CRIT {actualDamage}! " : $"{EnemyName} {actualDamage}! ";
         }
-        else if (enemyAttacks) CombatLog += $"{EnemyName} misses! ";
+        else if (enemyAttacks && !enemyStunned) CombatLog += $"{EnemyName} misses! ";
+
+        // Tick buffs at end of round
+        TickBuffs();
+        LastSkillUsed = ""; // Clear skill for next round
 
         if (EnemyHP <= 0)
         {
@@ -2139,6 +2409,7 @@ public class RPGGame
             PlayerXP += xpGained;
             PlayerGold += 10;
             CombatLog += $"Victory! +10g +{xpGained}xp!";
+            ClearCombatBuffsAndSkills(); // Clear buffs when combat ends
         }
         else if (PlayerHP <= 0)
         {
@@ -2146,6 +2417,7 @@ public class RPGGame
             CombatEnded = true;
             RunEnded = true;
             CombatLog += "DEATH! Run ended!";
+            ClearCombatBuffsAndSkills();
         }
     }
 
