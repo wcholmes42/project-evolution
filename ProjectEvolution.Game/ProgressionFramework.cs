@@ -121,6 +121,10 @@ public class ResearchMetadata
 
 public class ProgressionFrameworkResearcher
 {
+    // VERSION TRACKING - Increment on each bug fix!
+    private const string TUNER_VERSION = "v2.0.0-deterministic-adaptive";
+    private static readonly DateTime BUILD_TIME = DateTime.Now;
+
     private static int _generation = 0;
     private static ProgressionFrameworkData? _bestFramework = null;
     private static double _bestFitness = 0;
@@ -255,7 +259,7 @@ public class ProgressionFrameworkResearcher
         Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
         Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
         Console.WriteLine("║    Discovers formulas → Generates code → Tests → Refines       ║");
-        Console.WriteLine("║     🔥 OPTIMIZED: Demoscene tricks + zero-allocation! 🔥       ║");
+        Console.WriteLine($"║     {TUNER_VERSION,-58} ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝\n");
 
         // Configure output path
@@ -364,16 +368,24 @@ public class ProgressionFrameworkResearcher
 
         // Load champion if exists
         LoadChampion();
+
+        // VERSION INFO - Always visible
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"\n📋 TUNER VERSION: {TUNER_VERSION}");
+        Console.WriteLine($"   Build time: {BUILD_TIME:yyyy-MM-dd HH:mm:ss}");
+        Console.ResetColor();
+        var versionLog = $"\n[{DateTime.Now:HH:mm:ss}] ═══ TUNER START ═══\n  Version: {TUNER_VERSION}\n  Build: {BUILD_TIME:yyyy-MM-dd HH:mm:ss}\n";
+        SafeFileWriter.SafeAppendAllText("progression_research.log", versionLog);
+
         if (_champion != null)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"🏆 Champion loaded: Gen {_championGeneration}, Fitness {_championFitness:F2}");
+            Console.WriteLine($"\n🏆 Champion loaded: Gen {_championGeneration}, Fitness {_championFitness:F2}");
             Console.WriteLine("   This is your rubric - new runs will be compared against it!");
             Console.ResetColor();
-            Console.WriteLine();
         }
 
-        Console.WriteLine("Press ESC to stop, any other key to start...");
+        Console.WriteLine("\nPress ESC to stop, any other key to start...");
         if (Console.ReadKey().Key == ConsoleKey.Escape) return;
 
         // === ANTI-FLICKER SETUP ===
