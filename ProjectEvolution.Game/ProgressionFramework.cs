@@ -370,8 +370,8 @@ public class ProgressionFrameworkResearcher
                 _generationsSinceImprovement++;
             }
 
-            // PHASE 4: Auto-save every 5 generations
-            if (_generation % AUTO_SAVE_INTERVAL_GENERATIONS == 0)
+            // PHASE 4: Auto-save every 50 generations (was 5 - reduced I/O for speed!)
+            if (_generation % 50 == 0)
             {
                 _currentPhase = "💾 Auto-save...";
                 if (_bestFramework != null)
@@ -388,8 +388,11 @@ public class ProgressionFrameworkResearcher
                 UpdateStatusLine();
             }
 
-            // Log progress
-            LogProgress(framework, fitness, improved);
+            // Log progress (only on improvement or every 50 gens to reduce I/O!)
+            if (improved || _generation % 50 == 0)
+            {
+                LogProgress(framework, fitness, improved);
+            }
 
             // Check for ESC or R (reset)
             if (Console.KeyAvailable)
@@ -2082,8 +2085,8 @@ public class SkillBalanceMetric : IFitnessMetric
         var result = new MetricResult { MetricName = Name };
         var scores = new List<double>();
 
-        // Test skill usage at key levels only (1, 3, 5, 7, 10) for speed
-        var testLevels = new[] { 1, 3, 5, 7, 10 };
+        // Test skill usage at 3 levels only (was 5, now 3 for speed: 1, 5, 10)
+        var testLevels = new[] { 1, 5, 10 };
         foreach (int level in testLevels)
         {
             int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
