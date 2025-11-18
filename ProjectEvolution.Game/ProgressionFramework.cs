@@ -186,10 +186,18 @@ public class ProgressionFrameworkResearcher
         return "❌ BROKEN - Unplayable, critical failures";
     }
 
-    private static string GetTimeToTargetEstimate(double currentFitness, double trend)
+    private static string GetTimeToTargetEstimate(double currentFitness, double trend, int stuckGens)
     {
+        // REALITY CHECK: If stuck for a long time, ETA is wrong!
+        if (stuckGens > 200)
+            return "STUCK! Auto-reset soon...";
+
+        if (stuckGens > 100)
+            return $"Plateauing ({stuckGens} stuck)";
+
         // Estimate how long to reach next quality tier
-        if (trend <= 0) return "Unknown (not improving)";
+        if (trend <= 0.01) return "Trend too low (<0.01/1k)";
+        if (trend < 0.05) return $"Slow ({trend:F2}/1k - may plateau)";
 
         double[] targets = { 70, 75, 80, 85, 90 };
         double nextTarget = targets.FirstOrDefault(t => t > currentFitness);
@@ -199,14 +207,17 @@ public class ProgressionFrameworkResearcher
         double fitnessNeeded = nextTarget - currentFitness;
         double gensNeeded = fitnessNeeded / (trend / 1000.0);
 
-        if (gensNeeded < 0) return "Unknown";
+        if (gensNeeded < 0 || gensNeeded > 1000000) return "Unknown (bad trend)";
 
         double minutesNeeded = gensNeeded / 600.0; // Assume 600 gen/s average
 
+        // Sanity check: If ETA > 2 hours, probably plateauing
+        if (minutesNeeded > 120)
+            return $">{minutesNeeded / 60:F0}hrs (likely plateau)";
+
         if (minutesNeeded < 5) return $"~{minutesNeeded:F0}min to {nextTarget:F0}";
         if (minutesNeeded < 60) return $"~{minutesNeeded:F0}min to {nextTarget:F0}";
-        if (minutesNeeded < 1440) return $"~{minutesNeeded / 60:F1}hrs to {nextTarget:F0}";
-        return $"~{minutesNeeded / 1440:F1}days to {nextTarget:F0}";
+        return $"~{minutesNeeded / 60:F1}hrs to {nextTarget:F0}";
     }
 
     private static double CalculateFitnessTrend()

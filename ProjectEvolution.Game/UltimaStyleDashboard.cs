@@ -90,7 +90,7 @@ public class UltimaStyleDashboard
         // COLUMN 3 (Right): Fitness Trend, Sparkline, Quality Guide
         // ═══════════════════════════════════════════════════════════════
 
-        DrawColumn3_TrendAndGuide(col1Width + col2Width, 4, col3Width, fitnessHistory, fitness);
+        DrawColumn3_TrendAndGuide(col1Width + col2Width, 4, col3Width, fitnessHistory, fitness, stuckGens);
 
         // ═══════════════════════════════════════════════════════════════
         // FOOTER: Controls and auto-reset status
@@ -222,7 +222,7 @@ public class UltimaStyleDashboard
         _screen.WriteAt(x + 5, row++, $"DropRate: {framework.Loot.EquipmentDropRate:F0}%  (Gear chance)", ConsoleColor.White);
     }
 
-    private void DrawColumn3_TrendAndGuide(int x, int y, int width, Queue<(int gen, double fit)> history, double currentFitness)
+    private void DrawColumn3_TrendAndGuide(int x, int y, int width, Queue<(int gen, double fit)> history, double currentFitness, int stuckGens = 0)
     {
         int row = y;
 
@@ -269,22 +269,53 @@ public class UltimaStyleDashboard
 
                 _screen.WriteAt(x + 3, row++, $"Slope: +{slope:F3}/1k gens", slopeColor);
 
-                // ETA to next tier
+                // ETA to next tier (with REALITY CHECKS!)
                 double[] targets = { 70, 75, 80, 85, 90 };
                 double nextTarget = targets.FirstOrDefault(t => t > currentFitness);
 
-                if (nextTarget > 0 && slope > 0.01)
+                if (nextTarget > 0)
                 {
-                    double needed = nextTarget - currentFitness;
-                    double gensNeeded = needed / (slope / 1000.0);
-                    double minutesNeeded = gensNeeded / 600.0;
+                    // REALITY CHECK: If stuck for long time, trend data is stale!
+                    if (stuckGens > 200)
+                    {
+                        _screen.WriteAt(x + 3, row++, "ETA: STUCK! Auto-reset soon...", ConsoleColor.Red);
+                    }
+                    else if (stuckGens > 100)
+                    {
+                        _screen.WriteAt(x + 3, row++, $"ETA: Plateauing ({stuckGens} stuck)", ConsoleColor.DarkYellow);
+                    }
+                    else if (slope < 0.05)
+                    {
+                        _screen.WriteAt(x + 3, row++, $"ETA: Trend too low ({slope:F2}/1k)", ConsoleColor.DarkYellow);
+                    }
+                    else if (slope > 0.01)
+                    {
+                        double needed = nextTarget - currentFitness;
+                        double gensNeeded = needed / (slope / 1000.0);
+                        double minutesNeeded = gensNeeded / 600.0;
 
-                    string eta = minutesNeeded < 5 ? $"{minutesNeeded:F0}min" :
-                                minutesNeeded < 60 ? $"{minutesNeeded:F0}min" :
-                                minutesNeeded < 1440 ? $"{minutesNeeded / 60:F1}hrs" :
-                                $"{minutesNeeded / 1440:F1}days";
+                        // Reality check: If ETA > 2 hours, show warning
+                        if (minutesNeeded > 120)
+                        {
+                            _screen.WriteAt(x + 3, row++, $"ETA: >{minutesNeeded / 60:F0}hrs (may plateau)", ConsoleColor.DarkYellow);
+                        }
+                        else
+                        {
+                            string eta = minutesNeeded < 5 ? $"{minutesNeeded:F0}min" :
+                                        minutesNeeded < 60 ? $"{minutesNeeded:F0}min" :
+                                        $"{minutesNeeded / 60:F1}hrs";
 
-                    _screen.WriteAt(x + 3, row++, $"ETA to {nextTarget:F0}: ~{eta}", ConsoleColor.Cyan);
+                            ConsoleColor etaColor = minutesNeeded < 30 ? ConsoleColor.Green :
+                                                   minutesNeeded < 120 ? ConsoleColor.Yellow :
+                                                   ConsoleColor.DarkYellow;
+
+                            _screen.WriteAt(x + 3, row++, $"ETA to {nextTarget:F0}: ~{eta}", etaColor);
+                        }
+                    }
+                    else
+                    {
+                        _screen.WriteAt(x + 3, row++, "ETA: Unknown (no trend)", ConsoleColor.Gray);
+                    }
                 }
             }
         }
