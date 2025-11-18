@@ -90,7 +90,7 @@ public class UltimaStyleDashboard
         // COLUMN 3 (Right): Fitness Trend, Sparkline, Quality Guide
         // ═══════════════════════════════════════════════════════════════
 
-        DrawColumn3_TrendAndGuide(col1Width + col2Width, 4, col3Width, fitnessHistory, fitness, stuckGens);
+        DrawColumn3_TrendAndGuide(col1Width + col2Width, 4, col3Width, fitnessHistory, fitness, stuckGens, generation, genPerSec);
 
         // ═══════════════════════════════════════════════════════════════
         // FOOTER: Controls and auto-reset status
@@ -222,19 +222,19 @@ public class UltimaStyleDashboard
         _screen.WriteAt(x + 5, row++, $"DropRate: {framework.Loot.EquipmentDropRate:F0}%  (Gear chance)", ConsoleColor.White);
     }
 
-    private void DrawColumn3_TrendAndGuide(int x, int y, int width, Queue<(int gen, double fit)> history, double currentFitness, int stuckGens = 0)
+    private void DrawColumn3_TrendAndGuide(int x, int y, int width, Queue<(int gen, double fit)> history, double currentFitness, int stuckGens = 0, int currentGen = 0, double genPerSec = 600)
     {
         int row = y;
 
         // Box: Fitness Trend
-        _screen.WriteBox(x + 1, row, width - 2, 15, "FITNESS TREND", ConsoleColor.Magenta);
+        _screen.WriteBox(x + 1, row, width - 2, 18, "FITNESS TREND", ConsoleColor.Magenta);
         row += 2;
 
         if (history.Count >= 3)
         {
-            var data = history.TakeLast(40).ToArray(); // Show more points in wider display
-            double minFit = data.Min(d => d.fit);
-            double maxFit = data.Max(d => d.fit);
+            var data = history.TakeLast(40).ToArray();
+            double minFit = data.Length > 0 ? data.Min(d => d.fit) : 0;
+            double maxFit = data.Length > 0 ? data.Max(d => d.fit) : 100;
             double range = maxFit - minFit;
 
             // Sparkline
@@ -253,7 +253,7 @@ public class UltimaStyleDashboard
             _screen.WriteAt(x + 3, row++, sparkline, ConsoleColor.Cyan);
             _screen.WriteAt(x + 3, row++, $"Range: {minFit:F1} → {maxFit:F1}", ConsoleColor.Gray);
 
-            // Calculate trend
+            // Calculate trend and check if data is STALE
             if (data.Length >= 10)
             {
                 var oldest = data[0];
@@ -262,55 +262,74 @@ public class UltimaStyleDashboard
                 double fitDelta = newest.fit - oldest.fit;
                 double slope = genDelta > 0 ? fitDelta / genDelta * 1000 : 0;
 
+                // CRITICAL: Check if trend data is STALE!
+                int gensSinceLastImprovement = currentGen - newest.gen;
+                bool trendStale = gensSinceLastImprovement > 50; // Trend from >50 gens ago = stale!
+
                 ConsoleColor slopeColor = slope > 0.5 ? ConsoleColor.Green :
                                          slope > 0.1 ? ConsoleColor.Yellow :
                                          slope > 0 ? ConsoleColor.DarkYellow :
                                          ConsoleColor.Red;
 
-                _screen.WriteAt(x + 3, row++, $"Slope: +{slope:F3}/1k gens", slopeColor);
+                if (trendStale)
+                {
+                    _screen.WriteAt(x + 3, row++, $"Slope: +{slope:F3}/1k (STALE!)", ConsoleColor.Red);
+                    _screen.WriteAt(x + 3, row++, $"  Last improve: {gensSinceLastImprovement} gens ago", ConsoleColor.DarkGray);
+                }
+                else
+                {
+                    _screen.WriteAt(x + 3, row++, $"Slope: +{slope:F3}/1k gens", slopeColor);
+                }
 
-                // ETA to next tier (with REALITY CHECKS!)
+                // ETA calculation with CORRECT MATH
                 double[] targets = { 70, 75, 80, 85, 90 };
                 double nextTarget = targets.FirstOrDefault(t => t > currentFitness);
 
                 if (nextTarget > 0)
                 {
-                    // REALITY CHECK: If stuck for long time, trend data is stale!
-                    if (stuckGens > 200)
+                    // REALITY CHECK #1: Trend data is stale (no recent improvements)
+                    if (trendStale || stuckGens > 100)
                     {
-                        _screen.WriteAt(x + 3, row++, "ETA: STUCK! Auto-reset soon...", ConsoleColor.Red);
+                        _screen.WriteAt(x + 3, row++, $"ETA: STALE! Stuck {stuckGens} gens", ConsoleColor.Red);
                     }
-                    else if (stuckGens > 100)
-                    {
-                        _screen.WriteAt(x + 3, row++, $"ETA: Plateauing ({stuckGens} stuck)", ConsoleColor.DarkYellow);
-                    }
+                    // REALITY CHECK #2: Slope too low
                     else if (slope < 0.05)
                     {
-                        _screen.WriteAt(x + 3, row++, $"ETA: Trend too low ({slope:F2}/1k)", ConsoleColor.DarkYellow);
+                        _screen.WriteAt(x + 3, row++, $"ETA: Plateau ({slope:F2}/1k too low)", ConsoleColor.DarkYellow);
                     }
+                    // Calculate ETA with ACTUAL throughput
                     else if (slope > 0.01)
                     {
-                        double needed = nextTarget - currentFitness;
-                        double gensNeeded = needed / (slope / 1000.0);
-                        double minutesNeeded = gensNeeded / 600.0;
+                        double fitnessNeeded = nextTarget - currentFitness;
+                        double gensNeeded = fitnessNeeded / (slope / 1000.0); // How many gens to gain that fitness
+                        double secondsNeeded = gensNeeded / Math.Max(1, genPerSec); // Use ACTUAL throughput!
 
-                        // Reality check: If ETA > 2 hours, show warning
-                        if (minutesNeeded > 120)
+                        string eta;
+                        ConsoleColor etaColor;
+
+                        if (secondsNeeded < 60)
                         {
-                            _screen.WriteAt(x + 3, row++, $"ETA: >{minutesNeeded / 60:F0}hrs (may plateau)", ConsoleColor.DarkYellow);
+                            eta = $"{secondsNeeded:F0}sec";
+                            etaColor = ConsoleColor.Green;
+                        }
+                        else if (secondsNeeded < 3600)
+                        {
+                            eta = $"{secondsNeeded / 60:F1}min";
+                            etaColor = secondsNeeded < 1800 ? ConsoleColor.Green : ConsoleColor.Yellow;
+                        }
+                        else if (secondsNeeded < 86400)
+                        {
+                            eta = $"{secondsNeeded / 3600:F1}hrs";
+                            etaColor = ConsoleColor.Yellow;
                         }
                         else
                         {
-                            string eta = minutesNeeded < 5 ? $"{minutesNeeded:F0}min" :
-                                        minutesNeeded < 60 ? $"{minutesNeeded:F0}min" :
-                                        $"{minutesNeeded / 60:F1}hrs";
-
-                            ConsoleColor etaColor = minutesNeeded < 30 ? ConsoleColor.Green :
-                                                   minutesNeeded < 120 ? ConsoleColor.Yellow :
-                                                   ConsoleColor.DarkYellow;
-
-                            _screen.WriteAt(x + 3, row++, $"ETA to {nextTarget:F0}: ~{eta}", etaColor);
+                            eta = $"{secondsNeeded / 86400:F1}days";
+                            etaColor = ConsoleColor.DarkYellow;
                         }
+
+                        _screen.WriteAt(x + 3, row++, $"ETA to {nextTarget:F0}: ~{eta}", etaColor);
+                        _screen.WriteAt(x + 3, row++, $"  ({gensNeeded:F0} gens @ {genPerSec:F0}/s)", ConsoleColor.DarkGray);
                     }
                     else
                     {
