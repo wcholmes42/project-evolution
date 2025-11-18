@@ -147,8 +147,8 @@ public class ProgressionFrameworkResearcher
     private const int AUTO_RESET_STUCK_GENS = 150; // Must be stuck this long
 
     // Anti-flicker settings
-    private const int UI_UPDATE_INTERVAL = 5; // Update UI every N generations
-    private const int CYCLE_DELAY_MS = 100; // Delay between generations (balance flicker vs speed)
+    private const int UI_UPDATE_INTERVAL = 10; // Update UI every N generations (reduce for speed)
+    private const int CYCLE_DELAY_MS = 0; // NO DELAY - max speed!
 
     // PARALLEL EVOLUTION: Run multiple candidates simultaneously
     private static int POPULATION_SIZE = 16; // Configurable based on performance mode
@@ -168,22 +168,11 @@ public class ProgressionFrameworkResearcher
 
     public static void RunContinuousResearch()
     {
-        // SET PROCESS TO IDLE PRIORITY - Don't interfere with other work!
-        try
-        {
-            System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.Idle;
-            Console.WriteLine("✅ Process priority set to IDLE - won't interfere with other tasks");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️  Could not set priority (may need admin): {ex.Message}");
-        }
-
         Console.Clear();
         Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
         Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
         Console.WriteLine("║    Discovers formulas → Generates code → Tests → Refines       ║");
-        Console.WriteLine("║           🐌 IDLE PRIORITY - Runs in background                ║");
+        Console.WriteLine("║           🔥 MAXIMUM PERFORMANCE - All cores at 100%!          ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝\n");
 
         // Configure output path
@@ -231,41 +220,17 @@ public class ProgressionFrameworkResearcher
         }
         Console.WriteLine("✅ Write access confirmed!\n");
 
-        // Performance mode selection
-        Console.WriteLine("🚀 Performance Mode:");
-        Console.WriteLine("   [1] IDLE - Low priority, use spare CPU (population: 8)");
-        Console.WriteLine("   [2] BACKGROUND - Normal priority (population: 16)");
-        Console.WriteLine("   [3] MAXIMUM - All cores at full blast (population: 32)");
-        Console.Write("\nSelect mode [1-3] (default: 1 IDLE): ");
+        // MAXIMUM PERFORMANCE for local testing - melt that hardware!
+        POPULATION_SIZE = 32; // Max throughput
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("🔥 MAXIMUM PERFORMANCE MODE");
+        Console.ResetColor();
+        Console.WriteLine($"   Population: {POPULATION_SIZE} candidates per generation");
+        Console.WriteLine($"   CPU Cores: {Environment.ProcessorCount} threads");
+        Console.WriteLine("   Priority: Normal (100% CPU usage expected)");
+        Console.WriteLine("   Throttle: NONE - hardware melting mode enabled! 🌡️\n");
 
-        var perfChoice = Console.ReadKey(intercept: true);
-        Console.WriteLine();
-
-        if (perfChoice.Key == ConsoleKey.D2 || perfChoice.KeyChar == '2')
-        {
-            POPULATION_SIZE = 16;
-            Console.WriteLine("✅ BACKGROUND mode selected (16 candidates)");
-        }
-        else if (perfChoice.Key == ConsoleKey.D3 || perfChoice.KeyChar == '3')
-        {
-            POPULATION_SIZE = 32;
-            try
-            {
-                System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.Normal;
-                Console.WriteLine("✅ MAXIMUM mode - Priority set to NORMAL, Population: 32");
-            }
-            catch
-            {
-                Console.WriteLine("✅ MAXIMUM mode selected (32 candidates)");
-            }
-        }
-        else
-        {
-            POPULATION_SIZE = 8; // IDLE mode default
-            Console.WriteLine("✅ IDLE mode selected (8 candidates, won't interfere with work)");
-        }
-
-        Console.WriteLine("\nThis system will:");
+        Console.WriteLine("This system will:");
         Console.WriteLine("  1️⃣  Discover optimal progression formulas");
         Console.WriteLine("  2️⃣  Simulate economy over 10 levels");
         Console.WriteLine("  3️⃣  Balance gold income vs equipment costs");
@@ -390,19 +355,16 @@ public class ProgressionFrameworkResearcher
 
             var results = new (ProgressionFrameworkData framework, double fitness)[POPULATION_SIZE];
 
-            // Configure parallel options for IDLE priority (be nice to other processes)
+            // MAXIMUM PARALLELISM - use all cores at 100%!
             var parallelOptions = new ParallelOptions
             {
-                MaxDegreeOfParallelism = Environment.ProcessorCount // Use all cores but yield when needed
+                MaxDegreeOfParallelism = Environment.ProcessorCount
             };
 
             Parallel.For(0, POPULATION_SIZE, parallelOptions, i =>
             {
                 double fitness = EvaluateFramework(candidates[i]);
                 results[i] = (candidates[i], fitness);
-
-                // Yield CPU to other processes periodically (important for IDLE priority)
-                if (i % 4 == 0) Thread.Sleep(0); // Cooperative multitasking
             });
 
             // Find best from population
@@ -429,7 +391,7 @@ public class ProgressionFrameworkResearcher
                     // Full redraw when improved to show new formulas
                     Console.SetCursorPosition(0, 0);
                     RenderResearchDashboard();
-                    Thread.Sleep(300); // Brief pause to see new values
+                    // NO PAUSE - max speed!
                 }
                 else
                 {
@@ -485,8 +447,7 @@ public class ProgressionFrameworkResearcher
                 PerformReset(manual: false);
             }
 
-            // Controlled cycle - prevent flicker while maintaining responsiveness
-            Thread.Sleep(CYCLE_DELAY_MS);
+            // NO DELAY - max speed! UI updates every 10 gens to prevent flicker
         }
 
         // === CLEANUP ON EXIT ===
@@ -2360,13 +2321,12 @@ public static class FitnessEvaluator
 
         var parallelOptions = new ParallelOptions
         {
-            MaxDegreeOfParallelism = 6 // 6 metrics max
+            MaxDegreeOfParallelism = 6 // 6 metrics max - full speed!
         };
 
         Parallel.For(0, _metrics.Count, parallelOptions, i =>
         {
             metricResults[i] = _metrics[i].Evaluate(framework);
-            Thread.Sleep(0); // Yield to other processes
         });
 
         var results = metricResults.ToList();
