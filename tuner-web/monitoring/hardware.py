@@ -16,14 +16,16 @@ class HardwareMonitor:
     """Monitor system resources and auto-throttle"""
     
     def __init__(self):
+        global HAS_NVIDIA
         self.running = False
         self.gpu_handle = None
-        
+        self.has_nvidia = HAS_NVIDIA
+
         # Thresholds for auto-throttle
         self.cpu_throttle_threshold = 80  # If other processes use >80%, throttle
         self.gpu_throttle_threshold = 70
         self.temp_throttle_threshold = 80  # °C
-        
+
         # Current stats
         self.stats = {
             "cpu_percent": 0.0,
@@ -37,15 +39,15 @@ class HardwareMonitor:
             "should_throttle": False,
             "throttle_reason": None
         }
-        
-        if HAS_NVIDIA:
+
+        if self.has_nvidia:
             try:
                 pynvml.nvmlInit()
                 self.gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(0)
                 print("✅ NVIDIA GPU monitoring enabled")
             except Exception as e:
                 print(f"⚠️  NVIDIA monitoring failed: {e}")
-                HAS_NVIDIA = False
+                self.has_nvidia = False
     
     async def start(self):
         """Start monitoring loop"""
@@ -55,12 +57,12 @@ class HardwareMonitor:
     async def stop(self):
         """Stop monitoring"""
         self.running = False
-        if HAS_NVIDIA and self.gpu_handle:
+        if self.has_nvidia and self.gpu_handle:
             pynvml.nvmlShutdown()
-    
+
     def has_gpu(self) -> bool:
         """Check if GPU is available"""
-        return HAS_NVIDIA and self.gpu_handle is not None
+        return self.has_nvidia and self.gpu_handle is not None
     
     def get_gpu_info(self) -> str:
         """Get GPU name"""
