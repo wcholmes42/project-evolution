@@ -1,7 +1,7 @@
 ﻿# PROGRESSION FRAMEWORK - AUTO-GENERATED
-**Generated:** 11/18/2025 9:22:24 AM
-**Generation:** 606105
-**Fitness Score:** 69.40
+**Generated:** 11/18/2025 9:23:48 AM
+**Generation:** 622306
+**Fitness Score:** 69.41
 **Economy Status:** ✅ HEALTHY
 
 ## Player Progression
@@ -19,22 +19,22 @@
 
 ## Economy & Gold
 - **Base Gold per Combat:** 10g
-- **Gold Scaling:** +3.53g per enemy level
-- **Gold Formula:** `BaseGold + (EnemyLevel * 3.53)`
+- **Gold Scaling:** +4.85g per enemy level
+- **Gold Formula:** `BaseGold + (EnemyLevel * 4.85)`
 
 ### Economic Progression Simulation:
 | Level | Gold Earned | Cumulative | Can Afford | Status |
 |-------|-------------|------------|------------|--------|
-|  1 |     78g |     128g | Tier 2 | ✅ |
-|  2 |     85g |     183g | Tier 2 | ✅ |
-|  3 |    150g |     303g | Tier 3 | ✅ |
-|  4 |    168g |     366g | Tier 4 | ✅ |
-|  5 |    135g |     396g | Tier 4 | ✅ |
-|  6 |    235g |     401g | Tier 5 | ✅ |
-|  7 |    306g |     477g | Tier 5 | ✅ |
-|  8 |    380g |     452g | Tier 5 | ✅ |
-|  9 |    520g |     567g | Tier 5 | ✅ |
-| 10 |    315g |     252g | Tier 5 | ✅ |
+|  1 |     84g |     134g | Tier 2 | ✅ |
+|  2 |     95g |     199g | Tier 2 | ✅ |
+|  3 |    170g |     339g | Tier 3 | ✅ |
+|  4 |    145g |     379g | Tier 4 | ✅ |
+|  5 |    170g |     444g | Tier 4 | ✅ |
+|  6 |    275g |     489g | Tier 5 | ✅ |
+|  7 |    215g |     474g | Tier 5 | ✅ |
+|  8 |    480g |     549g | Tier 5 | ✅ |
+|  9 |    481g |     625g | Tier 5 | ✅ |
+| 10 |    522g |     517g | Tier 5 | ✅ |
 
 ## Loot & Treasure
 - **Base Treasure:** 18g
