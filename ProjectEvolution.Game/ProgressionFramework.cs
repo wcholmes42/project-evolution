@@ -146,6 +146,18 @@ public class ProgressionFrameworkResearcher
     private const int UI_UPDATE_INTERVAL = 5; // Update UI every N generations
     private const int CYCLE_DELAY_MS = 200; // Delay between generations (was 50ms)
 
+    // TUNING THE TUNER: Progressive difficulty based on champion performance
+    public static double GetDifficultyMultiplier()
+    {
+        // As champion improves, make metrics more demanding
+        if (_championFitness >= 90) return 1.5;  // HARD MODE: Champion mastered the game
+        if (_championFitness >= 85) return 1.3;  // ADVANCED: Tighten tolerances
+        if (_championFitness >= 75) return 1.1;  // INTERMEDIATE: Slightly harder
+        return 1.0; // BEGINNER: Standard difficulty
+    }
+
+    public static double GetChampionFitness() => _championFitness;
+
     public static void RunContinuousResearch()
     {
         Console.Clear();
@@ -1516,6 +1528,19 @@ public class ProgressionFrameworkResearcher
         // Footer with controls
         SafeWriteLine(row++, "", ConsoleColor.Black);
         SafeWriteLine(row++, "────────────────────────────────────────────────────────────────", ConsoleColor.DarkGray);
+
+        // Show difficulty tier (tuning the tuner!)
+        double diffMult = GetDifficultyMultiplier();
+        string diffTier = diffMult >= 1.5 ? "🔥 HARD MODE" :
+                         diffMult >= 1.3 ? "⚡ ADVANCED" :
+                         diffMult >= 1.1 ? "📈 INTERMEDIATE" :
+                         "🌱 BEGINNER";
+        ConsoleColor diffColor = diffMult >= 1.5 ? ConsoleColor.Red :
+                                diffMult >= 1.3 ? ConsoleColor.Yellow :
+                                diffMult >= 1.1 ? ConsoleColor.Cyan :
+                                ConsoleColor.Green;
+        SafeWriteLine(row++, $"Tuner Difficulty: {diffTier} ({diffMult:F1}×) - Thresholds get stricter as champion improves", diffColor);
+
         string autoResetStatus = _bestFitness >= AUTO_RESET_THRESHOLD
             ? $"Auto-reset in {AUTO_RESET_STUCK_GENS - _generationsSinceImprovement} gens (fitness ≥{AUTO_RESET_THRESHOLD})"
             : $"Auto-reset at fitness ≥{AUTO_RESET_THRESHOLD} + {AUTO_RESET_STUCK_GENS} stuck gens";
@@ -1568,12 +1593,32 @@ public class CombatBalanceMetric : IFitnessMetric
         var result = new MetricResult { MetricName = Name };
         var scores = new List<double>();
 
+        // Get difficulty multiplier based on champion performance
+        double difficultyMult = ProgressionFrameworkResearcher.GetDifficultyMultiplier();
+        double championFitness = ProgressionFrameworkResearcher.GetChampionFitness();
+        if (difficultyMult > 1.0)
+        {
+            result.Details.Add($"Difficulty: {difficultyMult:F1}× (Champion: {championFitness:F1})");
+        }
+
         // Test ALL levels 1-10, not just 1,3,5
         for (int level = 1; level <= 10; level++)
         {
             int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
-            int playerSTR = framework.PlayerProgression.BaseSTR + level;
-            int playerDEF = framework.PlayerProgression.BaseDEF + level;
+
+            // REALISTIC stat allocation: StatPointsPerLevel split between STR/DEF
+            // Use a balanced 60/40 split (slightly favor offense)
+            int statPoints = (level - 1) * framework.PlayerProgression.StatPointsPerLevel;
+            int strPoints = (int)(statPoints * 0.6);
+            int defPoints = statPoints - strPoints;
+
+            int playerSTR = framework.PlayerProgression.BaseSTR + strPoints;
+            int playerDEF = framework.PlayerProgression.BaseDEF + defPoints;
+
+            // Add AVERAGE equipment bonus (not best tier - realistic mid-game gear)
+            int equipmentTier = Math.Min(5, level / 3); // Slower gear progression than ideal
+            playerSTR += equipmentTier;
+            playerDEF += equipmentTier;
 
             int enemyHP = framework.EnemyProgression.BaseHP + (int)(level * framework.EnemyProgression.HPScalingCoefficient);
             int enemyDMG = framework.EnemyProgression.BaseDamage + (int)(level * framework.EnemyProgression.DamageScalingCoefficient);
@@ -1583,21 +1628,40 @@ public class CombatBalanceMetric : IFitnessMetric
             // Granular scoring based on combat quality
             double levelScore = 0;
 
-            // 1. Win rate (0-40 points)
-            levelScore += combat.WinRate * 40;
+            // 1. Win rate (0-40 points) - PROGRESSIVE DIFFICULTY
+            // Window narrows as champion improves (tuning the tuner!)
+            double idealWinRate = 0.85; // Target center
+            double windowSize = 0.15 / difficultyMult; // Narrows at higher difficulty
+            double minWinRate = idealWinRate - windowSize;
+            double maxWinRate = idealWinRate + windowSize;
 
-            // 2. Time to kill - target 3-7 turns (0-40 points)
+            if (combat.WinRate >= minWinRate && combat.WinRate <= maxWinRate)
+                levelScore += 40; // Perfect - within acceptable window
+            else if (combat.WinRate < minWinRate)
+                levelScore += (combat.WinRate / minWinRate) * 40; // Too hard
+            else if (combat.WinRate > maxWinRate)
+                levelScore += Math.Max(0, 40 - (combat.WinRate - maxWinRate) * 200 * difficultyMult); // Too easy (penalize more at high difficulty)
+
+            // 2. Time to kill (0-40 points) - PROGRESSIVE DIFFICULTY
+            // Ideal: 5 turns, window narrows as champion improves
+            double idealTTK = 5.0;
+            double ttkWindow = 1.5 / difficultyMult; // 1.5 turns initially, narrows to 1 turn at hard mode
             double ttkScore = 0;
-            if (combat.AvgTurns >= 3 && combat.AvgTurns <= 7)
-                ttkScore = 40; // Perfect range
-            else if (combat.AvgTurns < 3)
-                ttkScore = Math.Max(0, 40 - (3 - combat.AvgTurns) * 20); // Too fast = boring
-            else if (combat.AvgTurns > 7)
-                ttkScore = Math.Max(0, 40 - (combat.AvgTurns - 7) * 5); // Too slow = grindy
+
+            double ttkDelta = Math.Abs(combat.AvgTurns - idealTTK);
+            if (ttkDelta <= ttkWindow)
+                ttkScore = 40 * (1.0 - (ttkDelta / ttkWindow) * 0.25); // Perfect to good range
+            else if (ttkDelta <= ttkWindow * 2)
+                ttkScore = 30 * (1.0 - (ttkDelta - ttkWindow) / ttkWindow); // Acceptable range
+            else
+                ttkScore = Math.Max(0, 20 - (ttkDelta - ttkWindow * 2) * 5 * difficultyMult); // Poor
+
             levelScore += ttkScore;
 
-            // 3. Consistency (0-20 points) - low variance is good
-            double varianceScore = Math.Max(0, 20 - combat.TurnVariance * 2);
+            // 3. Consistency (0-20 points) - PROGRESSIVE DIFFICULTY
+            // Higher difficulty = less tolerance for variance
+            double maxVariance = 6.0 / difficultyMult; // 6 turns variance at beginner, 4 at hard
+            double varianceScore = Math.Max(0, 20 * (1.0 - combat.TurnVariance / maxVariance));
             levelScore += varianceScore;
 
             scores.Add(levelScore);
