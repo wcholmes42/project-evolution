@@ -12,9 +12,9 @@
     "BaseHP": 10,
     "HPScalingCoefficient": 2.049354148062111,
     "BaseDamage": 4,
-    "DamageScalingCoefficient": 0.9332159340536298,
+    "DamageScalingCoefficient": 0.9852579602786612,
     "HPFormula": "BaseHP \u002B (PlayerLevel * 2.05)",
-    "DamageFormula": "BaseDamage \u002B (PlayerLevel * 0.93)"
+    "DamageFormula": "BaseDamage \u002B (PlayerLevel * 0.99)"
   },
   "Equipment": {
     "WeaponTiers": [
@@ -110,12 +110,12 @@
   },
   "Economy": {
     "BaseGoldPerCombat": 10,
-    "GoldScalingCoefficient": 3.367727048866324,
+    "GoldScalingCoefficient": 3.615829639423559,
     "LevelSnapshots": [
       {
         "Level": 1,
-        "ExpectedGoldEarned": 117,
-        "CumulativeGold": 167,
+        "ExpectedGoldEarned": 130,
+        "CumulativeGold": 180,
         "AffordableEquipmentTier": 2,
         "RecommendedEquipmentTier": 0,
         "EconomyHealthy": true,
@@ -123,8 +123,8 @@
       },
       {
         "Level": 2,
-        "ExpectedGoldEarned": 144,
-        "CumulativeGold": 281,
+        "ExpectedGoldEarned": 85,
+        "CumulativeGold": 235,
         "AffordableEquipmentTier": 3,
         "RecommendedEquipmentTier": 1,
         "EconomyHealthy": true,
@@ -132,8 +132,8 @@
       },
       {
         "Level": 3,
-        "ExpectedGoldEarned": 150,
-        "CumulativeGold": 401,
+        "ExpectedGoldEarned": 190,
+        "CumulativeGold": 395,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 1,
         "EconomyHealthy": true,
@@ -141,8 +141,8 @@
       },
       {
         "Level": 4,
-        "ExpectedGoldEarned": 161,
-        "CumulativeGold": 457,
+        "ExpectedGoldEarned": 120,
+        "CumulativeGold": 410,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 2,
         "EconomyHealthy": true,
@@ -150,8 +150,8 @@
       },
       {
         "Level": 5,
-        "ExpectedGoldEarned": 130,
-        "CumulativeGold": 482,
+        "ExpectedGoldEarned": 140,
+        "CumulativeGold": 445,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 2,
         "EconomyHealthy": true,
@@ -159,8 +159,8 @@
       },
       {
         "Level": 6,
-        "ExpectedGoldEarned": 230,
-        "CumulativeGold": 482,
+        "ExpectedGoldEarned": 235,
+        "CumulativeGold": 450,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 3,
         "EconomyHealthy": true,
@@ -168,8 +168,8 @@
       },
       {
         "Level": 7,
-        "ExpectedGoldEarned": 297,
-        "CumulativeGold": 549,
+        "ExpectedGoldEarned": 315,
+        "CumulativeGold": 535,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 3,
         "EconomyHealthy": true,
@@ -177,8 +177,8 @@
       },
       {
         "Level": 8,
-        "ExpectedGoldEarned": 360,
-        "CumulativeGold": 504,
+        "ExpectedGoldEarned": 380,
+        "CumulativeGold": 510,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 4,
         "EconomyHealthy": true,
@@ -186,8 +186,8 @@
       },
       {
         "Level": 9,
-        "ExpectedGoldEarned": 390,
-        "CumulativeGold": 489,
+        "ExpectedGoldEarned": 488,
+        "CumulativeGold": 593,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 4,
         "EconomyHealthy": true,
@@ -195,22 +195,22 @@
       },
       {
         "Level": 10,
-        "ExpectedGoldEarned": 301,
-        "CumulativeGold": 160,
+        "ExpectedGoldEarned": 276,
+        "CumulativeGold": 239,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 5,
         "EconomyHealthy": true,
         "Notes": "\u2705 Can afford progression"
       }
     ],
-    "GoldFormula": "BaseGold \u002B (EnemyLevel * 3.37)",
+    "GoldFormula": "BaseGold \u002B (EnemyLevel * 3.62)",
     "CanAffordProgression": true,
     "FirstUnaffordableTier": -1
   },
   "Loot": {
     "BaseTreasureGold": 11,
     "TreasurePerDungeonDepth": 36,
-    "EquipmentDropRate": 20,
+    "EquipmentDropRate": 21,
     "DungeonLoot": [],
     "TreasureFormula": "BaseTreasure \u002B (Depth * 36)"
   },
@@ -239,10 +239,10 @@
     "Warnings": []
   },
   "Metadata": {
-    "Timestamp": "2025-11-18T09:29:33.124168-08:00",
-    "SimulationsRun": 745000,
-    "Generation": 74500,
-    "OverallFitness": 78.38035982008996,
+    "Timestamp": "2025-11-18T09:34:24.120438-08:00",
+    "SimulationsRun": 1792000,
+    "Generation": 179200,
+    "OverallFitness": 78.63035982008996,
     "Version": "Generation 35"
   }
 }

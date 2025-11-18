@@ -160,6 +160,9 @@ public class ProgressionFrameworkResearcher
     private static int POPULATION_SIZE = 16; // Configurable based on performance mode
     private static readonly object _bestLock = new object(); // Thread-safe best tracking
 
+    // Ultima 4-style AAA UI - Rock-solid, zero flicker, full-screen
+    private static UltimaStyleDashboard? _ultimaDashboard = null;
+
     // TUNING THE TUNER: Progressive difficulty based on champion performance
     public static double GetDifficultyMultiplier()
     {
