@@ -382,17 +382,20 @@ public class ProgressionFrameworkResearcher
             SafeFileWriter.SafeWriteAllText("progression_summary.log", summaryHeader);
         }
 
+        // Initialize Ultima-style dashboard
+        _ultimaDashboard = new UltimaStyleDashboard();
+        _ultimaDashboard.Initialize();
+
         // Initial evaluation to populate metrics before first render
         if (_bestFramework != null)
         {
             _bestFitness = EvaluateFramework(_bestFramework);
         }
 
-        // Initial render once
-        Console.Clear();
-        if (_bestFramework != null)
+        // Initial render with new UI
+        if (_bestFramework != null && _ultimaDashboard != null)
         {
-            RenderResearchDashboard();
+            RenderUltimaDashboard();
         }
 
         while (true)
@@ -404,7 +407,7 @@ public class ProgressionFrameworkResearcher
             if (_generationsSinceImprovement > 100)
             {
                 _currentPhase = "🔄 RANDOM RESTART - Exploring new space...";
-                if (_generation % UI_UPDATE_INTERVAL == 0) UpdateStatusLine();
+                if (_generation % UI_UPDATE_INTERVAL == 0) RenderUltimaDashboard();
                 framework = CreateBaselineFramework();
                 _generationsSinceImprovement = 0;
                 Thread.Sleep(500);
@@ -441,8 +444,7 @@ public class ProgressionFrameworkResearcher
                 _lastSaveTime = DateTime.Now;
 
                 // Full redraw when improved
-                Console.SetCursorPosition(0, 0);
-                RenderResearchDashboard();
+                RenderUltimaDashboard();
             }
             else
             {
@@ -460,11 +462,11 @@ public class ProgressionFrameworkResearcher
                 _lastSaveTime = DateTime.Now;
             }
 
-            // PHASE 5: Update status
+            // PHASE 5: Update UI (uses double-buffered Ultima dashboard)
             _currentPhase = improved ? "✅ Improved!" : "🔄 Searching...";
             if (_generation % UI_UPDATE_INTERVAL == 0)
             {
-                UpdateStatusLine();
+                RenderUltimaDashboard();
             }
 
             // Log progress (only on improvement or every 50 gens to reduce I/O!)
@@ -480,7 +482,7 @@ public class ProgressionFrameworkResearcher
                 if (key == ConsoleKey.Escape)
                 {
                     _currentPhase = "💾 Saving...";
-                    UpdateStatusLine();
+                    RenderUltimaDashboard();
                     if (_bestFramework != null)
                     {
                         SaveFrameworkToJSON(_bestFramework);
@@ -518,7 +520,7 @@ public class ProgressionFrameworkResearcher
             if (shouldAutoReset)
             {
                 _currentPhase = $"🔄 AUTO-RESET: {resetReason}";
-                if (_generation % UI_UPDATE_INTERVAL == 0) UpdateStatusLine();
+                RenderUltimaDashboard();
                 Thread.Sleep(1000); // Show message
                 PerformReset(manual: false);
             }
@@ -632,22 +634,16 @@ public class ProgressionFrameworkResearcher
 
     private static void PerformReset(bool manual)
     {
-        _currentPhase = manual ? "🔄 MANUAL RESET - Saving champion..." : "🔄 AUTO RESET - Near optimal, exploring new space...";
-        Console.SetCursorPosition(0, 6);
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write(_currentPhase.PadRight(80));
-        Console.ResetColor();
-        Thread.Sleep(1000); // Let user see the message
+        _currentPhase = manual ? "🔄 MANUAL RESET - Saving champion..." : "🔄 AUTO RESET - Plateau detected, exploring new space...";
+        RenderUltimaDashboard();
+        Thread.Sleep(1000);
 
         // Save current best as champion
         if (_bestFramework != null && _bestFitness > _championFitness)
         {
             SaveChampion();
             _currentPhase = $"🏆 NEW CHAMPION! Fitness: {_bestFitness:F2} (was {_championFitness:F2})";
-            Console.SetCursorPosition(0, 6);
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(_currentPhase.PadRight(80));
-            Console.ResetColor();
+            RenderUltimaDashboard();
             Thread.Sleep(2000);
         }
 
@@ -671,8 +667,7 @@ public class ProgressionFrameworkResearcher
         _generationsSinceImprovement = 0;
 
         // Full redraw
-        Console.SetCursorPosition(0, 0);
-        RenderResearchDashboard();
+        RenderUltimaDashboard();
     }
 
     private static ProgressionFrameworkData CreateBaselineFramework()
@@ -1477,20 +1472,36 @@ public class ProgressionFrameworkResearcher
         SafeFileWriter.SafeWriteAllText("PROGRESSION_FRAMEWORK.md", readme.ToString(), silent: true);
     }
 
+    private static void RenderUltimaDashboard()
+    {
+        if (_bestFramework == null || _ultimaDashboard == null) return;
+
+        TimeSpan elapsed = DateTime.Now - _startTime;
+        double genPerSec = 0;
+
+        if (_recentGenerationTimes.Count > 0)
+            genPerSec = _recentGenerationTimes.Average();
+
+        _ultimaDashboard.RenderResearchDashboard(
+            generation: _generation,
+            fitness: _bestFitness,
+            championFitness: _championFitness,
+            championGen: _championGeneration,
+            genPerSec: genPerSec,
+            stuckGens: _generationsSinceImprovement,
+            resets: _resetCount,
+            phase: _currentPhase,
+            elapsed: elapsed,
+            framework: _bestFramework,
+            metrics: _latestMetricResults,
+            fitnessHistory: _fitnessHistory
+        );
+    }
+
     private static void RenderResearchDashboard()
     {
-        if (_bestFramework == null) return;
-
-        // Clear and redraw header only
-        Console.Clear();
-        Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
-        Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
-        Console.WriteLine("║     🔥 OPTIMIZED: Demoscene tricks + zero-allocation! 🔥       ║");
-        Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
-        Console.WriteLine();
-
-        // Use UpdateStatusLine for all the dynamic content (anti-flicker)
-        UpdateStatusLine();
+        // Legacy method - redirects to Ultima dashboard
+        RenderUltimaDashboard();
     }
 
     private static string GenerateBar(double value, int width)
@@ -1533,346 +1544,6 @@ public class ProgressionFrameworkResearcher
         }
     }
 
-    private static void UpdateStatusLine()
-    {
-        if (_bestFramework == null)
-        {
-            // Should never happen, but if it does, show error
-            try
-            {
-                Console.SetCursorPosition(0, 6);
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("⚠️ ERROR: No framework data available!".PadRight(80));
-                Console.ResetColor();
-            }
-            catch { }
-            return;
-        }
-
-        TimeSpan elapsed = DateTime.Now - _startTime;
-        TimeSpan sinceSave = DateTime.Now - _lastSaveTime;
-
-        // Detect window size and adapt
-        int consoleWidth = 80;
-        int consoleHeight = 30;
-        try
-        {
-            consoleWidth = Console.WindowWidth;
-            consoleHeight = Console.WindowHeight;
-        }
-        catch
-        {
-            // If console size detection fails, use defaults
-        }
-
-        // Detect window resize and trigger full redraw
-        if (_lastConsoleWidth != consoleWidth || _lastConsoleHeight != consoleHeight)
-        {
-            _lastConsoleWidth = consoleWidth;
-            _lastConsoleHeight = consoleHeight;
-
-            // Clear and redraw header on resize
-            try
-            {
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
-                Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
-                Console.WriteLine("║     🔥 OPTIMIZED: Demoscene tricks + zero-allocation! 🔥       ║");
-                Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
-                Console.WriteLine();
-                Console.ResetColor();
-            }
-            catch
-            {
-                // Ignore errors during resize but continue rendering
-            }
-        }
-
-        // Minimum dimensions to display properly
-        const int MIN_WIDTH = 80;
-        const int MIN_HEIGHT = 40; // Need at least 40 lines for full display (header + quality + params + metrics + guide + footer)
-
-        if (consoleWidth < MIN_WIDTH || consoleHeight < MIN_HEIGHT)
-        {
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("⚠️  WINDOW TOO SMALL!");
-            Console.ResetColor();
-            Console.WriteLine($"   Current:  {consoleWidth}×{consoleHeight}");
-            Console.WriteLine($"   Minimum:  {MIN_WIDTH}×{MIN_HEIGHT}");
-            Console.WriteLine();
-            Console.WriteLine("Please resize your terminal window to see full display.");
-            Console.WriteLine("Some parameters are being cut off!");
-            return;
-        }
-
-        // Helper to safely write a line with better error visibility
-        void SafeWriteLine(int row, string content, ConsoleColor color = ConsoleColor.White)
-        {
-            try
-            {
-                // CRITICAL: Don't silently skip - warn if window too short
-                if (row >= consoleHeight)
-                {
-                    // This shouldn't happen if we check MIN_HEIGHT above
-                    // But just in case, try to write to last line as warning
-                    if (row == consoleHeight && consoleHeight > 0)
-                    {
-                        Console.SetCursorPosition(0, consoleHeight - 1);
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Write("⚠️ Window too short - resize taller!".PadRight(consoleWidth - 1));
-                        Console.ResetColor();
-                    }
-                    return;
-                }
-
-                Console.SetCursorPosition(0, row);
-                Console.ForegroundColor = color;
-                // Truncate or pad to fit window width
-                if (content.Length > consoleWidth - 1)
-                    content = content.Substring(0, consoleWidth - 1);
-                else
-                    content = content.PadRight(consoleWidth - 1);
-                Console.Write(content);
-                Console.ResetColor();
-            }
-            catch
-            {
-                // Ignore cursor positioning errors during resize
-            }
-        }
-
-        // Update just the status lines without clearing screen
-        string fitnessDisplay = _champion != null
-            ? $"Fitness: {_bestFitness,6:F2} | 🏆 Champion: {_championFitness:F2} (Gen {_championGeneration})"
-            : $"Fitness: {_bestFitness,6:F2}";
-
-        // Calculate smoothed throughput (rolling average of last 20 samples)
-        double genPerSec = 0;
-        var now = DateTime.Now;
-        double timeSinceLastGen = (now - _lastGenerationTime).TotalSeconds;
-
-        if (timeSinceLastGen > 0 && timeSinceLastGen < 10) // Ignore if > 10s (paused)
-        {
-            double instantRate = 1.0 / timeSinceLastGen; // 1 generation per time
-            _recentGenerationTimes.Enqueue(instantRate);
-
-            // Keep only last 20 samples for rolling average
-            while (_recentGenerationTimes.Count > 20)
-                _recentGenerationTimes.Dequeue();
-
-            genPerSec = _recentGenerationTimes.Average();
-        }
-
-        _lastGenerationTime = now;
-
-        string throughput = genPerSec >= 10 ? $"{genPerSec:F0} gen/s" : $"{genPerSec:F1} gen/s";
-
-        // Fitness quality assessment
-        string qualityBand = GetFitnessQualityBand(_bestFitness);
-        ConsoleColor qualityColor = _bestFitness >= 80 ? ConsoleColor.Green :
-                                    _bestFitness >= 70 ? ConsoleColor.Yellow :
-                                    _bestFitness >= 60 ? ConsoleColor.Cyan :
-                                    ConsoleColor.Red;
-
-        SafeWriteLine(4, $"⏱️  {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2} | Gen: {_generation,5} ({throughput}) | {fitnessDisplay}", ConsoleColor.Yellow);
-        SafeWriteLine(5, $"QUALITY: {qualityBand}", qualityColor);
-        SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
-
-        // Calculate fitness trend using helper method
-        double slope = CalculateFitnessTrend();
-        string timeEstimate = GetTimeToTargetEstimate(_bestFitness, slope);
-        string trendDisplay = "";
-        ConsoleColor trendColor = ConsoleColor.Gray;
-
-        if (_fitnessHistory.Count >= 10)
-        {
-            if (slope > 0.5)
-            {
-                trendDisplay = $"📈 +{slope:F2}/1k | ETA: {timeEstimate}";
-                trendColor = ConsoleColor.Green;
-            }
-            else if (slope > 0.1)
-            {
-                trendDisplay = $"📊 +{slope:F2}/1k | ETA: {timeEstimate}";
-                trendColor = ConsoleColor.Yellow;
-            }
-            else if (slope >= 0)
-            {
-                trendDisplay = $"📉 +{slope:F2}/1k PLATEAU - Auto-reset soon!";
-                trendColor = ConsoleColor.DarkYellow;
-            }
-            else
-            {
-                trendDisplay = $"⚠️  {slope:F2}/1k declining (difficulty increased?)";
-                trendColor = ConsoleColor.Red;
-            }
-        }
-        else if (_fitnessHistory.Count > 0)
-        {
-            trendDisplay = $"📊 Collecting trend data ({_fitnessHistory.Count}/10 improvements)";
-            trendColor = ConsoleColor.Cyan;
-        }
-
-        string resetInfo = _resetCount > 0 ? $" | Resets: {_resetCount}" : "";
-        SafeWriteLine(7, $"Stuck: {_generationsSinceImprovement}{resetInfo} | {trendDisplay}", trendColor);
-
-        // === ENHANCED PARAMETER DISPLAY (NON-SCROLLING) ===
-        int row = 9;
-
-        // Fitness trend mini-graph (sparkline!) - ALWAYS show if we have data
-        if (_fitnessHistory.Count >= 3)
-        {
-            var graphData = _fitnessHistory.Count >= 20
-                ? _fitnessHistory.TakeLast(20).ToArray()
-                : _fitnessHistory.ToArray();
-
-            double minFit = graphData.Length > 0 ? graphData.Min(d => d.fitness) : 0;
-            double maxFit = graphData.Length > 0 ? graphData.Max(d => d.fitness) : 100;
-            double range = maxFit - minFit;
-
-            // Draw sparkline (8 height levels using Unicode blocks)
-            string sparkline = "   TREND: ";
-            foreach (var point in graphData)
-            {
-                int level = range > 0.01 ? (int)((point.fitness - minFit) / range * 7) : 4;
-                char bar = level switch
-                {
-                    0 => '▁', 1 => '▂', 2 => '▃', 3 => '▄',
-                    4 => '▅', 5 => '▆', 6 => '▇', _ => '█'
-                };
-                sparkline += bar;
-            }
-
-            sparkline += $"  ({minFit:F1}→{maxFit:F1})";
-            if (graphData.Length >= 10)
-                sparkline += $"  Δ+{slope:F2}/1k";
-
-            SafeWriteLine(row++, sparkline, trendColor);
-        }
-        else
-        {
-            SafeWriteLine(row++, "   TREND: Collecting data... (need 3+ improvements)", ConsoleColor.DarkGray);
-        }
-
-        // Player Progression Parameters
-        SafeWriteLine(row++, "👤 PLAYER:", ConsoleColor.Green);
-        SafeWriteLine(row++, $"   BaseHP={_bestFramework.PlayerProgression.BaseHP,3}  HPPerLvl={_bestFramework.PlayerProgression.HPPerLevel:F1}  BaseSTR={_bestFramework.PlayerProgression.BaseSTR,2}  BaseDEF={_bestFramework.PlayerProgression.BaseDEF,2}  StatPts/Lvl={_bestFramework.PlayerProgression.StatPointsPerLevel}", ConsoleColor.Green);
-
-        // Enemy Progression Parameters
-        SafeWriteLine(row++, "👹 ENEMY:", ConsoleColor.Red);
-        SafeWriteLine(row++, $"   BaseHP={_bestFramework.EnemyProgression.BaseHP,3}  HPScale={_bestFramework.EnemyProgression.HPScalingCoefficient:F2}  BaseDMG={_bestFramework.EnemyProgression.BaseDamage,2}  DMGScale={_bestFramework.EnemyProgression.DamageScalingCoefficient:F2}", ConsoleColor.Red);
-
-        // Economy Parameters
-        string economyStatus = _bestFramework.Economy.CanAffordProgression ? "✅" : "❌";
-        SafeWriteLine(row++, $"💰 ECONOMY {economyStatus}:", ConsoleColor.Yellow);
-        SafeWriteLine(row++, $"   BaseGold={_bestFramework.Economy.BaseGoldPerCombat,3}g  GoldScale={_bestFramework.Economy.GoldScalingCoefficient:F2}  [Formula: {_bestFramework.Economy.BaseGoldPerCombat}+Lvl×{_bestFramework.Economy.GoldScalingCoefficient:F2}]", ConsoleColor.Yellow);
-
-        // Loot Parameters
-        SafeWriteLine(row++, "🎁 LOOT:", ConsoleColor.Magenta);
-        SafeWriteLine(row++, $"   BaseTreasure={_bestFramework.Loot.BaseTreasureGold,3}g  DepthScale={_bestFramework.Loot.TreasurePerDungeonDepth,3}g  DropRate={_bestFramework.Loot.EquipmentDropRate:F0}%", ConsoleColor.Magenta);
-
-        // Equipment Tiers (show first 3 tiers)
-        SafeWriteLine(row++, "⚔️  EQUIPMENT:", ConsoleColor.Cyan);
-        var wepTiers = _bestFramework.Equipment.WeaponTiers.Take(3).ToList();
-        SafeWriteLine(row++, $"   Weapons T0-2: [{string.Join(", ", wepTiers.Select(t => $"+{t.BonusValue}={t.RecommendedCost}g"))}]", ConsoleColor.Cyan);
-        var armTiers = _bestFramework.Equipment.ArmorTiers.Take(3).ToList();
-        SafeWriteLine(row++, $"   Armor   T0-2: [{string.Join(", ", armTiers.Select(t => $"+{t.BonusValue}={t.RecommendedCost}g"))}]", ConsoleColor.Cyan);
-
-        // Live Metrics with human-readable explanations
-        SafeWriteLine(row++, "⚡ METRICS (what they mean for gameplay):", ConsoleColor.White);
-
-        if (_latestMetricResults != null && _latestMetricResults.Count > 0)
-        {
-            foreach (var metric in _latestMetricResults)
-            {
-                ConsoleColor color = metric.Score >= 80 ? ConsoleColor.Green :
-                                    metric.Score >= 60 ? ConsoleColor.Yellow :
-                                    ConsoleColor.Red;
-                string bar = GenerateBar(metric.Score, 15);
-                string metricName = metric.MetricName.PadRight(22);
-                SafeWriteLine(row++, $"   {metricName} {bar} {metric.Score,6:F1} → {metric.WeightedScore,6:F2}", color);
-            }
-
-            // Add metric explanations
-            SafeWriteLine(row++, "", ConsoleColor.Black);
-            SafeWriteLine(row++, "   💡 Metric Guide:", ConsoleColor.DarkGray);
-            SafeWriteLine(row++, "   Combat Balance (30%): Win rate 70-95%, 4-6 turns to kill = FUN combat", ConsoleColor.DarkGray);
-            SafeWriteLine(row++, "   Economic Health (25%): Can afford gear progression = No grinding", ConsoleColor.DarkGray);
-            SafeWriteLine(row++, "   Skill Balance (20%): Skills useful but not exploitable = Strategy", ConsoleColor.DarkGray);
-            SafeWriteLine(row++, "   Equipment Curve (15%): Upgrades feel meaningful = Progression", ConsoleColor.DarkGray);
-            SafeWriteLine(row++, "   Difficulty Pacing (10%): Smooth difficulty curve = No walls", ConsoleColor.DarkGray);
-        }
-        else
-        {
-            // Placeholder while first evaluation runs
-            SafeWriteLine(row++, "   Evaluating initial framework...", ConsoleColor.DarkGray);
-            SafeWriteLine(row++, "", ConsoleColor.Black);
-            SafeWriteLine(row++, "", ConsoleColor.Black);
-            SafeWriteLine(row++, "", ConsoleColor.Black);
-            SafeWriteLine(row++, "", ConsoleColor.Black);
-            SafeWriteLine(row++, "", ConsoleColor.Black);
-        }
-
-        // Mutation strategy indicator
-        string strategy = _generationsSinceImprovement > 100 ? "🔥 AGGRESSIVE EXPLORATION" :
-                         _generationsSinceImprovement > 50 ? "🔍 MODERATE SEARCH" :
-                         _generationsSinceImprovement < 10 ? "🎯 FINE-TUNING" :
-                         "⚖️  BALANCED";
-        SafeWriteLine(row++, $"Strategy: {strategy}", ConsoleColor.DarkGray);
-
-        // Footer with controls
-        SafeWriteLine(row++, "", ConsoleColor.Black);
-        SafeWriteLine(row++, "────────────────────────────────────────────────────────────────", ConsoleColor.DarkGray);
-
-        // Show difficulty tier (tuning the tuner!)
-        double diffMult = GetDifficultyMultiplier();
-        string diffTier = diffMult >= 1.5 ? "🔥 HARD MODE" :
-                         diffMult >= 1.3 ? "⚡ ADVANCED" :
-                         diffMult >= 1.1 ? "📈 INTERMEDIATE" :
-                         "🌱 BEGINNER";
-        ConsoleColor diffColor = diffMult >= 1.5 ? ConsoleColor.Red :
-                                diffMult >= 1.3 ? ConsoleColor.Yellow :
-                                diffMult >= 1.1 ? ConsoleColor.Cyan :
-                                ConsoleColor.Green;
-        SafeWriteLine(row++, $"Tuner Difficulty: {diffTier} ({diffMult:F1}×)", diffColor);
-
-        // Auto-reset status with both triggers
-        string autoResetLine = "🔄 AUTO-RESET: ";
-        bool trigger1 = _bestFitness >= AUTO_RESET_THRESHOLD && _generationsSinceImprovement >= AUTO_RESET_STUCK_GENS;
-        bool trigger2 = _fitnessHistory.Count >= AUTO_RESET_MIN_IMPROVEMENTS &&
-                       slope < AUTO_RESET_TREND_THRESHOLD &&
-                       _generationsSinceImprovement >= 100;
-
-        if (trigger1 || trigger2)
-        {
-            autoResetLine += "READY! ";
-            if (trigger1) autoResetLine += $"[Stuck at {_bestFitness:F0}] ";
-            if (trigger2) autoResetLine += $"[Plateau {slope:F2}/1k] ";
-            SafeWriteLine(row++, autoResetLine, ConsoleColor.Red);
-        }
-        else
-        {
-            autoResetLine += $"fitness ≥{AUTO_RESET_THRESHOLD} + stuck {AUTO_RESET_STUCK_GENS} OR trend <{AUTO_RESET_TREND_THRESHOLD}/1k + stuck 100";
-            SafeWriteLine(row++, autoResetLine, ConsoleColor.DarkCyan);
-        }
-
-        SafeWriteLine(row++, "[ESC] Stop & Save  |  [R] Manual Reset → New Champion", ConsoleColor.Yellow);
-
-        // Clear any remaining lines from previous longer displays
-        for (int i = row; i < Math.Min(consoleHeight - 1, 50); i++)
-        {
-            SafeWriteLine(i, "", ConsoleColor.Black);
-        }
-
-        // DEBUG: Show if we're running out of vertical space
-        if (row >= consoleHeight - 2)
-        {
-            SafeWriteLine(consoleHeight - 1, $"⚠️ Display truncated at row {row}/{consoleHeight} - RESIZE TALLER!", ConsoleColor.Red);
-        }
-    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
