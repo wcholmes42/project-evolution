@@ -140,8 +140,8 @@ public class UltimaStyleDashboard
         // Top border
         _screen.WriteAt(0, 0, "╔" + new string('═', _width - 2) + "╗", ConsoleColor.Cyan);
 
-        // Title
-        string title = "🧬 PROGRESSION FRAMEWORK RESEARCH - DEMOSCENE EDITION 🧬";
+        // Title with version
+        string title = "🧬 PROGRESSION RESEARCH v2.0-DETERM-ADAPTIVE 🧬";
         int titleX = (_width - title.Length) / 2;
         _screen.WriteAt(titleX, 1, title, ConsoleColor.Yellow);
 
