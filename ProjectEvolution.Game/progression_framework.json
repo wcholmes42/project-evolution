@@ -1,20 +1,20 @@
 ﻿{
   "PlayerProgression": {
-    "BaseHP": 15,
-    "HPPerLevel": 2,
+    "BaseHP": 23,
+    "HPPerLevel": 4,
     "BaseSTR": 3,
-    "BaseDEF": 1,
+    "BaseDEF": 2,
     "StatPointsPerLevel": 2,
-    "MaxHPFormula": "BaseHP \u002B (Level * 2)",
+    "MaxHPFormula": "BaseHP \u002B (Level * 4)",
     "EffectiveSTRFormula": "BaseSTR \u002B AllocatedSTR \u002B EquipmentBonus"
   },
   "EnemyProgression": {
-    "BaseHP": 10,
-    "HPScalingCoefficient": 2.070097872787201,
+    "BaseHP": 12,
+    "HPScalingCoefficient": 1.9818081398177003,
     "BaseDamage": 4,
-    "DamageScalingCoefficient": 1,
-    "HPFormula": "BaseHP \u002B (PlayerLevel * 2.07)",
-    "DamageFormula": "BaseDamage \u002B (PlayerLevel * 1.00)"
+    "DamageScalingCoefficient": 0.9705453485462561,
+    "HPFormula": "BaseHP \u002B (PlayerLevel * 1.98)",
+    "DamageFormula": "BaseDamage \u002B (PlayerLevel * 0.97)"
   },
   "Equipment": {
     "WeaponTiers": [
@@ -30,35 +30,35 @@
         "BonusValue": 1,
         "RecommendedCost": 30,
         "RecommendedLevel": 2,
-        "PowerIncrease": 99900
+        "PowerIncrease": 100
       },
       {
         "Tier": 2,
         "BonusValue": 2,
         "RecommendedCost": 105,
         "RecommendedLevel": 4,
-        "PowerIncrease": 99.80019980019983
+        "PowerIncrease": 100
       },
       {
         "Tier": 3,
         "BonusValue": 3,
         "RecommendedCost": 230,
         "RecommendedLevel": 6,
-        "PowerIncrease": 49.92503748125938
+        "PowerIncrease": 50
       },
       {
         "Tier": 4,
         "BonusValue": 4,
         "RecommendedCost": 405,
         "RecommendedLevel": 8,
-        "PowerIncrease": 33.28890369876709
+        "PowerIncrease": 33.33333333333333
       },
       {
         "Tier": 5,
         "BonusValue": 5,
         "RecommendedCost": 630,
         "RecommendedLevel": 10,
-        "PowerIncrease": 24.96875781054735
+        "PowerIncrease": 25
       }
     ],
     "ArmorTiers": [
@@ -74,35 +74,35 @@
         "BonusValue": 1,
         "RecommendedCost": 30,
         "RecommendedLevel": 2,
-        "PowerIncrease": 99900
+        "PowerIncrease": 100
       },
       {
         "Tier": 2,
         "BonusValue": 2,
         "RecommendedCost": 105,
         "RecommendedLevel": 4,
-        "PowerIncrease": 99.80019980019983
+        "PowerIncrease": 100
       },
       {
         "Tier": 3,
         "BonusValue": 3,
         "RecommendedCost": 230,
         "RecommendedLevel": 6,
-        "PowerIncrease": 49.92503748125938
+        "PowerIncrease": 50
       },
       {
         "Tier": 4,
         "BonusValue": 4,
         "RecommendedCost": 405,
         "RecommendedLevel": 8,
-        "PowerIncrease": 33.28890369876709
+        "PowerIncrease": 33.33333333333333
       },
       {
         "Tier": 5,
         "BonusValue": 5,
         "RecommendedCost": 630,
         "RecommendedLevel": 10,
-        "PowerIncrease": 24.96875781054735
+        "PowerIncrease": 25
       }
     ],
     "PowerGrowthModel": 1,
@@ -110,12 +110,12 @@
   },
   "Economy": {
     "BaseGoldPerCombat": 10,
-    "GoldScalingCoefficient": 3.6150067837978743,
+    "GoldScalingCoefficient": 3.8980069071510837,
     "LevelSnapshots": [
       {
         "Level": 1,
-        "ExpectedGoldEarned": 65,
-        "CumulativeGold": 115,
+        "ExpectedGoldEarned": 78,
+        "CumulativeGold": 128,
         "AffordableEquipmentTier": 2,
         "RecommendedEquipmentTier": 0,
         "EconomyHealthy": true,
@@ -123,26 +123,26 @@
       },
       {
         "Level": 2,
-        "ExpectedGoldEarned": 85,
-        "CumulativeGold": 170,
-        "AffordableEquipmentTier": 2,
-        "RecommendedEquipmentTier": 1,
-        "EconomyHealthy": true,
-        "Notes": "\u2705 Can afford progression"
-      },
-      {
-        "Level": 3,
-        "ExpectedGoldEarned": 190,
-        "CumulativeGold": 330,
+        "ExpectedGoldEarned": 153,
+        "CumulativeGold": 251,
         "AffordableEquipmentTier": 3,
         "RecommendedEquipmentTier": 1,
         "EconomyHealthy": true,
         "Notes": "\u2705 Can afford progression"
       },
       {
+        "Level": 3,
+        "ExpectedGoldEarned": 155,
+        "CumulativeGold": 376,
+        "AffordableEquipmentTier": 4,
+        "RecommendedEquipmentTier": 1,
+        "EconomyHealthy": true,
+        "Notes": "\u2705 Can afford progression"
+      },
+      {
         "Level": 4,
-        "ExpectedGoldEarned": 144,
-        "CumulativeGold": 369,
+        "ExpectedGoldEarned": 125,
+        "CumulativeGold": 396,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 2,
         "EconomyHealthy": true,
@@ -150,8 +150,8 @@
       },
       {
         "Level": 5,
-        "ExpectedGoldEarned": 140,
-        "CumulativeGold": 404,
+        "ExpectedGoldEarned": 203,
+        "CumulativeGold": 494,
         "AffordableEquipmentTier": 4,
         "RecommendedEquipmentTier": 2,
         "EconomyHealthy": true,
@@ -159,8 +159,8 @@
       },
       {
         "Level": 6,
-        "ExpectedGoldEarned": 235,
-        "CumulativeGold": 409,
+        "ExpectedGoldEarned": 245,
+        "CumulativeGold": 509,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 3,
         "EconomyHealthy": true,
@@ -168,8 +168,8 @@
       },
       {
         "Level": 7,
-        "ExpectedGoldEarned": 350,
-        "CumulativeGold": 529,
+        "ExpectedGoldEarned": 222,
+        "CumulativeGold": 501,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 3,
         "EconomyHealthy": true,
@@ -177,8 +177,8 @@
       },
       {
         "Level": 8,
-        "ExpectedGoldEarned": 342,
-        "CumulativeGold": 466,
+        "ExpectedGoldEarned": 410,
+        "CumulativeGold": 506,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 4,
         "EconomyHealthy": true,
@@ -186,8 +186,8 @@
       },
       {
         "Level": 9,
-        "ExpectedGoldEarned": 488,
-        "CumulativeGold": 549,
+        "ExpectedGoldEarned": 470,
+        "CumulativeGold": 571,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 4,
         "EconomyHealthy": true,
@@ -195,42 +195,42 @@
       },
       {
         "Level": 10,
-        "ExpectedGoldEarned": 368,
-        "CumulativeGold": 287,
+        "ExpectedGoldEarned": 336,
+        "CumulativeGold": 277,
         "AffordableEquipmentTier": 5,
         "RecommendedEquipmentTier": 5,
         "EconomyHealthy": true,
         "Notes": "\u2705 Can afford progression"
       }
     ],
-    "GoldFormula": "BaseGold \u002B (EnemyLevel * 3.62)",
+    "GoldFormula": "BaseGold \u002B (EnemyLevel * 3.90)",
     "CanAffordProgression": true,
     "FirstUnaffordableTier": -1
   },
   "Loot": {
-    "BaseTreasureGold": 21,
-    "TreasurePerDungeonDepth": 55,
-    "EquipmentDropRate": 17,
+    "BaseTreasureGold": 10,
+    "TreasurePerDungeonDepth": 49,
+    "EquipmentDropRate": 20,
     "DungeonLoot": [],
-    "TreasureFormula": "BaseTreasure \u002B (Depth * 55)"
+    "TreasureFormula": "BaseTreasure \u002B (Depth * 49)"
   },
   "Builds": {
     "ViableBuilds": {
       "GlassCannon": {
-        "MinBaseHP": 15,
-        "MaxBaseHP": 25,
+        "MinBaseHP": 23,
+        "MaxBaseHP": 33,
         "RecommendedRatio": {},
         "ViabilityScore": 100
       },
       "Balanced": {
-        "MinBaseHP": 15,
-        "MaxBaseHP": 25,
+        "MinBaseHP": 23,
+        "MaxBaseHP": 33,
         "RecommendedRatio": {},
         "ViabilityScore": 100
       },
       "Tank": {
-        "MinBaseHP": 15,
-        "MaxBaseHP": 25,
+        "MinBaseHP": 23,
+        "MaxBaseHP": 33,
         "RecommendedRatio": {},
         "ViabilityScore": 100
       }
@@ -239,10 +239,10 @@
     "Warnings": []
   },
   "Metadata": {
-    "Timestamp": "2025-11-18T07:02:04.723165-08:00",
-    "SimulationsRun": 9648700,
-    "Generation": 964870,
-    "OverallFitness": 7985.603193773484,
+    "Timestamp": "2025-11-18T08:07:47.447565-08:00",
+    "SimulationsRun": 23150,
+    "Generation": 2315,
+    "OverallFitness": 77.20944006904736,
     "Version": "Generation 35"
   }
 }

@@ -142,6 +142,10 @@ public class ProgressionFrameworkResearcher
     private const double AUTO_RESET_THRESHOLD = 85.0; // Reset if stuck near optimal
     private const int AUTO_RESET_STUCK_GENS = 150; // Must be stuck this long
 
+    // Anti-flicker settings
+    private const int UI_UPDATE_INTERVAL = 5; // Update UI every N generations
+    private const int CYCLE_DELAY_MS = 200; // Delay between generations (was 50ms)
+
     public static void RunContinuousResearch()
     {
         Console.Clear();
@@ -243,6 +247,18 @@ public class ProgressionFrameworkResearcher
         Console.WriteLine("Press ESC to stop, any other key to start...");
         if (Console.ReadKey().Key == ConsoleKey.Escape) return;
 
+        // === ANTI-FLICKER SETUP ===
+        Console.CursorVisible = false; // Hide cursor to prevent blinking
+        try
+        {
+            // Set buffer size to prevent auto-scroll
+            Console.SetBufferSize(Console.WindowWidth, Math.Max(50, Console.WindowHeight));
+        }
+        catch
+        {
+            // Some terminals don't support this
+        }
+
         _startTime = DateTime.Now;
         _lastSaveTime = DateTime.Now;
         _totalSimulations = 0;
@@ -279,7 +295,7 @@ public class ProgressionFrameworkResearcher
             if (_generationsSinceImprovement > 100)
             {
                 _currentPhase = "🔄 RANDOM RESTART - Exploring new space...";
-                UpdateStatusLine();
+                if (_generation % UI_UPDATE_INTERVAL == 0) UpdateStatusLine();
                 framework = CreateBaselineFramework(); // Start fresh
                 _generationsSinceImprovement = 0;
                 Thread.Sleep(500); // Let user see restart
@@ -287,14 +303,12 @@ public class ProgressionFrameworkResearcher
             else
             {
                 _currentPhase = "🔬 Mutating parameters...";
-                UpdateStatusLine();
                 framework = MutateFramework(_bestFramework ?? CreateBaselineFramework());
             }
             _totalSimulations += 50;
 
             // PHASE 2: Evaluate fitness
             _currentPhase = "📊 Evaluating...";
-            UpdateStatusLine();
 
             double fitness = EvaluateFramework(framework);
             _totalSimulations += 15;
@@ -304,7 +318,6 @@ public class ProgressionFrameworkResearcher
             if (fitness > _bestFitness || _bestFramework == null)
             {
                 _currentPhase = "🌟 NEW BEST! Saving & generating code...";
-                UpdateStatusLine();
 
                 _bestFitness = fitness;
                 _bestFramework = framework;
@@ -318,7 +331,7 @@ public class ProgressionFrameworkResearcher
                 // Full redraw when improved to show new formulas
                 Console.SetCursorPosition(0, 0);
                 RenderResearchDashboard();
-                Thread.Sleep(500); // Brief pause to see new values
+                Thread.Sleep(300); // Brief pause to see new values
             }
             else
             {
@@ -329,7 +342,6 @@ public class ProgressionFrameworkResearcher
             if (_generation % AUTO_SAVE_INTERVAL_GENERATIONS == 0)
             {
                 _currentPhase = "💾 Auto-save...";
-                UpdateStatusLine();
                 if (_bestFramework != null)
                 {
                     SaveFrameworkToJSON(_bestFramework);
@@ -337,9 +349,12 @@ public class ProgressionFrameworkResearcher
                 _lastSaveTime = DateTime.Now;
             }
 
-            // PHASE 5: Update status
+            // PHASE 5: Update status (only every N generations to reduce flicker)
             _currentPhase = improved ? "✅ Improved!" : "🔄 Searching...";
-            UpdateStatusLine();
+            if (_generation % UI_UPDATE_INTERVAL == 0)
+            {
+                UpdateStatusLine();
+            }
 
             // Log progress to file
             LogProgress(framework, fitness, improved);
@@ -371,10 +386,12 @@ public class ProgressionFrameworkResearcher
                 PerformReset(manual: false);
             }
 
-            // Fast cycle - no pause!
-            Thread.Sleep(50);
+            // Controlled cycle - prevent flicker while maintaining responsiveness
+            Thread.Sleep(CYCLE_DELAY_MS);
         }
 
+        // === CLEANUP ON EXIT ===
+        Console.CursorVisible = true; // Restore cursor
         Console.Clear();
 
         TimeSpan totalElapsed = DateTime.Now - _startTime;
@@ -480,7 +497,10 @@ public class ProgressionFrameworkResearcher
     private static void PerformReset(bool manual)
     {
         _currentPhase = manual ? "🔄 MANUAL RESET - Saving champion..." : "🔄 AUTO RESET - Near optimal, exploring new space...";
-        UpdateStatusLine();
+        Console.SetCursorPosition(0, 6);
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write(_currentPhase.PadRight(80));
+        Console.ResetColor();
         Thread.Sleep(1000); // Let user see the message
 
         // Save current best as champion
@@ -488,7 +508,10 @@ public class ProgressionFrameworkResearcher
         {
             SaveChampion();
             _currentPhase = $"🏆 NEW CHAMPION! Fitness: {_bestFitness:F2} (was {_championFitness:F2})";
-            UpdateStatusLine();
+            Console.SetCursorPosition(0, 6);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(_currentPhase.PadRight(80));
+            Console.ResetColor();
             Thread.Sleep(2000);
         }
 
@@ -1303,125 +1326,15 @@ public class ProgressionFrameworkResearcher
     {
         if (_bestFramework == null) return;
 
-        TimeSpan elapsed = DateTime.Now - _startTime;
-        TimeSpan sinceSave = DateTime.Now - _lastSaveTime;
-
+        // Clear and redraw header only
+        Console.Clear();
         Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
         Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
         Console.WriteLine();
 
-        // Status bar
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"⏱️  RUNTIME: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}  |  Gen: {_generation}  |  Sims: {_totalSimulations}  |  Fitness: {_bestFitness:F2}");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"STATUS: {_currentPhase}");
-        Console.ResetColor();
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine($"Last save: {sinceSave.TotalSeconds:F0}s ago  |  Gens since improvement: {_generationsSinceImprovement}");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        Console.WriteLine();
-
-        // NEW: Real-time Metrics Breakdown
-        if (_latestMetricResults != null)
-        {
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("⚡ LIVE METRICS BREAKDOWN:");
-            Console.ResetColor();
-            Console.WriteLine($"{"─",64}");
-
-            foreach (var metric in _latestMetricResults)
-            {
-                // Color based on score
-                ConsoleColor color = metric.Score >= 80 ? ConsoleColor.Green :
-                                    metric.Score >= 60 ? ConsoleColor.Yellow :
-                                    metric.Score >= 40 ? ConsoleColor.DarkYellow :
-                                    ConsoleColor.Red;
-
-                Console.ForegroundColor = color;
-                string bar = GenerateBar(metric.Score, 20);
-                Console.Write($"  {metric.MetricName,-20}");
-                Console.ResetColor();
-                Console.Write($" {bar} ");
-                Console.ForegroundColor = color;
-                Console.WriteLine($"{metric.Score,5:F1} → {metric.WeightedScore,5:F2}");
-                Console.ResetColor();
-            }
-
-            Console.WriteLine();
-        }
-
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("📊 CURRENT BEST FORMULAS:");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"  Player: {_bestFramework.PlayerProgression.BaseHP}HP + (Lvl×{_bestFramework.PlayerProgression.HPPerLevel:F1})");
-        Console.WriteLine($"  Enemy:  {_bestFramework.EnemyProgression.BaseHP}HP + (Lvl×{_bestFramework.EnemyProgression.HPScalingCoefficient:F2})  |  {_bestFramework.EnemyProgression.BaseDamage}DMG + (Lvl×{_bestFramework.EnemyProgression.DamageScalingCoefficient:F2})");
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"  Gold:   {_bestFramework.Economy.BaseGoldPerCombat}g + (Lvl×{_bestFramework.Economy.GoldScalingCoefficient:F2})");
-        Console.WriteLine($"  Loot:   {_bestFramework.Loot.BaseTreasureGold}g + (Depth×{_bestFramework.Loot.TreasurePerDungeonDepth})  |  Drop: {_bestFramework.Loot.EquipmentDropRate:F0}%");
-        Console.ResetColor();
-        Console.WriteLine();
-
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("💰 ECONOMIC SIMULATION (Levels 1-10):");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        Console.WriteLine("  Lvl | Gold Earned | Total Gold | Can Afford | Rec. Tier");
-
-        foreach (var snapshot in _bestFramework.Economy.LevelSnapshots.Take(5)) // Show first 5 levels
-        {
-            string status = snapshot.EconomyHealthy ? "✅" : "❌";
-            Console.WriteLine($"  {status} {snapshot.Level,2} | {snapshot.ExpectedGoldEarned,6}g      | {snapshot.CumulativeGold,6}g    | Tier {snapshot.AffordableEquipmentTier}     | Tier {snapshot.RecommendedEquipmentTier}");
-        }
-
-        if (_bestFramework.Economy.LevelSnapshots.Count > 5)
-        {
-            var lastSnapshot = _bestFramework.Economy.LevelSnapshots.Last();
-            Console.WriteLine($"  ... | ...         | ...        | ...        | ...");
-            string status = lastSnapshot.EconomyHealthy ? "✅" : "❌";
-            Console.WriteLine($"  {status}{lastSnapshot.Level,2} | {lastSnapshot.ExpectedGoldEarned,6}g      | {lastSnapshot.CumulativeGold,6}g    | Tier {lastSnapshot.AffordableEquipmentTier}     | Tier {lastSnapshot.RecommendedEquipmentTier}");
-        }
-
-        Console.ForegroundColor = _bestFramework.Economy.CanAffordProgression ? ConsoleColor.Green : ConsoleColor.Red;
-        Console.WriteLine($"\n  Economy Status: {(_bestFramework.Economy.CanAffordProgression ? "✅ HEALTHY" : "❌ BROKEN")}");
-        Console.ResetColor();
-        Console.WriteLine();
-
-        Console.ForegroundColor = ConsoleColor.Magenta;
-        Console.WriteLine("🎁 LOOT TABLES:");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        Console.WriteLine($"  Treasure: {_bestFramework.Loot.BaseTreasureGold}g + (Depth × {_bestFramework.Loot.TreasurePerDungeonDepth}g)");
-        Console.WriteLine($"  Equipment Drop Rate: {_bestFramework.Loot.EquipmentDropRate:F0}% (increases with depth)");
-        Console.WriteLine();
-
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("✅ BUILD VIABILITY:");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        foreach (var (name, reqs) in _bestFramework.Builds.ViableBuilds)
-        {
-            string status = reqs.ViabilityScore > 60 ? "✅" : "❌";
-            Console.WriteLine($"  {status} {name,-15} Viability: {reqs.ViabilityScore:F0}%");
-        }
-        Console.WriteLine();
-
-        // Footer with controls and auto-save status
-        Console.WriteLine($"{"─",64}");
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine($"💾 Auto-saves every {AUTO_SAVE_INTERVAL_GENERATIONS} gens  |  Output: {SafeFileWriter.GetOutputPath()}");
-        Console.WriteLine($"📁 Files: progression_*.json/.log/.md  |  GeneratedCode/*.cs");
-        Console.WriteLine($"🔒 Lock-safe writes with retry (network share compatible)");
-        Console.ResetColor();
-        Console.WriteLine($"{"─",64}");
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("Press [ESC] to stop and save  |  Files update automatically");
-        Console.ResetColor();
+        // Use UpdateStatusLine for all the dynamic content (anti-flicker)
+        UpdateStatusLine();
     }
 
     private static string GenerateBar(double value, int width)

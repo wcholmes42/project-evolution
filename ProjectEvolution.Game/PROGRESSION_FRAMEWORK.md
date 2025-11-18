@@ -1,46 +1,46 @@
 ﻿# PROGRESSION FRAMEWORK - AUTO-GENERATED
-**Generated:** 11/18/2025 7:02:04 AM
-**Generation:** 918706
-**Fitness Score:** 7985.60
+**Generated:** 11/18/2025 8:07:47 AM
+**Generation:** 1433
+**Fitness Score:** 77.21
 **Economy Status:** ✅ HEALTHY
 
 ## Player Progression
-- **Base HP:** 15
-- **HP Per Level:** 2.0
-- **Formula:** `BaseHP + (Level * 2)`
+- **Base HP:** 23
+- **HP Per Level:** 4.0
+- **Formula:** `BaseHP + (Level * 4)`
 
 ## Enemy Progression
-- **Base HP:** 10
-- **HP Scaling:** ×2.07 per player level
+- **Base HP:** 12
+- **HP Scaling:** ×1.98 per player level
 - **Base Damage:** 4
-- **Damage Scaling:** ×1.00 per player level
-- **HP Formula:** `BaseHP + (PlayerLevel * 2.07)`
-- **Damage Formula:** `BaseDamage + (PlayerLevel * 1.00)`
+- **Damage Scaling:** ×0.97 per player level
+- **HP Formula:** `BaseHP + (PlayerLevel * 1.98)`
+- **Damage Formula:** `BaseDamage + (PlayerLevel * 0.97)`
 
 ## Economy & Gold
 - **Base Gold per Combat:** 10g
-- **Gold Scaling:** +3.62g per enemy level
-- **Gold Formula:** `BaseGold + (EnemyLevel * 3.62)`
+- **Gold Scaling:** +3.90g per enemy level
+- **Gold Formula:** `BaseGold + (EnemyLevel * 3.90)`
 
 ### Economic Progression Simulation:
 | Level | Gold Earned | Cumulative | Can Afford | Status |
 |-------|-------------|------------|------------|--------|
-|  1 |     65g |     115g | Tier 2 | ✅ |
-|  2 |     85g |     170g | Tier 2 | ✅ |
-|  3 |    190g |     330g | Tier 3 | ✅ |
-|  4 |    144g |     369g | Tier 4 | ✅ |
-|  5 |    140g |     404g | Tier 4 | ✅ |
-|  6 |    235g |     409g | Tier 5 | ✅ |
-|  7 |    350g |     529g | Tier 5 | ✅ |
-|  8 |    342g |     466g | Tier 5 | ✅ |
-|  9 |    488g |     549g | Tier 5 | ✅ |
-| 10 |    368g |     287g | Tier 5 | ✅ |
+|  1 |     78g |     128g | Tier 2 | ✅ |
+|  2 |    153g |     251g | Tier 3 | ✅ |
+|  3 |    155g |     376g | Tier 4 | ✅ |
+|  4 |    125g |     396g | Tier 4 | ✅ |
+|  5 |    203g |     494g | Tier 4 | ✅ |
+|  6 |    245g |     509g | Tier 5 | ✅ |
+|  7 |    222g |     501g | Tier 5 | ✅ |
+|  8 |    410g |     506g | Tier 5 | ✅ |
+|  9 |    470g |     571g | Tier 5 | ✅ |
+| 10 |    336g |     277g | Tier 5 | ✅ |
 
 ## Loot & Treasure
-- **Base Treasure:** 21g
-- **Treasure per Depth:** +55g
-- **Equipment Drop Rate:** 17%
-- **Treasure Formula:** `BaseTreasure + (Depth * 55)`
+- **Base Treasure:** 10g
+- **Treasure per Depth:** +49g
+- **Equipment Drop Rate:** 20%
+- **Treasure Formula:** `BaseTreasure + (Depth * 49)`
 
 ### Dungeon Loot Tables:
 | Depth | Gold Range | Equip Drop % | Tier |
@@ -65,17 +65,17 @@
 
 ## Build Viability
 ### GlassCannon
-- **Min HP Required:** 15
+- **Min HP Required:** 23
 - **Recommended Ratio:** 100:20
 - **Viability Score:** 100.0%
 
 ### Balanced
-- **Min HP Required:** 15
+- **Min HP Required:** 23
 - **Recommended Ratio:** 60:60
 - **Viability Score:** 100.0%
 
 ### Tank
-- **Min HP Required:** 15
-- **Recommended Ratio:** 30:100
+- **Min HP Required:** 23
+- **Recommended Ratio:** 20:100
 - **Viability Score:** 100.0%
 
