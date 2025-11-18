@@ -1,32 +1,107 @@
 using ProjectEvolution.Game;
+using System.Text;
+
+// Ensure UTF-8 encoding for proper display
+Console.OutputEncoding = Encoding.UTF8;
 
 // Main menu
 Console.Clear();
-Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
-Console.WriteLine("║              PROJECT EVOLUTION - GENERATION 35                 ║");
-Console.WriteLine("║                \"Skills & Abilities Update\"                     ║");
-Console.WriteLine("╠════════════════════════════════════════════════════════════════╣");
-Console.WriteLine("║                                                                ║");
-Console.WriteLine("║  🎮 [P] PLAY GAME                                              ║");
-Console.WriteLine("║      Experience the evolved RPG with skills & progression      ║");
-Console.WriteLine("║                                                                ║");
-Console.WriteLine("║  🧬 [R] PROGRESSION FRAMEWORK RESEARCH                         ║");
-Console.WriteLine("║      Continuous evolution of game balance & formulas           ║");
-Console.WriteLine("║      → Tests combat, economy, equipment, skills, builds        ║");
-Console.WriteLine("║      → Auto-generates balanced code & progression curves       ║");
-Console.WriteLine("║      → Adaptive mutation finds optimal parameters              ║");
-Console.WriteLine("║                                                                ║");
-Console.WriteLine("║  [Q] Quit                                                      ║");
-Console.WriteLine("║                                                                ║");
-Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
+
+Console.WriteLine("================================================================");
+Console.WriteLine("              PROJECT EVOLUTION - GENERATION 35");
+Console.WriteLine("                  The UX Evolution Update");
+Console.WriteLine("================================================================");
+Console.WriteLine();
+Console.WriteLine("  [P] Play Game (Normal Mode)");
+Console.WriteLine("  [T] Manual Testing & Tuning (Interactive)");
+Console.WriteLine("  [A] Automated Tuning (10 Cycles)");
+Console.WriteLine("  [C] Continuous Tuning (Infinite - ESC to stop)");
+Console.WriteLine("  [G] Gradient Descent (Backpropagation - Leaderboard)");
+Console.WriteLine("  [S] Single-Param Test (No Interference)");
+Console.WriteLine("  [R] Random Search (Explore Solution Space)");
+Console.WriteLine("  [X] X-MEN MUTATION MODE (Find The Unicorn!)");
+Console.WriteLine("  [F] Focused Class Optimizer (Boost Weakest to Top!)");
+Console.WriteLine("  [V] PROGRESSION TUNER (Test Levels & Builds)");
+Console.WriteLine("  [E] EVOLUTIONARY TUNER (Continuous Evolution)");
+Console.WriteLine("  [M] PROGRESSION RESEARCH (Formula Discovery)");
+Console.WriteLine("  [B] CONTINUOUS RESEARCH - CODE GEN (Auto-evolve!)");
+Console.WriteLine("  [Q] Quit");
+Console.WriteLine();
+Console.WriteLine("================================================================");
 Console.Write("\nChoice: ");
 
 var menuChoice = Console.ReadKey(intercept: true).Key;
 Console.Clear();
 
-if (menuChoice == ConsoleKey.R)
+if (menuChoice == ConsoleKey.T)
 {
-    // Progression Framework Research - encompasses all tuning!
+    // Run simulation/tuning mode
+    SimulationRunner.RunInteractiveTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.A)
+{
+    // Run automated tuning
+    AutoTuner.RunAutoTuning(10);
+    return;
+}
+else if (menuChoice == ConsoleKey.C)
+{
+    // Run continuous tuning
+    ContinuousTuner.RunContinuousTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.G)
+{
+    // Run gradient descent tuning
+    GradientTuner.RunGradientTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.S)
+{
+    // Run single-parameter tuning
+    SingleParamTuner.RunSingleParamOptimization();
+    return;
+}
+else if (menuChoice == ConsoleKey.R)
+{
+    // Run random search
+    RandomSearchTuner.RunRandomSearch(50);
+    return;
+}
+else if (menuChoice == ConsoleKey.X)
+{
+    // X-MEN MUTATION MODE!
+    XMenMutationMode.UnleashTheMutants();
+    return;
+}
+else if (menuChoice == ConsoleKey.F)
+{
+    // Focused Class Optimizer!
+    FocusedClassOptimizer.RunFocusedOptimization();
+    return;
+}
+else if (menuChoice == ConsoleKey.V)
+{
+    // NEW: Progression Tuner!
+    ProgressionTuner.RunProgressionTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.E)
+{
+    // NEW: Evolutionary Tuner!
+    EvolutionaryTuner.RunContinuousEvolution();
+    return;
+}
+else if (menuChoice == ConsoleKey.M)
+{
+    // NEW: Progression Research!
+    ProgressionResearch.RunProgressionResearch();
+    return;
+}
+else if (menuChoice == ConsoleKey.B)
+{
+    // NEW: Continuous Research → Code Generation!
     ProgressionFrameworkResearcher.RunContinuousResearch();
     return;
 }
@@ -53,7 +128,7 @@ if (optimalConfig != null)
     // Override stats with tuned values
     game.SetPlayerStats(optimalConfig.PlayerStrength, optimalConfig.PlayerDefense);
 
-    logger.LogEvent("CONFIG", $"🤖 AI-TUNED: HP={optimalConfig.PlayerStartHP}, Det={optimalConfig.MobDetectionRange}, Mobs={optimalConfig.MaxMobs}, STR={optimalConfig.PlayerStrength}, DEF={optimalConfig.PlayerDefense}");
+    logger.LogEvent("CONFIG", $"AI-TUNED: HP={optimalConfig.PlayerStartHP}, Det={optimalConfig.MobDetectionRange}, Mobs={optimalConfig.MaxMobs}, STR={optimalConfig.PlayerStrength}, DEF={optimalConfig.PlayerDefense}");
 }
 else
 {
@@ -76,8 +151,8 @@ logger.LogEvent("INIT", $"Player spawned at ({game.PlayerX},{game.PlayerY})");
 ui.Initialize();
 ui.RenderStatusBar(game);
 ui.RenderMap(game);
-ui.AddMessage("Welcome to Project Evolution! Generation 35: Skills & Abilities!");
-ui.AddMessage("† You're at the Temple - FREE healing & respawn point!");
+ui.AddMessage("Welcome to Project Evolution! Generation 35!");
+ui.AddMessage("+ You're at the Temple - FREE healing & respawn point!");
 ui.AddMessage("Death is not the end! You'll respawn here (lose 50% gold & gear)");
 ui.AddMessage($"Towns at (5,5) & (15,15) | Dungeons at (10,5) & (10,15) | Press [H] for help");
 ui.RenderCommandBar(game.InDungeon);
@@ -111,9 +186,9 @@ void HandleDeath(string killerName)
     ui.Initialize();
     ui.RenderStatusBar(game);
     ui.RenderMap(game);
-    ui.AddMessage($"💀 You died! Respawned at Temple. Lost {goldLost}g.");
+    ui.AddMessage($"X You died! Respawned at Temple. Lost {goldLost}g.");
     if (droppedItems.Count > 0)
-        ui.AddMessage($"💀 Return to your corpse to retrieve: {string.Join(", ", droppedItems)}");
+        ui.AddMessage($"X Return to your corpse to retrieve: {string.Join(", ", droppedItems)}");
     ui.RenderCommandBar(false);
 }
 
@@ -223,7 +298,7 @@ while (playing)
             // NEW: Temple interaction
             if (terrain == "Temple")
             {
-                ui.AddMessage("† Entered Temple of Respawn †");
+                ui.AddMessage("+ Entered Temple of Respawn +");
                 ui.AddMessage("[P]ray for blessing (FREE heal) | [R]etrieve corpse items | [X]it");
                 Thread.Sleep(400);
 
@@ -232,7 +307,7 @@ while (playing)
                 {
                     // Free heal at temple
                     game.SetHPForTesting(game.MaxPlayerHP);
-                    ui.AddMessage("✨ The gods have blessed you! Fully healed!");
+                    ui.AddMessage("The gods have blessed you! Fully healed!");
                     ui.RenderStatusBar(game);
                     Thread.Sleep(800);
                 }
@@ -242,19 +317,19 @@ while (playing)
                     if (game.CanRetrieveDroppedItems())
                     {
                         string msg = game.RetrieveDroppedItems();
-                        ui.AddMessage($"✅ {msg}");
+                        ui.AddMessage($"OK {msg}");
                         ui.RenderStatusBar(game);
                         Thread.Sleep(800);
                     }
                     else
                     {
-                        ui.AddMessage("❌ No corpse here. Look for 💀 on map.");
+                        ui.AddMessage("NO corpse here. Look for X on map.");
                     }
                 }
             }
             else if (terrain == "Town")
             {
-                ui.AddMessage("🏘️  Entered Town!");
+                ui.AddMessage("Entered Town!");
                 ui.AddMessage("[I]nn (10g heal) | [B]uy Potion (5g) | [X]it");
                 Thread.Sleep(400); // Brief pause to see options
 
@@ -263,27 +338,27 @@ while (playing)
                 {
                     if (game.VisitInn())
                     {
-                        ui.AddMessage("✅ Rested at Inn - Fully healed! -10g");
+                        ui.AddMessage("OK Rested at Inn - Fully healed! -10g");
                         ui.RenderStatusBar(game);
                         Thread.Sleep(700); // Ahhh, refreshing!
                     }
-                    else ui.AddMessage("❌ Not enough gold (need 10g)");
+                    else ui.AddMessage("NO Not enough gold (need 10g)");
                 }
                 else if (townKey == ConsoleKey.B)
                 {
                     if (game.BuyPotion())
                     {
-                        ui.AddMessage("✅ Bought healing potion! -5g");
+                        ui.AddMessage("OK Bought healing potion! -5g");
                         ui.RenderStatusBar(game);
                         Thread.Sleep(600); // Potion acquired!
                     }
-                    else ui.AddMessage("❌ Not enough gold (need 5g)");
+                    else ui.AddMessage("NO Not enough gold (need 5g)");
                 }
             }
             else if (terrain == "Dungeon")
             {
                 game.EnterDungeon();
-                ui.AddMessage("⚔️  Entered Dungeon! Depth 1 - Danger awaits!");
+                ui.AddMessage("Entered Dungeon! Depth 1 - Danger awaits!");
                 ui.RenderStatusBar(game);
                 ui.RenderMap(game); // Show the dungeon map!
                 ui.RenderCommandBar(true);
@@ -298,7 +373,7 @@ while (playing)
         {
             if (game.UsePotion())
             {
-                ui.AddMessage("🧪 Used potion! +5 HP");
+                ui.AddMessage("Used potion! +5 HP");
                 ui.RenderStatusBar(game);
                 Thread.Sleep(600); // Potion effect!
             }
@@ -314,7 +389,7 @@ while (playing)
             if (game.CanRetrieveDroppedItems())
             {
                 string retrieved = game.RetrieveDroppedItems();
-                ui.AddMessage($"💀 {retrieved}");
+                ui.AddMessage($"X {retrieved}");
                 Thread.Sleep(800);
             }
 
@@ -343,7 +418,7 @@ while (playing)
             {
                 // Walked into a visible mob!
                 logger.LogEvent("ENCOUNTER", $"Mob encounter: {mob.Name} at ({game.PlayerX},{game.PlayerY})");
-                ui.AddMessage($"⚔️  Encountered {mob.Name}!");
+                ui.AddMessage($"Encountered {mob.Name}!");
                 Thread.Sleep(800);
                 game.TriggerMobEncounter(mob);
                 hasEncounter = true;
@@ -368,7 +443,7 @@ while (playing)
 
                 game.AddMobForTesting(encounterMob);
 
-                ui.AddMessage($"💥 {encounterMob.Name} [Lvl{encounterMob.Level}] appears!");
+                ui.AddMessage($"{encounterMob.Name} [Lvl{encounterMob.Level}] appears!");
                 ui.RenderMap(game); // Show mob appearing!
                 Thread.Sleep(800);
 
@@ -391,7 +466,7 @@ while (playing)
 
                     if (combatKey == ConsoleKey.P && game.UsePotion())
                     {
-                        ui.AddMessage("🧪 Potion! +5 HP");
+                        ui.AddMessage("Potion! +5 HP");
                         ui.RenderStatusBar(game);
                         ui.RenderCombat(game);
                         Thread.Sleep(600); // Let player see the healing
@@ -418,65 +493,16 @@ while (playing)
                         continue;
                     }
 
-                    // GENERATION 35: Skills Menu
-                    if (combatKey == ConsoleKey.S)
+                    var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
+                    int hpBefore = game.PlayerHP;
+                    game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
+                    int hpAfter = game.PlayerHP;
+
+                    if (hpAfter < hpBefore)
                     {
-                        ui.RenderSkillsMenu(game);
-                        var skillKey = Console.ReadKey(intercept: true).Key;
-
-                        if (skillKey == ConsoleKey.Escape)
-                        {
-                            // Cancel - redraw combat
-                            ui.RenderStatusBar(game);
-                            ui.RenderCombat(game);
-                            continue;
-                        }
-
-                        // Try to use skill 1-5
-                        int skillIndex = skillKey switch
-                        {
-                            ConsoleKey.D1 or ConsoleKey.NumPad1 => 0,
-                            ConsoleKey.D2 or ConsoleKey.NumPad2 => 1,
-                            ConsoleKey.D3 or ConsoleKey.NumPad3 => 2,
-                            ConsoleKey.D4 or ConsoleKey.NumPad4 => 3,
-                            ConsoleKey.D5 or ConsoleKey.NumPad5 => 4,
-                            _ => -1
-                        };
-
-                        if (skillIndex >= 0)
-                        {
-                            var skills = game.GetAvailableSkills();
-                            if (skillIndex < skills.Count)
-                            {
-                                var skill = skills[skillIndex];
-                                game.QueueSkillForNextRound(skill);
-                                // Use skill action
-                                game.ExecuteGameLoopRoundWithRandomHits(CombatAction.UseSkill, CombatAction.Attack);
-                                logger.LogEvent("SKILL", $"Used {skill.Name}");
-                            }
-                            else
-                            {
-                                // Invalid skill - redraw combat
-                                ui.RenderStatusBar(game);
-                                ui.RenderCombat(game);
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            // Invalid key - redraw combat
-                            ui.RenderStatusBar(game);
-                            ui.RenderCombat(game);
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
-                        game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
+                        logger.LogEvent("DAMAGE", $"Player took {hpBefore - hpAfter} damage. HP: {hpAfter}/{game.MaxPlayerHP}");
                     }
 
-                    // Common combat result handling
                     logger.LogEvent("COMBAT_ROUND", game.CombatLog);
                     ui.AddMessage(game.CombatLog);
                     Thread.Sleep(900); // Pause to read combat results
@@ -487,7 +513,7 @@ while (playing)
                         if (game.IsWon)
                         {
                             logger.LogEvent("VICTORY", $"Defeated {game.EnemyName}. XP: {game.PlayerXP}");
-                            ui.AddMessage("✅ Victory!");
+                            ui.AddMessage("OK Victory!");
 
                             // Remove defeated mob from map if it was a mob encounter
                             if (mob != null)
@@ -543,7 +569,7 @@ while (playing)
         {
             if (game.UsePotion())
             {
-                ui.AddMessage("🧪 Used potion! +5 HP");
+                ui.AddMessage("Used potion! +5 HP");
                 ui.RenderStatusBar(game);
                 Thread.Sleep(600);
             }
@@ -577,7 +603,7 @@ while (playing)
             {
                 // Walked into a dungeon mob!
                 game.TriggerDungeonCombat();
-                ui.AddMessage($"👹 {game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
+                ui.AddMessage($"{game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
                 Thread.Sleep(800);
 
                 while (!game.CombatEnded && playing)
@@ -587,7 +613,7 @@ while (playing)
 
                     if (combatKey == ConsoleKey.P && game.UsePotion())
                     {
-                        ui.AddMessage("🧪 +5 HP");
+                        ui.AddMessage("+5 HP");
                         ui.RenderStatusBar(game);
                         Thread.Sleep(600);
                         continue;
@@ -622,7 +648,7 @@ while (playing)
                         game.ProcessGameLoopVictory();
                         if (game.IsWon)
                         {
-                            ui.AddMessage("✅ Victory!");
+                            ui.AddMessage("OK Victory!");
                             // Remove defeated dungeon mob!
                             game.RemoveDungeonMob(dungeonMob);
                             ui.RenderStatusBar(game);
@@ -648,7 +674,7 @@ while (playing)
             {
                 // Stepped on treasure!
                 int gold = game.RollForTreasure(game.DungeonDepth);
-                ui.AddMessage($"💎 TREASURE CHEST! Found {gold} gold!");
+                ui.AddMessage($"TREASURE CHEST! Found {gold} gold!");
                 ui.RenderStatusBar(game);
                 Thread.Sleep(800);
 
@@ -659,7 +685,7 @@ while (playing)
             {
                 // Stepped on trap!
                 int dmg = game.TriggerTrap();
-                ui.AddMessage($"💥 TRAP! Took {dmg} damage!");
+                ui.AddMessage($"TRAP! Took {dmg} damage!");
                 ui.RenderStatusBar(game);
                 Thread.Sleep(900);
 
@@ -685,7 +711,7 @@ while (playing)
 
                     if (combatKey == ConsoleKey.P && game.UsePotion())
                     {
-                        ui.AddMessage("🧪 +5 HP");
+                        ui.AddMessage("+5 HP");
                         ui.RenderStatusBar(game);
                         Thread.Sleep(600);
                         continue;
@@ -720,7 +746,7 @@ while (playing)
                         game.ProcessGameLoopVictory();
                         if (game.IsWon)
                         {
-                            ui.AddMessage("🏆 BOSS DEFEATED!");
+                            ui.AddMessage("BOSS DEFEATED!");
                             game.MarkBossDefeated(); // Spawn artifact and portal!
                             game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
                             ui.RenderStatusBar(game);
@@ -754,7 +780,7 @@ while (playing)
                 // Check for victory!
                 if (game.RunWon)
                 {
-                    ui.AddMessage("🎉🎉🎉 VICTORY! YOU WON THE GAME! 🎉🎉🎉");
+                    ui.AddMessage("VICTORY! YOU WON THE GAME!");
                     ui.AddMessage(game.GetVictoryProgress());
                     Thread.Sleep(3000);
                     playing = false;
@@ -772,7 +798,7 @@ while (playing)
                 // Stepped on monster!
                 {
                     game.TriggerDungeonCombat();
-                    ui.AddMessage($"👹 {game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
+                    ui.AddMessage($"{game.EnemyName} [Lvl{game.EnemyLevel}] blocks your path!");
                     Thread.Sleep(800);
 
                     while (!game.CombatEnded && playing)
@@ -782,7 +808,7 @@ while (playing)
 
                         if (combatKey == ConsoleKey.P && game.UsePotion())
                         {
-                            ui.AddMessage("🧪 +5 HP");
+                            ui.AddMessage("+5 HP");
                             ui.RenderStatusBar(game);
                             Thread.Sleep(600);
                             continue;
@@ -801,7 +827,7 @@ while (playing)
                             }
                             if (game.PlayerHP <= 0)
                             {
-                                ui.AddMessage("💀 GAME OVER!");
+                                ui.AddMessage("GAME OVER!");
                                 Thread.Sleep(1200);
                                 playing = false;
                                 break;
@@ -819,7 +845,7 @@ while (playing)
                             game.ProcessGameLoopVictory();
                             if (game.IsWon)
                             {
-                                ui.AddMessage("✅ Victory!");
+                                ui.AddMessage("OK Victory!");
                                 // Remove defeated monster from map!
                                 game.SetDungeonTileForTesting(game.PlayerX, game.PlayerY, "Floor");
                                 ui.RenderStatusBar(game);
@@ -828,7 +854,7 @@ while (playing)
                             }
                             else
                             {
-                                ui.AddMessage("💀 GAME OVER!");
+                                ui.AddMessage("GAME OVER!");
                                 Thread.Sleep(1500);
                                 playing = false;
                             }
@@ -839,7 +865,7 @@ while (playing)
             }
             else if (currentTile == "Stairs")
             {
-                ui.AddMessage("🚪 Found stairs! Press [D] to descend or keep exploring");
+                ui.AddMessage("Found stairs! Press [D] to descend or keep exploring");
             }
         }
         else if (key == ConsoleKey.D && game.InDungeon)
@@ -848,7 +874,7 @@ while (playing)
             if (game.GetDungeonTile(game.PlayerX, game.PlayerY) == "Stairs")
             {
                 game.DescendDungeon();
-                ui.AddMessage($"⬇️  Descended to Depth {game.DungeonDepth}!");
+                ui.AddMessage($"Descended to Depth {game.DungeonDepth}!");
                 ui.RenderStatusBar(game);
                 ui.RenderMap(game); // Show new floor!
                 Thread.Sleep(600);
@@ -864,7 +890,7 @@ while (playing)
                  key == ConsoleKey.LeftArrow || key == ConsoleKey.RightArrow)
         {
             // Tried to move but hit a wall
-            ui.AddMessage("🧱 Wall blocks your path!");
+            ui.AddMessage("Wall blocks your path!");
             Thread.Sleep(300);
         }
     }
@@ -873,9 +899,7 @@ while (playing)
 ui.Cleanup();
 
 logger.LogEvent("GAME", "Game session ended");
-Console.WriteLine("\n╔════════════════════════════════════════╗");
-Console.WriteLine("║      GAME ENDED                        ║");
-Console.WriteLine("╚════════════════════════════════════════╝");
+Console.WriteLine("\n" + UIFramework.CreateMessageBox("GAME ENDED", width: 40));
 
 // Determine why game ended
 string endReason = "Unknown";

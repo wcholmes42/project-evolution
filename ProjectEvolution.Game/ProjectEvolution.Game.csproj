@@ -13,4 +13,8 @@
     <None Include="GeneratedCode/**/*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Raylib-CsLo" Version="4.2.0.9" />
+  </ItemGroup>
+
 </Project>

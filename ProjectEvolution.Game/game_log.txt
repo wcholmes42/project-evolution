@@ -1024,18 +1024,388 @@
 [11:37:11] DUMP: 
 [11:37:11] DUMP: ═══════════════════════════════════════════════════════
 [11:37:11] DUMP: 
-[09:33:06] GAME: Project Evolution started!
-[09:33:06] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
-[09:33:06] INIT: Player spawned at (10,10)
-[10:34:54] GAME: Project Evolution started!
-[10:34:54] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
-[10:34:54] INIT: Player spawned at (10,10)
-[10:40:38] GAME: Project Evolution started!
-[10:40:38] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
-[10:40:38] INIT: Player spawned at (10,10)
-[10:43:33] GAME: Project Evolution started!
-[10:43:34] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
-[10:43:34] INIT: Player spawned at (10,10)
-[12:58:03] GAME: Project Evolution started!
-[12:58:03] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
-[12:58:03] INIT: Player spawned at (10,10)
+[14:45:29] GAME: Project Evolution started! (Graphics Mode)
+[14:45:29] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3
+[14:45:29] INIT: Player spawned at (10,10)
+[14:45:32] MOVE: Moved to (9,10) - Grassland
+[14:45:32] MOVE: Moved to (8,10) - Mountain
+[14:45:33] MOVE: Moved to (7,10) - Forest
+[14:45:33] MOVE: Moved to (6,10) - Grassland
+[14:45:34] MOVE: Moved to (5,10) - Grassland
+[14:45:34] MOVE: Moved to (5,11) - Grassland
+[14:45:35] MOVE: Moved to (5,12) - Grassland
+[14:45:35] MOVE: Moved to (5,13) - Grassland
+[14:45:35] MOVE: Moved to (6,13) - Grassland
+[14:45:35] MOVE: Moved to (7,13) - Mountain
+[14:45:36] MOVE: Moved to (8,13) - Forest
+[14:45:36] ENCOUNTER: Random encounter: Ambusher appeared!
+[14:45:36] MOVE: Moved to (9,13) - Mountain
+[14:45:36] ENCOUNTER: Mob encounter: Ambusher at (9,13)
+[14:45:36] VICTORY: Defeated Ambusher
+[14:45:36] MOVE: Moved to (10,13) - Grassland
+[14:45:36] MOVE: Moved to (10,12) - Forest
+[14:45:37] MOVE: Moved to (10,11) - Grassland
+[14:45:37] ENCOUNTER: Mob encounter: Goblin Archer at (10,11)
+[14:45:37] VICTORY: Defeated Goblin Archer
+[14:45:37] MOVE: Moved to (10,10) - Temple
+[14:45:37] MOVE: Moved to (10,9) - Grassland
+[14:45:37] MOVE: Moved to (10,8) - Grassland
+[14:45:38] MOVE: Moved to (10,7) - Grassland
+[14:45:38] MOVE: Moved to (10,6) - Grassland
+[14:45:38] MOVE: Moved to (10,5) - Dungeon
+[14:45:38] MOVE: Moved to (11,5) - Grassland
+[14:45:38] MOVE: Moved to (12,5) - Mountain
+[14:45:38] ENCOUNTER: Mob encounter: Goblin Warrior at (12,5)
+[14:45:38] VICTORY: Defeated Goblin Warrior
+[14:45:39] MOVE: Moved to (13,5) - Forest
+[14:45:39] MOVE: Moved to (14,5) - Forest
+[14:45:39] MOVE: Moved to (15,5) - Grassland
+[14:45:39] MOVE: Moved to (15,6) - Forest
+[14:45:40] MOVE: Moved to (15,7) - Grassland
+[14:45:40] MOVE: Moved to (15,8) - Forest
+[14:45:40] MOVE: Moved to (15,9) - Grassland
+[14:45:40] MOVE: Moved to (15,10) - Forest
+[14:45:40] MOVE: Moved to (15,11) - Forest
+[14:45:41] MOVE: Moved to (15,12) - Mountain
+[14:45:41] MOVE: Moved to (15,13) - Forest
+[14:45:41] ENCOUNTER: Random encounter: Ambusher appeared!
+[14:45:41] MOVE: Moved to (15,14) - Mountain
+[14:45:41] ENCOUNTER: Mob encounter: Ambusher at (15,14)
+[14:45:41] VICTORY: Defeated Ambusher
+[14:45:41] MOVE: Moved to (15,15) - Town
+[14:45:41] ENCOUNTER: Mob encounter: Goblin Scout at (15,15)
+[14:45:41] VICTORY: Defeated Goblin Scout
+[14:45:42] MOVE: Moved to (14,15) - Grassland
+[14:45:42] MOVE: Moved to (13,15) - Grassland
+[14:45:42] MOVE: Moved to (12,15) - Grassland
+[14:45:45] GAME: Game session ended
+[14:45:45] DUMP: 
+[14:45:45] DUMP: ═══════════════════════════════════════════════════════
+[14:45:45] DUMP:           GAME STATE DUMP
+[14:45:45] DUMP: Reason: Player quit
+[14:45:45] DUMP: ═══════════════════════════════════════════════════════
+[14:45:45] DUMP: 
+[14:45:45] DUMP: PLAYER STATE:
+[14:45:45] DUMP:   Level: 1
+[14:45:45] DUMP:   HP: 96/100
+[14:45:45] DUMP:   XP: 70/100
+[14:45:45] DUMP:   Gold: 85g
+[14:45:45] DUMP:   Strength: 10
+[14:45:45] DUMP:   Defense: 5
+[14:45:45] DUMP:   Stamina: 996/12
+[14:45:45] DUMP:   Potions: 3
+[14:45:45] DUMP:   Stat Points: 0
+[14:45:45] DUMP: 
+[14:45:45] DUMP: LOCATION:
+[14:45:45] DUMP:   Position: (12, 15)
+[14:45:45] DUMP:   Terrain: Grassland
+[14:45:45] DUMP:   In Location: False
+[14:45:45] DUMP:   In Dungeon: False
+[14:45:45] DUMP:   Dungeon Depth: 0
+[14:45:45] DUMP: 
+[14:45:45] DUMP: PROGRESS:
+[14:45:45] DUMP:   Combats Won: 5
+[14:45:45] DUMP:   Deaths: 0
+[14:45:45] DUMP:   Run Ended: False
+[14:45:45] DUMP: 
+[14:45:45] DUMP: COMBAT STATE:
+[14:45:45] DUMP:   In Combat: False
+[14:45:45] DUMP:   Combat Won: True
+[14:45:45] DUMP:   Enemy: Goblin Scout [Lvl 1]
+[14:45:45] DUMP:   Enemy HP: 0
+[14:45:45] DUMP:   Enemy Damage: 1
+[14:45:45] DUMP: 
+[14:45:45] DUMP: ═══════════════════════════════════════════════════════
+[14:45:45] DUMP: 
+[15:02:36] GAME: Project Evolution started! (Graphics Mode)
+[15:02:36] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3
+[15:02:36] INIT: Player spawned at (10,10)
+[15:02:39] MOVE: Moved to (10,11) - Grassland
+[15:02:39] MOVE: Moved to (10,12) - Forest
+[15:02:40] MOVE: Moved to (10,13) - Grassland
+[15:02:40] ENCOUNTER: Mob encounter: Goblin Archer at (10,13)
+[15:02:40] VICTORY: Defeated Goblin Archer
+[15:02:40] MOVE: Moved to (9,13) - Mountain
+[15:02:40] MOVE: Moved to (8,13) - Forest
+[15:02:41] MOVE: Moved to (7,13) - Mountain
+[15:02:41] MOVE: Moved to (6,13) - Grassland
+[15:02:42] MOVE: Moved to (5,13) - Grassland
+[15:02:42] MOVE: Moved to (4,13) - Forest
+[15:02:42] MOVE: Moved to (3,13) - Grassland
+[15:02:42] MOVE: Moved to (2,13) - Mountain
+[15:02:43] MOVE: Moved to (2,14) - Forest
+[15:02:43] MOVE: Moved to (2,15) - Mountain
+[15:02:43] MOVE: Moved to (2,16) - Forest
+[15:02:43] ENCOUNTER: Random encounter: Ambusher appeared!
+[15:02:43] MOVE: Moved to (2,17) - Mountain
+[15:02:43] ENCOUNTER: Mob encounter: Ambusher at (2,17)
+[15:02:43] VICTORY: Defeated Ambusher
+[15:02:43] MOVE: Moved to (2,18) - Forest
+[15:02:44] MOVE: Moved to (2,19) - Grassland
+[15:02:44] MOVE: Moved to (3,19) - Forest
+[15:02:44] MOVE: Moved to (4,19) - Mountain
+[15:02:45] MOVE: Moved to (5,19) - Grassland
+[15:02:45] MOVE: Moved to (6,19) - Forest
+[15:02:45] MOVE: Moved to (7,19) - Grassland
+[15:02:45] MOVE: Moved to (8,19) - Grassland
+[15:02:45] MOVE: Moved to (9,19) - Mountain
+[15:02:46] MOVE: Moved to (10,19) - Forest
+[15:02:46] ENCOUNTER: Random encounter: Ambusher appeared!
+[15:02:46] MOVE: Moved to (10,18) - Mountain
+[15:02:46] ENCOUNTER: Mob encounter: Ambusher at (10,18)
+[15:02:46] VICTORY: Defeated Ambusher
+[15:02:46] MOVE: Moved to (10,17) - Forest
+[15:02:46] MOVE: Moved to (10,16) - Mountain
+[15:02:47] MOVE: Moved to (10,15) - Dungeon
+[15:02:47] MOVE: Moved to (10,14) - Forest
+[15:02:47] MOVE: Moved to (10,13) - Grassland
+[15:02:47] MOVE: Moved to (10,12) - Forest
+[15:02:48] MOVE: Moved to (10,11) - Grassland
+[15:02:48] MOVE: Moved to (11,11) - Grassland
+[15:02:48] MOVE: Moved to (12,11) - Grassland
+[15:02:48] MOVE: Moved to (13,11) - Grassland
+[15:02:49] GAME: Game session ended
+[15:02:49] DUMP: 
+[15:02:49] DUMP: ═══════════════════════════════════════════════════════
+[15:02:49] DUMP:           GAME STATE DUMP
+[15:02:49] DUMP: Reason: Game completed
+[15:02:49] DUMP: ═══════════════════════════════════════════════════════
+[15:02:49] DUMP: 
+[15:02:49] DUMP: PLAYER STATE:
+[15:02:49] DUMP:   Level: 1
+[15:02:49] DUMP:   HP: 96/100
+[15:02:49] DUMP:   XP: 35/100
+[15:02:49] DUMP:   Gold: 65g
+[15:02:49] DUMP:   Strength: 10
+[15:02:49] DUMP:   Defense: 5
+[15:02:49] DUMP:   Stamina: 996/12
+[15:02:49] DUMP:   Potions: 3
+[15:02:49] DUMP:   Stat Points: 0
+[15:02:49] DUMP: 
+[15:02:49] DUMP: LOCATION:
+[15:02:49] DUMP:   Position: (13, 11)
+[15:02:49] DUMP:   Terrain: Grassland
+[15:02:49] DUMP:   In Location: False
+[15:02:49] DUMP:   In Dungeon: False
+[15:02:49] DUMP:   Dungeon Depth: 0
+[15:02:49] DUMP: 
+[15:02:49] DUMP: PROGRESS:
+[15:02:49] DUMP:   Combats Won: 3
+[15:02:49] DUMP:   Deaths: 0
+[15:02:49] DUMP:   Run Ended: False
+[15:02:49] DUMP: 
+[15:02:49] DUMP: COMBAT STATE:
+[15:02:49] DUMP:   In Combat: False
+[15:02:49] DUMP:   Combat Won: True
+[15:02:49] DUMP:   Enemy: Ambusher [Lvl 2]
+[15:02:49] DUMP:   Enemy HP: 0
+[15:02:49] DUMP:   Enemy Damage: 1
+[15:02:49] DUMP: 
+[15:02:49] DUMP: ═══════════════════════════════════════════════════════
+[15:02:49] DUMP: 
+[15:24:51] GAME: Project Evolution started! (Graphics Mode)
+[15:24:51] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3
+[15:24:51] INIT: Player spawned at (10,10)
+[15:28:09] GAME: Project Evolution started! (Graphics Mode)
+[15:28:09] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3
+[15:28:09] INIT: Player spawned at (10,10)
+[15:28:34] GAME: Game session ended
+[15:28:34] DUMP: 
+[15:28:34] DUMP: ═══════════════════════════════════════════════════════
+[15:28:34] DUMP:           GAME STATE DUMP
+[15:28:34] DUMP: Reason: Player quit
+[15:28:34] DUMP: ═══════════════════════════════════════════════════════
+[15:28:34] DUMP: 
+[15:28:34] DUMP: PLAYER STATE:
+[15:28:34] DUMP:   Level: 1
+[15:28:34] DUMP:   HP: 100/100
+[15:28:34] DUMP:   XP: 0/100
+[15:28:34] DUMP:   Gold: 35g
+[15:28:34] DUMP:   Strength: 10
+[15:28:34] DUMP:   Defense: 5
+[15:28:34] DUMP:   Stamina: 12/12
+[15:28:34] DUMP:   Potions: 3
+[15:28:34] DUMP:   Stat Points: 0
+[15:28:34] DUMP: 
+[15:28:34] DUMP: LOCATION:
+[15:28:34] DUMP:   Position: (10, 10)
+[15:28:34] DUMP:   Terrain: Temple
+[15:28:34] DUMP:   In Location: False
+[15:28:34] DUMP:   In Dungeon: False
+[15:28:34] DUMP:   Dungeon Depth: 0
+[15:28:34] DUMP: 
+[15:28:34] DUMP: PROGRESS:
+[15:28:34] DUMP:   Combats Won: 0
+[15:28:34] DUMP:   Deaths: 0
+[15:28:34] DUMP:   Run Ended: False
+[15:28:34] DUMP: 
+[15:28:34] DUMP: COMBAT STATE:
+[15:28:34] DUMP:   In Combat: True
+[15:28:34] DUMP:   Combat Won: False
+[15:28:34] DUMP:   Enemy: Goblin [Lvl 1]
+[15:28:34] DUMP:   Enemy HP: 0
+[15:28:34] DUMP:   Enemy Damage: 1
+[15:28:34] DUMP: 
+[15:28:34] DUMP: ═══════════════════════════════════════════════════════
+[15:28:34] DUMP: 
+[15:28:58] GAME: Project Evolution started!
+[15:28:58] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[15:28:58] INIT: Player spawned at (10,10)
+[15:29:01] MOVE: South to (10,11) - Grassland (-1 turns)
+[15:29:01] ENCOUNTER: Mob encounter: Goblin Archer at (10,11)
+[15:29:01] COMBAT: Fighting Goblin Archer [Lvl1] HP:2
+[15:29:02] COMBAT_ROUND: Goblin Archer misses! 
+[15:29:08] DAMAGE: Player took 1 damage. HP: 99/100
+[15:29:08] COMBAT_ROUND: Hit 10! Goblin Archer 1! Victory! +10g +15xp!
+[15:29:09] VICTORY: Defeated Goblin Archer. XP: 15
+[15:29:09] MOB: Removed Goblin Archer from map
+[15:29:13] MOVE: North to (10,10) - Temple (-1 turns)
+[15:29:13] ENCOUNTER: Mob encounter: Goblin Scout at (10,10)
+[15:29:14] COMBAT: Fighting Goblin Scout [Lvl2] HP:5
+[15:29:15] DAMAGE: Player took 1 damage. HP: 98/100
+[15:29:15] COMBAT_ROUND: Hit 10! Goblin Scout 1! Victory! +10g +10xp!
+[15:29:16] VICTORY: Defeated Goblin Scout. XP: 25
+[15:29:16] MOB: Removed Goblin Scout from map
+[15:29:25] MOVE: South to (10,11) - Grassland (-1 turns)
+[15:29:26] MOVE: South to (10,12) - Forest (-2 turns)
+[15:29:27] MOVE: South to (10,13) - Grassland (-1 turns)
+[15:29:27] MOVE: South to (10,14) - Forest (-2 turns)
+[15:29:28] MOVE: East to (11,14) - Grassland (-1 turns)
+[15:29:28] MOVE: East to (12,14) - Grassland (-1 turns)
+[15:29:28] MOVE: East to (13,14) - Grassland (-1 turns)
+[15:29:29] MOVE: South to (13,15) - Grassland (-1 turns)
+[15:29:29] MOVE: South to (13,16) - Grassland (-1 turns)
+[15:29:29] MOVE: East to (14,16) - Grassland (-1 turns)
+[15:29:30] MOVE: South to (14,17) - Grassland (-1 turns)
+[15:29:30] MOVE: South to (14,18) - Grassland (-1 turns)
+[15:29:30] MOVE: South to (14,19) - Grassland (-1 turns)
+[15:29:31] MOVE: East to (15,19) - Grassland (-1 turns)
+[15:29:31] MOVE: East to (16,19) - Mountain (-3 turns)
+[15:29:32] MOVE: North to (16,18) - Forest (-2 turns)
+[15:29:32] MOVE: North to (16,17) - Mountain (-3 turns)
+[15:29:32] MOVE: North to (16,16) - Forest (-2 turns)
+[15:29:32] ENCOUNTER: Random encounter at (16,16)
+[15:29:33] MOVE: North to (16,15) - Mountain (-3 turns)
+[15:29:33] ENCOUNTER: Mob encounter: Ambusher at (16,15)
+[15:29:34] COMBAT: Fighting Ambusher [Lvl2] HP:8
+[15:29:34] COMBAT_ROUND: Ambusher misses! 
+[15:29:35] COMBAT_ROUND: Ambusher misses! 
+[15:29:36] COMBAT_ROUND: Ambusher misses! 
+[15:29:37] COMBAT_ROUND: Ambusher misses! 
+[15:29:38] COMBAT_ROUND: Ambusher misses! 
+[15:29:39] COMBAT_ROUND: Ambusher misses! 
+[15:29:40] COMBAT_ROUND: Ambusher misses! 
+[15:29:41] COMBAT_ROUND: Ambusher misses! 
+[15:29:42] COMBAT_ROUND: Ambusher misses! 
+[15:29:42] COMBAT_ROUND: Ambusher misses! 
+[15:29:43] DAMAGE: Player took 1 damage. HP: 97/100
+[15:29:43] COMBAT_ROUND: CRIT 20! Ambusher CRIT 1! Victory! +10g +25xp!
+[15:29:44] VICTORY: Defeated Ambusher. XP: 50
+[15:29:44] MOB: Removed Ambusher from map
+[15:29:46] MOVE: West to (15,15) - Town (-1 turns)
+[15:29:47] MOVE: West to (14,15) - Grassland (-1 turns)
+[15:29:48] MOVE: West to (13,15) - Grassland (-1 turns)
+[15:29:48] MOVE: North to (13,14) - Grassland (-1 turns)
+[15:29:48] ENCOUNTER: Random encounter at (13,14)
+[15:29:49] MOVE: West to (12,14) - Grassland (-1 turns)
+[15:29:50] MOVE: North to (12,13) - Grassland (-1 turns)
+[15:29:50] MOVE: North to (12,12) - Grassland (-1 turns)
+[15:29:51] MOVE: North to (12,11) - Grassland (-1 turns)
+[15:29:51] MOVE: West to (11,11) - Grassland (-1 turns)
+[15:29:52] MOVE: North to (11,10) - Grassland (-1 turns)
+[15:29:52] MOVE: North to (11,9) - Grassland (-1 turns)
+[15:29:52] MOVE: North to (11,8) - Grassland (-1 turns)
+[15:29:52] ENCOUNTER: Random encounter at (11,8)
+[15:29:53] MOVE: West to (10,8) - Grassland (-1 turns)
+[15:29:53] ENCOUNTER: Mob encounter: Ambusher at (10,8)
+[15:29:54] COMBAT: Fighting Ambusher [Lvl2] HP:6
+[15:29:54] COMBAT_ROUND: Ambusher misses! 
+[15:29:55] DAMAGE: Player took 1 damage. HP: 96/100
+[15:29:55] COMBAT_ROUND: Hit 10! Ambusher 1! Victory! +10g +15xp!
+[15:29:56] VICTORY: Defeated Ambusher. XP: 65
+[15:29:56] MOB: Removed Ambusher from map
+[15:37:40] GAME: Project Evolution started! (Graphics Mode)
+[15:37:40] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3
+[15:37:40] INIT: Player spawned at (10,10)
+[15:38:03] GAME: Game session ended
+[15:38:03] DUMP: 
+[15:38:03] DUMP: ═══════════════════════════════════════════════════════
+[15:38:03] DUMP:           GAME STATE DUMP
+[15:38:03] DUMP: Reason: Player quit
+[15:38:03] DUMP: ═══════════════════════════════════════════════════════
+[15:38:03] DUMP: 
+[15:38:03] DUMP: PLAYER STATE:
+[15:38:03] DUMP:   Level: 1
+[15:38:03] DUMP:   HP: 100/100
+[15:38:03] DUMP:   XP: 0/100
+[15:38:03] DUMP:   Gold: 35g
+[15:38:03] DUMP:   Strength: 10
+[15:38:03] DUMP:   Defense: 5
+[15:38:03] DUMP:   Stamina: 12/12
+[15:38:03] DUMP:   Potions: 3
+[15:38:03] DUMP:   Stat Points: 0
+[15:38:03] DUMP: 
+[15:38:03] DUMP: LOCATION:
+[15:38:03] DUMP:   Position: (10, 10)
+[15:38:03] DUMP:   Terrain: Temple
+[15:38:03] DUMP:   In Location: False
+[15:38:03] DUMP:   In Dungeon: False
+[15:38:03] DUMP:   Dungeon Depth: 0
+[15:38:03] DUMP: 
+[15:38:03] DUMP: PROGRESS:
+[15:38:03] DUMP:   Combats Won: 0
+[15:38:03] DUMP:   Deaths: 0
+[15:38:03] DUMP:   Run Ended: False
+[15:38:03] DUMP: 
+[15:38:03] DUMP: COMBAT STATE:
+[15:38:03] DUMP:   In Combat: True
+[15:38:03] DUMP:   Combat Won: False
+[15:38:03] DUMP:   Enemy: Goblin [Lvl 1]
+[15:38:03] DUMP:   Enemy HP: 0
+[15:38:03] DUMP:   Enemy Damage: 1
+[15:38:03] DUMP: 
+[15:38:03] DUMP: ═══════════════════════════════════════════════════════
+[15:38:03] DUMP: 
+[15:39:44] GAME: Project Evolution started!
+[15:39:44] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[15:39:44] INIT: Player spawned at (10,10)
+[15:41:53] MOVE: East to (11,10) - Grassland (-1 turns)
+[15:41:54] MOVE: South to (11,11) - Grassland (-1 turns)
+[15:41:55] MOVE: South to (11,12) - Grassland (-1 turns)
+[15:41:55] MOVE: West to (10,12) - Forest (-2 turns)
+[15:41:58] MOVE: South to (10,13) - Grassland (-1 turns)
+[15:42:01] MOVE: North to (10,12) - Forest (-2 turns)
+[15:42:02] MOVE: North to (10,11) - Grassland (-1 turns)
+[15:42:03] MOVE: East to (11,11) - Grassland (-1 turns)
+[15:42:03] MOVE: North to (11,10) - Grassland (-1 turns)
+[15:57:19] GAME: Project Evolution started!
+[15:57:19] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[15:57:19] INIT: Player spawned at (10,10)
+[16:01:37] GAME: Project Evolution started!
+[16:01:37] CONFIG: 🤖 AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[16:01:37] INIT: Player spawned at (10,10)
+[16:01:43] MOVE: South to (10,11) - Grassland (-1 turns)
+[16:01:44] MOVE: South to (10,12) - Forest (-2 turns)
+[16:01:45] MOVE: South to (10,13) - Grassland (-1 turns)
+[16:01:45] ENCOUNTER: Mob encounter: Goblin Scout at (10,13)
+[16:01:46] COMBAT: Fighting Goblin Scout [Lvl1] HP:2
+[16:01:46] COMBAT_ROUND: Goblin Scout misses! 
+[16:12:30] COMBAT_ROUND: Goblin Scout misses! 
+[16:12:31] COMBAT_ROUND: Goblin Scout misses! 
+[16:12:38] GAME: Project Evolution started!
+[16:12:38] CONFIG: AI-TUNED: HP=100, Det=2, Mobs=3, STR=10, DEF=5
+[16:12:38] INIT: Player spawned at (10,10)
+[16:12:45] MOVE: South to (10,11) - Grassland (-1 turns)
+[16:12:45] MOVE: South to (10,12) - Forest (-2 turns)
+[16:12:46] MOVE: South to (10,13) - Grassland (-1 turns)
+[16:12:49] MOVE: South to (10,14) - Forest (-2 turns)
+[16:12:50] MOVE: South to (10,15) - Dungeon (-1 turns)
+[16:12:50] ENCOUNTER: Mob encounter: Goblin Warrior at (10,15)
+[16:12:50] COMBAT: Fighting Goblin Warrior [Lvl2] HP:7
+[16:13:02] COMBAT_ROUND: Goblin Warrior misses! 
+[16:13:06] DAMAGE: Player took 1 damage. HP: 99/100
+[16:13:06] COMBAT_ROUND: MISS! Goblin Warrior CRIT 1! 
+[16:13:09] DAMAGE: Player took 1 damage. HP: 98/100
+[16:13:09] COMBAT_ROUND: Hit 10! Goblin Warrior 1! Victory! +10g +25xp!
+[16:13:10] VICTORY: Defeated Goblin Warrior. XP: 25
+[16:13:10] MOB: Removed Goblin Warrior from map

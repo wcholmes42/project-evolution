@@ -3531,6 +3531,11 @@ public class RPGGame
         _activeMobs.Remove(mob);
     }
 
+    public List<Mob> GetAllWorldMobs()
+    {
+        return _activeMobs;
+    }
+
     // NEW: Active World - Mobs move toward player
     public void UpdateWorldMobs()
     {

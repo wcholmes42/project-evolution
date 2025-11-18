@@ -1,0 +1,166 @@
+═══════════════════════════════════════════════════════════
+         TMX TILE ANALYSIS - Kenney Roguelike Pack
+═══════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════
+Analyzing: sample_map.tmx
+═══════════════════════════════════════════════
+
+Map Size: 100x100
+Tileset: Roguelike
+Tile Size: 16x16
+Spacing: 1px
+Image: roguelikeSheet_transparent.png (968x526)
+
+
+--- Layer: Ground/terrain ---
+  Total tiles: 10000
+  Non-empty tiles: 10000
+  Unique tiles used: 14
+
+  Top 10 tiles used:
+    Tile   63 (row  1, col  5) - used  9858 times
+    Tile   61 (row  1, col  3) - used    62 times
+    Tile    6 (row  0, col  5) - used    36 times
+    Tile   62 (row  1, col  4) - used     9 times
+    Tile   60 (row  1, col  2) - used     8 times
+    Tile    4 (row  0, col  3) - used     7 times
+    Tile  118 (row  2, col  3) - used     6 times
+    Tile    3 (row  0, col  2) - used     3 times
+    Tile  119 (row  2, col  4) - used     3 times
+    Tile  116 (row  2, col  1) - used     2 times
+
+--- Layer: Ground overlay ---
+  Total tiles: 10000
+  Non-empty tiles: 126
+  Unique tiles used: 20
+
+  Top 10 tiles used:
+    Tile  921 (row 16, col  8) - used    58 times
+    Tile  579 (row 10, col  8) - used    20 times
+    Tile  920 (row 16, col  7) - used    13 times
+    Tile  636 (row 11, col  8) - used     5 times
+    Tile  978 (row 17, col  8) - used     5 times
+    Tile  522 (row  9, col  8) - used     4 times
+    Tile  521 (row  9, col  7) - used     3 times
+    Tile  523 (row  9, col  9) - used     2 times
+    Tile  578 (row 10, col  7) - used     2 times
+    Tile  580 (row 10, col  9) - used     2 times
+
+--- Layer: Objects ---
+  Total tiles: 10000
+  Non-empty tiles: 414
+  Unique tiles used: 75
+
+  Top 10 tiles used:
+    Tile  644 (row 11, col 16) - used    69 times
+    Tile  587 (row 10, col 16) - used    66 times
+    Tile  409 (row  7, col  9) - used    51 times
+    Tile  466 (row  8, col  9) - used    28 times
+    Tile  808 (row 14, col  9) - used    21 times
+    Tile  874 (row 15, col 18) - used    11 times
+    Tile 1417 (row 24, col 48) - used    10 times
+    Tile  593 (row 10, col 22) - used     9 times
+    Tile  584 (row 10, col 13) - used     9 times
+    Tile  641 (row 11, col 13) - used     9 times
+
+--- Layer: Doors/windows/roof ---
+  Total tiles: 10000
+  Non-empty tiles: 77
+  Unique tiles used: 47
+
+  Top 10 tiles used:
+    Tile  587 (row 10, col 16) - used     6 times
+    Tile  644 (row 11, col 16) - used     4 times
+    Tile 1218 (row 21, col 20) - used     3 times
+    Tile 1219 (row 21, col 21) - used     3 times
+    Tile 1276 (row 22, col 21) - used     3 times
+    Tile 1332 (row 23, col 20) - used     3 times
+    Tile 1333 (row 23, col 21) - used     3 times
+    Tile 1232 (row 21, col 34) - used     2 times
+    Tile 1233 (row 21, col 35) - used     2 times
+    Tile 1289 (row 22, col 34) - used     2 times
+
+--- Layer: Roof object ---
+  Total tiles: 10000
+  Non-empty tiles: 1
+  Unique tiles used: 1
+
+  Top 10 tiles used:
+    Tile  303 (row  5, col 17) - used     1 times
+
+═══════════════════════════════════════════════
+Analyzing: sample_indoor.tmx
+═══════════════════════════════════════════════
+
+Map Size: 100x100
+Tileset: roguelikeSheet_transparent
+Tile Size: 16x16
+Spacing: 1px
+Image: roguelikeSheet_transparent.png (968x526)
+
+
+--- Layer: Floor ---
+  Total tiles: 10000
+  Non-empty tiles: 246
+  Unique tiles used: 16
+
+  Top 10 tiles used:
+    Tile  120 (row  2, col  5) - used    49 times
+    Tile  121 (row  2, col  6) - used    39 times
+    Tile  699 (row 12, col 14) - used    38 times
+    Tile  869 (row 15, col 13) - used    38 times
+    Tile  874 (row 15, col 18) - used    36 times
+    Tile  757 (row 13, col 15) - used    18 times
+    Tile  870 (row 15, col 14) - used     4 times
+    Tile  872 (row 15, col 16) - used     4 times
+    Tile  701 (row 12, col 16) - used     3 times
+    Tile  702 (row 12, col 17) - used     3 times
+
+--- Layer: Carpet ---
+  Total tiles: 10000
+  Non-empty tiles: 33
+  Unique tiles used: 14
+
+  Top 10 tiles used:
+    Tile  984 (row 17, col 14) - used     6 times
+    Tile  586 (row 10, col 15) - used     4 times
+    Tile  643 (row 11, col 15) - used     4 times
+    Tile  924 (row 16, col 11) - used     3 times
+    Tile  981 (row 17, col 11) - used     3 times
+    Tile 1038 (row 18, col 11) - used     3 times
+    Tile  983 (row 17, col 13) - used     2 times
+    Tile  985 (row 17, col 15) - used     2 times
+    Tile  923 (row 16, col 10) - used     1 times
+    Tile  925 (row 16, col 12) - used     1 times
+
+--- Layer: Objects ---
+  Total tiles: 10000
+  Non-empty tiles: 52
+  Unique tiles used: 30
+
+  Top 10 tiles used:
+    Tile  159 (row  2, col 44) - used     6 times
+    Tile  216 (row  3, col 44) - used     6 times
+    Tile  157 (row  2, col 42) - used     3 times
+    Tile  160 (row  2, col 45) - used     3 times
+    Tile  217 (row  3, col 45) - used     3 times
+    Tile  191 (row  3, col 19) - used     3 times
+    Tile  192 (row  3, col 20) - used     3 times
+    Tile   30 (row  0, col 29) - used     2 times
+    Tile  130 (row  2, col 15) - used     2 times
+    Tile  312 (row  5, col 26) - used     1 times
+
+--- Layer: Details ---
+  Total tiles: 10000
+  Non-empty tiles: 5
+  Unique tiles used: 3
+
+  Top 10 tiles used:
+    Tile  283 (row  4, col 54) - used     3 times
+    Tile  621 (row 10, col 50) - used     1 times
+    Tile  898 (row 15, col 42) - used     1 times
+
+═══════════════════════════════════════════════════════════
+Analysis saved to: tile-analysis.txt
+Press any key to exit...
