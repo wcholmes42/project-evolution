@@ -1577,7 +1577,7 @@ public class MetricResult
 public class CombatBalanceMetric : IFitnessMetric
 {
     public string Name => "Combat Balance";
-    public double Weight => 0.30;
+    public double Weight => 0.25;
 
     public MetricResult Evaluate(ProgressionFrameworkData framework)
     {
@@ -1822,7 +1822,7 @@ public class EconomicHealthMetric : IFitnessMetric
 public class EquipmentCurveMetric : IFitnessMetric
 {
     public string Name => "Equipment Progression";
-    public double Weight => 0.15;
+    public double Weight => 0.10;
 
     public MetricResult Evaluate(ProgressionFrameworkData framework)
     {
@@ -1953,7 +1953,7 @@ public class DifficultyPacingMetric : IFitnessMetric
 public class SkillBalanceMetric : IFitnessMetric
 {
     public string Name => "Skill Balance";
-    public double Weight => 0.20;
+    public double Weight => 0.15;
 
     public MetricResult Evaluate(ProgressionFrameworkData framework)
     {
@@ -2227,17 +2227,151 @@ public class BuildDiversityMetric : IFitnessMetric
     }
 }
 
+public class ProgressionStrataMetric : IFitnessMetric
+{
+    public string Name => "Progression Strata";
+    public double Weight => 0.15;
+
+    public MetricResult Evaluate(ProgressionFrameworkData framework)
+    {
+        var result = new MetricResult { MetricName = Name };
+
+        // Test combat at level 5 with 3 equipment tiers to validate progression feel
+        int testLevel = 5;
+        int baseHP = framework.PlayerProgression.BaseHP + (testLevel * (int)framework.PlayerProgression.HPPerLevel);
+
+        // Realistic stat allocation (60/40 STR/DEF split)
+        int statPoints = (testLevel - 1) * framework.PlayerProgression.StatPointsPerLevel;
+        int baseSTR = framework.PlayerProgression.BaseSTR + (int)(statPoints * 0.6);
+        int baseDEF = framework.PlayerProgression.BaseDEF + (statPoints - (int)(statPoints * 0.6));
+
+        int enemyHP = framework.EnemyProgression.BaseHP + (int)(testLevel * framework.EnemyProgression.HPScalingCoefficient);
+        int enemyDMG = framework.EnemyProgression.BaseDamage + (int)(testLevel * framework.EnemyProgression.DamageScalingCoefficient);
+
+        double totalScore = 0;
+
+        // TIER 0: DEFAULT/NAKED (no equipment) - Should be HARD but WINNABLE
+        int t0STR = baseSTR;
+        int t0DEF = baseDEF;
+        double t0WinRate = TestWinRate(baseHP, t0STR, t0DEF, enemyHP, enemyDMG);
+
+        // Target: 60-70% win rate (challenging, requires skill)
+        double t0Score = 0;
+        if (t0WinRate >= 0.60 && t0WinRate <= 0.70)
+            t0Score = 100; // Perfect - hard but winnable!
+        else if (t0WinRate < 0.60)
+            t0Score = Math.Max(0, (t0WinRate / 0.60) * 100); // Too hard
+        else if (t0WinRate > 0.70)
+            t0Score = Math.Max(0, 100 - (t0WinRate - 0.70) * 300); // Too easy (big penalty!)
+
+        totalScore += t0Score * 0.33; // Tier 0 = 33% of this metric
+        result.Details.Add($"Tier 0 (Default): {t0WinRate:P0} wins (target: 60-70%) → {t0Score:F0}/100");
+
+        if (t0WinRate < 0.50)
+            result.Warnings.Add($"Default gear TOO HARD! Only {t0WinRate:P0} win rate - game unwinnable!");
+        else if (t0WinRate > 0.80)
+            result.Warnings.Add($"Default gear TOO EASY! {t0WinRate:P0} win rate - no progression needed!");
+
+        // TIER 2: MID-GAME EQUIPMENT - Should be EASIER not EASY
+        int t2STR = baseSTR + 2; // +2 weapon
+        int t2DEF = baseDEF + 2; // +2 armor
+        double t2WinRate = TestWinRate(baseHP, t2STR, t2DEF, enemyHP, enemyDMG);
+
+        // Target: 75-85% win rate (comfortable, rewarding)
+        double t2Score = 0;
+        if (t2WinRate >= 0.75 && t2WinRate <= 0.85)
+            t2Score = 100; // Perfect - upgrade feels good!
+        else if (t2WinRate < 0.75)
+            t2Score = Math.Max(0, (t2WinRate / 0.75) * 100); // Still too hard
+        else if (t2WinRate > 0.85)
+            t2Score = Math.Max(0, 100 - (t2WinRate - 0.85) * 200); // Getting too easy
+
+        totalScore += t2Score * 0.33; // Tier 2 = 33% of this metric
+        result.Details.Add($"Tier 2 (Mid-gear): {t2WinRate:P0} wins (target: 75-85%) → {t2Score:F0}/100");
+
+        // TIER 5: BEST EQUIPMENT - Should FEEL OP but NOT BE TRIVIAL
+        int t5STR = baseSTR + 5; // +5 enchanted blade
+        int t5DEF = baseDEF + 5; // +5 dragon scale
+        double t5WinRate = TestWinRate(baseHP, t5STR, t5DEF, enemyHP, enemyDMG);
+
+        // Target: 90-95% win rate (feels OP, but can still lose!)
+        double t5Score = 0;
+        if (t5WinRate >= 0.90 && t5WinRate <= 0.95)
+            t5Score = 100; // Perfect - power fantasy fulfilled, still fair!
+        else if (t5WinRate < 0.90)
+            t5Score = Math.Max(0, (t5WinRate / 0.90) * 100); // Best gear should dominate more
+        else if (t5WinRate >= 0.98)
+            t5Score = 0; // Trivial = BROKEN, 100% win rate kills challenge!
+        else if (t5WinRate > 0.95)
+            t5Score = Math.Max(0, 100 - (t5WinRate - 0.95) * 500); // Steep penalty approaching trivial
+
+        totalScore += t5Score * 0.34; // Tier 5 = 34% of this metric
+        result.Details.Add($"Tier 5 (Best gear): {t5WinRate:P0} wins (target: 90-95%) → {t5Score:F0}/100");
+
+        if (t5WinRate >= 0.98)
+            result.Warnings.Add($"Best gear TRIVIALIZES game! {t5WinRate:P0} win rate - no challenge left!");
+        else if (t5WinRate < 0.85)
+            result.Warnings.Add($"Best gear too weak! Only {t5WinRate:P0} - doesn't feel rewarding!");
+
+        // Validate progression curve (each tier should be better than last)
+        if (t2WinRate <= t0WinRate)
+        {
+            result.Warnings.Add($"Tier 2 not better than Tier 0! No progression reward!");
+            totalScore *= 0.5; // Big penalty
+        }
+
+        if (t5WinRate <= t2WinRate + 0.05)
+        {
+            result.Warnings.Add($"Tier 5 barely better than Tier 2! Best gear doesn't feel special!");
+            totalScore *= 0.8;
+        }
+
+        result.Score = totalScore;
+        result.WeightedScore = result.Score * Weight;
+
+        return result;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private double TestWinRate(int hp, int str, int def, int enemyHP, int enemyDMG)
+    {
+        int wins = 0;
+        const int sims = 10;
+
+        for (int i = 0; i < sims; i++)
+        {
+            int playerHP = hp;
+            int eHP = enemyHP;
+
+            while (playerHP > 0 && eHP > 0)
+            {
+                eHP -= str;
+                if (eHP > 0)
+                {
+                    int damage = enemyDMG - def;
+                    playerHP -= damage > 1 ? damage : 1;
+                }
+            }
+
+            if (playerHP > 0) wins++;
+        }
+
+        return wins / (double)sims;
+    }
+}
+
 public static class FitnessEvaluator
 {
     private static readonly List<IFitnessMetric> _metrics = new()
     {
-        new CombatBalanceMetric(),      // 30% (increased - most important)
-        new EconomicHealthMetric(),     // 25% (increased - critical)
-        new EquipmentCurveMetric(),     // 15%
-        new SkillBalanceMetric(),       // 20% (increased - important)
-        new DifficultyPacingMetric()    // 10%
-        // BuildDiversityMetric DISABLED - stuck at 50.0, too expensive (3× combat sims)
-        // Total: 100% - add new metrics here as features are added!
+        new CombatBalanceMetric(),      // 25% (core gameplay)
+        new EconomicHealthMetric(),     // 25% (CRITICAL - can't be broken)
+        new ProgressionStrataMetric(),  // 15% (NEW - validates user's progression philosophy!)
+        new SkillBalanceMetric(),       // 15% (skills balanced)
+        new EquipmentCurveMetric(),     // 10% (power curve)
+        new DifficultyPacingMetric()    // 10% (smoothness)
+        // BuildDiversityMetric DISABLED - stuck at 50.0, too expensive
+        // Total: 100% - tuner evolves with game features!
     };
 
     public static (double totalFitness, List<MetricResult> results) EvaluateComprehensive(ProgressionFrameworkData framework)
