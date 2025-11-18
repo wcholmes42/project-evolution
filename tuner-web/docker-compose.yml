@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  tuner-web:
+    build: .
+    image: tuner-web:latest
+    container_name: progression-tuner
+    
+    # GPU passthrough
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    
+    # CPU configuration
+    cpuset: "0-23"  # All i9 cores
+    mem_limit: 16g
+    
+    # Ports
+    ports:
+      - "8000:8000"  # Web dashboard
+    
+    # Unraid share mount
+    volumes:
+      - /mnt/user/GameResearch:/data
+      - ./game:/app/game:ro  # C# game DLL
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

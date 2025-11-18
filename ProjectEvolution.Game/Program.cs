@@ -1,8 +1,45 @@
 using ProjectEvolution.Game;
 using System.Text;
+using System.Text.Json;
 
 // Ensure UTF-8 encoding for proper display
 Console.OutputEncoding = Encoding.UTF8;
+
+// CLI MODE: Check for command-line args (for Python integration)
+if (args.Length > 0 && args[0] == "evaluate")
+{
+    // Python is calling us to evaluate a framework
+    if (args.Length < 2)
+    {
+        Console.WriteLine("ERROR: Missing framework JSON file path");
+        return;
+    }
+
+    try
+    {
+        string jsonPath = args[1];
+        string json = File.ReadAllText(jsonPath);
+        var framework = JsonSerializer.Deserialize<ProgressionFrameworkData>(json);
+
+        if (framework == null)
+        {
+            Console.WriteLine("ERROR: Failed to deserialize framework");
+            return;
+        }
+
+        // Evaluate using existing fitness evaluator
+        var (fitness, metrics) = FitnessEvaluator.EvaluateComprehensive(framework);
+
+        // Output ONLY the fitness score (Python will parse this)
+        Console.WriteLine($"FITNESS:{fitness:F2}");
+        return;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"ERROR: {ex.Message}");
+        return;
+    }
+}
 
 // Main menu
 Console.Clear();
