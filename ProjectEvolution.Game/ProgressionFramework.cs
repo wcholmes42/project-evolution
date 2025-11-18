@@ -134,6 +134,14 @@ public class ProgressionFrameworkResearcher
     private static int _lastConsoleWidth = 0;
     private static int _lastConsoleHeight = 0;
 
+    // Champion/Rubric System - tracks best runs across resets
+    private static ProgressionFrameworkData? _champion = null;
+    private static double _championFitness = 0;
+    private static int _championGeneration = 0;
+    private static int _resetCount = 0;
+    private const double AUTO_RESET_THRESHOLD = 85.0; // Reset if stuck near optimal
+    private const int AUTO_RESET_STUCK_GENS = 150; // Must be stuck this long
+
     public static void RunContinuousResearch()
     {
         Console.Clear();
@@ -219,6 +227,17 @@ public class ProgressionFrameworkResearcher
             {
                 Console.WriteLine("⚠️  Could not load previous research, starting fresh...\n");
             }
+        }
+
+        // Load champion if exists
+        LoadChampion();
+        if (_champion != null)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine($"🏆 Champion loaded: Gen {_championGeneration}, Fitness {_championFitness:F2}");
+            Console.WriteLine("   This is your rubric - new runs will be compared against it!");
+            Console.ResetColor();
+            Console.WriteLine();
         }
 
         Console.WriteLine("Press ESC to stop, any other key to start...");
@@ -325,16 +344,31 @@ public class ProgressionFrameworkResearcher
             // Log progress to file
             LogProgress(framework, fitness, improved);
 
-            // Check for ESC
-            if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
+            // Check for ESC or R (reset)
+            if (Console.KeyAvailable)
             {
-                _currentPhase = "💾 Saving...";
-                UpdateStatusLine();
-                if (_bestFramework != null)
+                var key = Console.ReadKey(true).Key;
+                if (key == ConsoleKey.Escape)
                 {
-                    SaveFrameworkToJSON(_bestFramework);
+                    _currentPhase = "💾 Saving...";
+                    UpdateStatusLine();
+                    if (_bestFramework != null)
+                    {
+                        SaveFrameworkToJSON(_bestFramework);
+                    }
+                    break;
                 }
-                break;
+                else if (key == ConsoleKey.R)
+                {
+                    // Manual reset - promote current best to champion
+                    PerformReset(manual: true);
+                }
+            }
+
+            // AUTOMATED RESET: If stuck near optimal, reset and explore new space
+            if (_bestFitness >= AUTO_RESET_THRESHOLD && _generationsSinceImprovement >= AUTO_RESET_STUCK_GENS)
+            {
+                PerformReset(manual: false);
             }
 
             // Fast cycle - no pause!
@@ -397,6 +431,89 @@ public class ProgressionFrameworkResearcher
 
         Console.WriteLine("\nPress any key to return to menu...");
         Console.ReadKey();
+    }
+
+    private static void LoadChampion()
+    {
+        string championPath = SafeFileWriter.GetFullPath("progression_champion.json");
+        if (File.Exists(championPath))
+        {
+            try
+            {
+                string json = File.ReadAllText(championPath);
+                _champion = JsonSerializer.Deserialize<ProgressionFrameworkData>(json);
+                if (_champion != null)
+                {
+                    _championFitness = _champion.Metadata.OverallFitness;
+                    _championGeneration = _champion.Metadata.Generation;
+                }
+            }
+            catch
+            {
+                // If champion load fails, no problem
+            }
+        }
+    }
+
+    private static void SaveChampion()
+    {
+        if (_bestFramework == null) return;
+
+        _champion = _bestFramework;
+        _championFitness = _bestFitness;
+        _championGeneration = _generation;
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never
+        };
+
+        string json = JsonSerializer.Serialize(_champion, options);
+        SafeFileWriter.SafeWriteAllText("progression_champion.json", json);
+
+        // Also save a timestamped backup
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        SafeFileWriter.SafeWriteAllText($"progression_champion_{timestamp}.json", json);
+    }
+
+    private static void PerformReset(bool manual)
+    {
+        _currentPhase = manual ? "🔄 MANUAL RESET - Saving champion..." : "🔄 AUTO RESET - Near optimal, exploring new space...";
+        UpdateStatusLine();
+        Thread.Sleep(1000); // Let user see the message
+
+        // Save current best as champion
+        if (_bestFramework != null && _bestFitness > _championFitness)
+        {
+            SaveChampion();
+            _currentPhase = $"🏆 NEW CHAMPION! Fitness: {_bestFitness:F2} (was {_championFitness:F2})";
+            UpdateStatusLine();
+            Thread.Sleep(2000);
+        }
+
+        // Log the reset
+        var log = new System.Text.StringBuilder();
+        log.AppendLine($"\n{'═',64}");
+        log.AppendLine($"[{DateTime.Now:HH:mm:ss}] RESET #{++_resetCount} - {(manual ? "MANUAL" : "AUTO")}");
+        log.AppendLine($"  Previous run: Gen {_generation}, Fitness {_bestFitness:F2}");
+        if (_champion != null)
+        {
+            log.AppendLine($"  Champion: Gen {_championGeneration}, Fitness {_championFitness:F2}");
+        }
+        log.AppendLine($"  Starting fresh exploration...");
+        log.AppendLine($"{'═',64}");
+        SafeFileWriter.SafeAppendAllText("progression_research.log", log.ToString());
+
+        // Reset to baseline
+        _bestFramework = CreateBaselineFramework();
+        _bestFitness = EvaluateFramework(_bestFramework);
+        _generation = 0;
+        _generationsSinceImprovement = 0;
+
+        // Full redraw
+        Console.SetCursorPosition(0, 0);
+        RenderResearchDashboard();
     }
 
     private static ProgressionFrameworkData CreateBaselineFramework()
@@ -480,9 +597,17 @@ public class ProgressionFrameworkResearcher
             ? Math.Clamp(parent.PlayerProgression.HPPerLevel + random.Next(-1, 2), 1, 5)
             : parent.PlayerProgression.HPPerLevel;
 
-        mutated.PlayerProgression.BaseSTR = parent.PlayerProgression.BaseSTR;
-        mutated.PlayerProgression.BaseDEF = parent.PlayerProgression.BaseDEF;
-        mutated.PlayerProgression.StatPointsPerLevel = parent.PlayerProgression.StatPointsPerLevel;
+        mutated.PlayerProgression.BaseSTR = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.PlayerProgression.BaseSTR + random.Next(-1, 2), 2, 5)
+            : parent.PlayerProgression.BaseSTR;
+
+        mutated.PlayerProgression.BaseDEF = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.PlayerProgression.BaseDEF + random.Next(-1, 2), 0, 3)
+            : parent.PlayerProgression.BaseDEF;
+
+        mutated.PlayerProgression.StatPointsPerLevel = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.PlayerProgression.StatPointsPerLevel + random.Next(-1, 2), 1, 3)
+            : parent.PlayerProgression.StatPointsPerLevel;
 
         // Mutate enemy progression
         mutated.EnemyProgression.BaseHP = random.NextDouble() < mutationRate
@@ -1415,16 +1540,21 @@ public class ProgressionFrameworkResearcher
         }
 
         // Update just the status lines without clearing screen
-        SafeWriteLine(4, $"⏱️  RUNTIME: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}  |  Gen: {_generation,4}  |  Sims: {_totalSimulations,6}  |  Fitness: {_bestFitness,6:F2}", ConsoleColor.Yellow);
+        string fitnessDisplay = _champion != null
+            ? $"Fitness: {_bestFitness,6:F2} | 🏆 Champion: {_championFitness:F2} (Gen {_championGeneration})"
+            : $"Fitness: {_bestFitness,6:F2}";
+        SafeWriteLine(4, $"⏱️  RUNTIME: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}  |  Gen: {_generation,4}  |  {fitnessDisplay}", ConsoleColor.Yellow);
         SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
-        SafeWriteLine(7, $"Last save: {sinceSave.TotalSeconds:F0}s ago  |  No improvement: {_generationsSinceImprovement} gens", ConsoleColor.DarkGray);
+
+        string resetInfo = _resetCount > 0 ? $"  |  Resets: {_resetCount}" : "";
+        SafeWriteLine(7, $"Last save: {sinceSave.TotalSeconds:F0}s ago  |  No improvement: {_generationsSinceImprovement} gens{resetInfo}", ConsoleColor.DarkGray);
 
         // === ENHANCED PARAMETER DISPLAY (NON-SCROLLING) ===
         int row = 9;
 
         // Player Progression Parameters
         SafeWriteLine(row++, "👤 PLAYER:", ConsoleColor.Green);
-        SafeWriteLine(row++, $"   BaseHP={_bestFramework.PlayerProgression.BaseHP,3}  HPPerLvl={_bestFramework.PlayerProgression.HPPerLevel:F1}  BaseSTR={_bestFramework.PlayerProgression.BaseSTR,2}  BaseDEF={_bestFramework.PlayerProgression.BaseDEF,2}", ConsoleColor.Green);
+        SafeWriteLine(row++, $"   BaseHP={_bestFramework.PlayerProgression.BaseHP,3}  HPPerLvl={_bestFramework.PlayerProgression.HPPerLevel:F1}  BaseSTR={_bestFramework.PlayerProgression.BaseSTR,2}  BaseDEF={_bestFramework.PlayerProgression.BaseDEF,2}  StatPts/Lvl={_bestFramework.PlayerProgression.StatPointsPerLevel}", ConsoleColor.Green);
 
         // Enemy Progression Parameters
         SafeWriteLine(row++, "👹 ENEMY:", ConsoleColor.Red);
@@ -1469,6 +1599,15 @@ public class ProgressionFrameworkResearcher
                          _generationsSinceImprovement < 10 ? "🎯 FINE-TUNING" :
                          "⚖️  BALANCED";
         SafeWriteLine(row++, $"Strategy: {strategy}", ConsoleColor.DarkGray);
+
+        // Footer with controls
+        SafeWriteLine(row++, "", ConsoleColor.Black);
+        SafeWriteLine(row++, "────────────────────────────────────────────────────────────────", ConsoleColor.DarkGray);
+        string autoResetStatus = _bestFitness >= AUTO_RESET_THRESHOLD
+            ? $"Auto-reset in {AUTO_RESET_STUCK_GENS - _generationsSinceImprovement} gens (fitness ≥{AUTO_RESET_THRESHOLD})"
+            : $"Auto-reset at fitness ≥{AUTO_RESET_THRESHOLD} + {AUTO_RESET_STUCK_GENS} stuck gens";
+        SafeWriteLine(row++, autoResetStatus, ConsoleColor.DarkCyan);
+        SafeWriteLine(row++, "[ESC] Stop & Save  |  [R] Manual Reset → New Champion", ConsoleColor.Yellow);
 
         // Clear any remaining lines from previous longer displays
         for (int i = row; i < consoleHeight - 1; i++)
