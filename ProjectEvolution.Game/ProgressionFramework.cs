@@ -172,6 +172,40 @@ public class ProgressionFrameworkResearcher
 
     public static double GetChampionFitness() => _championFitness;
 
+    private static string GetFitnessQualityBand(double fitness)
+    {
+        // Translate fitness score to gameplay quality
+        if (fitness >= 90) return "🏆 OPTIMAL - Near-perfect balance! Ready for production!";
+        if (fitness >= 80) return "⭐ EXCELLENT - Very good balance, minor tweaks only";
+        if (fitness >= 70) return "✅ GOOD - Playable and fun, some rough edges";
+        if (fitness >= 60) return "📊 FAIR - Functional but needs work";
+        if (fitness >= 50) return "⚠️  POOR - Broken economy or unfun combat";
+        return "❌ BROKEN - Unplayable, critical failures";
+    }
+
+    private static string GetTimeToTargetEstimate(double currentFitness, double trend)
+    {
+        // Estimate how long to reach next quality tier
+        if (trend <= 0) return "Unknown (not improving)";
+
+        double[] targets = { 70, 75, 80, 85, 90 };
+        double nextTarget = targets.FirstOrDefault(t => t > currentFitness);
+
+        if (nextTarget == 0) return "At maximum!";
+
+        double fitnessNeeded = nextTarget - currentFitness;
+        double gensNeeded = fitnessNeeded / (trend / 1000.0);
+
+        if (gensNeeded < 0) return "Unknown";
+
+        double minutesNeeded = gensNeeded / 600.0; // Assume 600 gen/s average
+
+        if (minutesNeeded < 5) return $"~{minutesNeeded:F0}min to {nextTarget:F0}";
+        if (minutesNeeded < 60) return $"~{minutesNeeded:F0}min to {nextTarget:F0}";
+        if (minutesNeeded < 1440) return $"~{minutesNeeded / 60:F1}hrs to {nextTarget:F0}";
+        return $"~{minutesNeeded / 1440:F1}days to {nextTarget:F0}";
+    }
+
     private static double CalculateFitnessTrend()
     {
         // Calculate slope of fitness improvements over last N generations
@@ -249,16 +283,32 @@ public class ProgressionFrameworkResearcher
         Console.WriteLine($"   CPU Cores: {Environment.ProcessorCount} available");
         Console.WriteLine("   Target: 250-400+ gen/s\n");
 
-        Console.WriteLine("This system will:");
-        Console.WriteLine("  1️⃣  Discover optimal progression formulas");
-        Console.WriteLine("  2️⃣  Simulate economy over 10 levels");
-        Console.WriteLine("  3️⃣  Balance gold income vs equipment costs");
-        Console.WriteLine("  4️⃣  Tune loot drop rates");
-        Console.WriteLine("  5️⃣  Test skill balance & exploit prevention");
-        Console.WriteLine("  6️⃣  Output machine-readable JSON");
-        Console.WriteLine("  7️⃣  Auto-generate balanced code");
-        Console.WriteLine("  8️⃣  Test & refine continuously!");
-        Console.WriteLine($"  9️⃣  Parallel evolution: {POPULATION_SIZE} candidates per generation!\n");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("\n📚 WHAT YOU'RE ABOUT TO SEE:");
+        Console.ResetColor();
+        Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        Console.WriteLine("FITNESS SCORE = Overall game balance quality (0-100)");
+        Console.WriteLine("");
+        Console.WriteLine("  50-60: ⚠️  POOR - Broken economy or unfun combat (1-2 hours)");
+        Console.WriteLine("  60-70: 📊 FAIR - Functional but needs work (2-4 hours)");
+        Console.WriteLine("  70-80: ✅ GOOD - Playable and fun! (4-8 hours)");
+        Console.WriteLine("  80-90: ⭐ EXCELLENT - Production ready! (8-24 hours)");
+        Console.WriteLine("  90+:   🏆 OPTIMAL - Near perfect! (days/weeks)");
+        Console.WriteLine("");
+        Console.WriteLine("TREND = How fast it's improving (+X.XX per 1000 generations)");
+        Console.WriteLine("  +2.0/1k = FAST climb (early run, expect hours)");
+        Console.WriteLine("  +0.5/1k = STEADY progress (mid run, overnight)");
+        Console.WriteLine("  +0.1/1k = SLOW gains (near optimal, days)");
+        Console.WriteLine("  +0.05/1k = PLATEAU (auto-resets to explore new space)");
+        Console.WriteLine("");
+        Console.WriteLine("SPARKLINE = Visual trend of last 20 improvements");
+        Console.WriteLine("  ▁▂▃▄▅▆▇█ = Climbing (keep going!)");
+        Console.WriteLine("  ████████ = Flat (plateau, will auto-reset)");
+        Console.WriteLine("");
+        Console.WriteLine("AUTO-RESET = Saves best as Champion, starts fresh exploration");
+        Console.WriteLine("  Triggers when stuck at plateau to escape local optimum");
+        Console.WriteLine("  Your Champion is PRESERVED as the best ever found!");
+        Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
         // Load previous research if exists
         string frameworkPath = SafeFileWriter.GetFullPath("progression_framework.json");
@@ -1539,7 +1589,7 @@ public class ProgressionFrameworkResearcher
 
         // Minimum dimensions to display properly
         const int MIN_WIDTH = 80;
-        const int MIN_HEIGHT = 35; // Need at least 35 lines for full display (header + params + metrics + footer)
+        const int MIN_HEIGHT = 40; // Need at least 40 lines for full display (header + quality + params + metrics + guide + footer)
 
         if (consoleWidth < MIN_WIDTH || consoleHeight < MIN_HEIGHT)
         {
@@ -1617,11 +1667,20 @@ public class ProgressionFrameworkResearcher
 
         string throughput = genPerSec >= 10 ? $"{genPerSec:F0} gen/s" : $"{genPerSec:F1} gen/s";
 
+        // Fitness quality assessment
+        string qualityBand = GetFitnessQualityBand(_bestFitness);
+        ConsoleColor qualityColor = _bestFitness >= 80 ? ConsoleColor.Green :
+                                    _bestFitness >= 70 ? ConsoleColor.Yellow :
+                                    _bestFitness >= 60 ? ConsoleColor.Cyan :
+                                    ConsoleColor.Red;
+
         SafeWriteLine(4, $"⏱️  {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2} | Gen: {_generation,5} ({throughput}) | {fitnessDisplay}", ConsoleColor.Yellow);
+        SafeWriteLine(5, $"QUALITY: {qualityBand}", qualityColor);
         SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
 
         // Calculate fitness trend using helper method
         double slope = CalculateFitnessTrend();
+        string timeEstimate = GetTimeToTargetEstimate(_bestFitness, slope);
         string trendDisplay = "";
         ConsoleColor trendColor = ConsoleColor.Gray;
 
@@ -1629,28 +1688,28 @@ public class ProgressionFrameworkResearcher
         {
             if (slope > 0.5)
             {
-                trendDisplay = $"📈 +{slope:F2}/1k";
+                trendDisplay = $"📈 +{slope:F2}/1k | ETA: {timeEstimate}";
                 trendColor = ConsoleColor.Green;
             }
             else if (slope > 0.1)
             {
-                trendDisplay = $"📊 +{slope:F2}/1k";
+                trendDisplay = $"📊 +{slope:F2}/1k | ETA: {timeEstimate}";
                 trendColor = ConsoleColor.Yellow;
             }
             else if (slope >= 0)
             {
-                trendDisplay = $"📉 +{slope:F2}/1k (PLATEAU!)";
+                trendDisplay = $"📉 +{slope:F2}/1k PLATEAU - Auto-reset soon!";
                 trendColor = ConsoleColor.DarkYellow;
             }
             else
             {
-                trendDisplay = $"⚠️  {slope:F2}/1k (declining)";
+                trendDisplay = $"⚠️  {slope:F2}/1k declining (difficulty increased?)";
                 trendColor = ConsoleColor.Red;
             }
         }
         else if (_fitnessHistory.Count > 0)
         {
-            trendDisplay = $"📊 {_fitnessHistory.Count}/10 improvements...";
+            trendDisplay = $"📊 Collecting trend data ({_fitnessHistory.Count}/10 improvements)";
             trendColor = ConsoleColor.Cyan;
         }
 
@@ -1719,8 +1778,8 @@ public class ProgressionFrameworkResearcher
         var armTiers = _bestFramework.Equipment.ArmorTiers.Take(3).ToList();
         SafeWriteLine(row++, $"   Armor   T0-2: [{string.Join(", ", armTiers.Select(t => $"+{t.BonusValue}={t.RecommendedCost}g"))}]", ConsoleColor.Cyan);
 
-        // Live Metrics - ALWAYS show section (even if pending)
-        SafeWriteLine(row++, "⚡ METRICS:", ConsoleColor.White);
+        // Live Metrics with human-readable explanations
+        SafeWriteLine(row++, "⚡ METRICS (what they mean for gameplay):", ConsoleColor.White);
 
         if (_latestMetricResults != null && _latestMetricResults.Count > 0)
         {
@@ -1730,10 +1789,18 @@ public class ProgressionFrameworkResearcher
                                     metric.Score >= 60 ? ConsoleColor.Yellow :
                                     ConsoleColor.Red;
                 string bar = GenerateBar(metric.Score, 15);
-                // Fixed width formatting: name(22) + bar(15) + score(6) + arrow(3) + weighted(6)
                 string metricName = metric.MetricName.PadRight(22);
                 SafeWriteLine(row++, $"   {metricName} {bar} {metric.Score,6:F1} → {metric.WeightedScore,6:F2}", color);
             }
+
+            // Add metric explanations
+            SafeWriteLine(row++, "", ConsoleColor.Black);
+            SafeWriteLine(row++, "   💡 Metric Guide:", ConsoleColor.DarkGray);
+            SafeWriteLine(row++, "   Combat Balance (30%): Win rate 70-95%, 4-6 turns to kill = FUN combat", ConsoleColor.DarkGray);
+            SafeWriteLine(row++, "   Economic Health (25%): Can afford gear progression = No grinding", ConsoleColor.DarkGray);
+            SafeWriteLine(row++, "   Skill Balance (20%): Skills useful but not exploitable = Strategy", ConsoleColor.DarkGray);
+            SafeWriteLine(row++, "   Equipment Curve (15%): Upgrades feel meaningful = Progression", ConsoleColor.DarkGray);
+            SafeWriteLine(row++, "   Difficulty Pacing (10%): Smooth difficulty curve = No walls", ConsoleColor.DarkGray);
         }
         else
         {
