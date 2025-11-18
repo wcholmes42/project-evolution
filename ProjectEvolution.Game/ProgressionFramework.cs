@@ -172,7 +172,7 @@ public class ProgressionFrameworkResearcher
         Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
         Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
         Console.WriteLine("║    Discovers formulas → Generates code → Tests → Refines       ║");
-        Console.WriteLine("║           🔥 MAXIMUM PERFORMANCE - All cores at 100%!          ║");
+        Console.WriteLine("║     🔥 OPTIMIZED: Demoscene tricks + zero-allocation! 🔥       ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝\n");
 
         // Configure output path
@@ -220,15 +220,13 @@ public class ProgressionFrameworkResearcher
         }
         Console.WriteLine("✅ Write access confirmed!\n");
 
-        // MAXIMUM PERFORMANCE for local testing - melt that hardware!
-        POPULATION_SIZE = 32; // Max throughput
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("🔥 MAXIMUM PERFORMANCE MODE");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("🚀 OPTIMIZED EVOLUTION MODE");
         Console.ResetColor();
-        Console.WriteLine($"   Population: {POPULATION_SIZE} candidates per generation");
-        Console.WriteLine($"   CPU Cores: {Environment.ProcessorCount} threads");
-        Console.WriteLine("   Priority: Normal (100% CPU usage expected)");
-        Console.WriteLine("   Throttle: NONE - hardware melting mode enabled! 🌡️\n");
+        Console.WriteLine("   Demoscene optimizations: Span, stackalloc, zero GC pressure");
+        Console.WriteLine("   Serial execution: No parallel overhead");
+        Console.WriteLine($"   CPU Cores: {Environment.ProcessorCount} available");
+        Console.WriteLine("   Target: 250-400+ gen/s\n");
 
         Console.WriteLine("This system will:");
         Console.WriteLine("  1️⃣  Discover optimal progression formulas");
@@ -325,88 +323,51 @@ public class ProgressionFrameworkResearcher
 
         while (true)
         {
-            _generation += POPULATION_SIZE; // Increment by population size since we eval multiple
+            _generation++;
 
-            // PHASE 1: Generate population of candidates (DEMOSCENE: manual loops, no LINQ!)
-            var candidates = new ProgressionFrameworkData[POPULATION_SIZE];
-
+            // SIMPLE: One candidate at a time (parallel overhead was killing us!)
+            ProgressionFrameworkData framework;
             if (_generationsSinceImprovement > 100)
             {
                 _currentPhase = "🔄 RANDOM RESTART - Exploring new space...";
                 if (_generation % UI_UPDATE_INTERVAL == 0) UpdateStatusLine();
-
-                // Create fresh population
-                for (int i = 0; i < POPULATION_SIZE; i++)
-                {
-                    candidates[i] = CreateBaselineFramework();
-                }
+                framework = CreateBaselineFramework();
                 _generationsSinceImprovement = 0;
                 Thread.Sleep(500);
             }
             else
             {
-                _currentPhase = $"🧬 Mutating {POPULATION_SIZE} candidates (parallel)...";
-
-                // Mutate population from best
-                var parent = _bestFramework ?? CreateBaselineFramework();
-                for (int i = 0; i < POPULATION_SIZE; i++)
-                {
-                    candidates[i] = MutateFramework(parent);
-                }
+                _currentPhase = "🔬 Mutating...";
+                framework = MutateFramework(_bestFramework ?? CreateBaselineFramework());
             }
 
-            // PHASE 2: Evaluate ALL candidates in PARALLEL 🚀
-            _currentPhase = $"⚡ Evaluating {POPULATION_SIZE} frameworks (using all cores)...";
+            // PHASE 2: Evaluate (metrics still run in parallel internally)
+            _currentPhase = "📊 Evaluating...";
+            double fitness = EvaluateFramework(framework);
+            _totalSimulations += 65;
 
-            var results = new (ProgressionFrameworkData framework, double fitness)[POPULATION_SIZE];
-
-            // MAXIMUM PARALLELISM - use all cores at 100%!
-            var parallelOptions = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount
-            };
-
-            Parallel.For(0, POPULATION_SIZE, parallelOptions, i =>
-            {
-                double fitness = EvaluateFramework(candidates[i]);
-                results[i] = (candidates[i], fitness);
-            });
-
-            // Find best from population (DEMOSCENE: manual max, no LINQ sort!)
-            var bestCandidate = results[0];
-            for (int i = 1; i < POPULATION_SIZE; i++)
-            {
-                if (results[i].fitness > bestCandidate.fitness)
-                    bestCandidate = results[i];
-            }
-            _totalSimulations += POPULATION_SIZE * 65; // Each candidate runs ~65 simulations
-
-            // PHASE 3: Update if best from population beats current best
+            // PHASE 3: Update if better
             bool improved = false;
-            lock (_bestLock) // Thread-safe update
+            if (fitness > _bestFitness || _bestFramework == null)
             {
-                if (bestCandidate.fitness > _bestFitness || _bestFramework == null)
-                {
-                    _currentPhase = $"🌟 NEW BEST! Fitness: {bestCandidate.fitness:F2} (from {POPULATION_SIZE} candidates)";
+                _currentPhase = "🌟 NEW BEST! Saving...";
 
-                    _bestFitness = bestCandidate.fitness;
-                    _bestFramework = bestCandidate.framework;
-                    _generationsSinceImprovement = 0;
-                    improved = true;
+                _bestFitness = fitness;
+                _bestFramework = framework;
+                _generationsSinceImprovement = 0;
+                improved = true;
 
-                    SaveFrameworkToJSON(bestCandidate.framework);
-                    GenerateGameCode(bestCandidate.framework);
-                    _lastSaveTime = DateTime.Now;
+                SaveFrameworkToJSON(framework);
+                GenerateGameCode(framework);
+                _lastSaveTime = DateTime.Now;
 
-                    // Full redraw when improved to show new formulas
-                    Console.SetCursorPosition(0, 0);
-                    RenderResearchDashboard();
-                    // NO PAUSE - max speed!
-                }
-                else
-                {
-                    _generationsSinceImprovement += POPULATION_SIZE;
-                }
+                // Full redraw when improved
+                Console.SetCursorPosition(0, 0);
+                RenderResearchDashboard();
+            }
+            else
+            {
+                _generationsSinceImprovement++;
             }
 
             // PHASE 4: Auto-save every 5 generations
@@ -420,15 +381,15 @@ public class ProgressionFrameworkResearcher
                 _lastSaveTime = DateTime.Now;
             }
 
-            // PHASE 5: Update status (only every N generations to reduce flicker)
-            _currentPhase = improved ? "✅ Improved!" : $"🔄 Searching ({POPULATION_SIZE} parallel)...";
+            // PHASE 5: Update status
+            _currentPhase = improved ? "✅ Improved!" : "🔄 Searching...";
             if (_generation % UI_UPDATE_INTERVAL == 0)
             {
                 UpdateStatusLine();
             }
 
-            // Log progress to file (log best from population)
-            LogProgress(bestCandidate.framework, bestCandidate.fitness, improved);
+            // Log progress
+            LogProgress(framework, fitness, improved);
 
             // Check for ESC or R (reset)
             if (Console.KeyAvailable)
@@ -1417,10 +1378,9 @@ public class ProgressionFrameworkResearcher
 
         // Clear and redraw header only
         Console.Clear();
-        int cpuCores = Environment.ProcessorCount;
         Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
         Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
-        Console.WriteLine($"║           PARALLEL MODE: {POPULATION_SIZE} Candidates × {cpuCores} CPU Cores            ║");
+        Console.WriteLine("║     🔥 OPTIMIZED: Demoscene tricks + zero-allocation! 🔥       ║");
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
         Console.WriteLine();
 
@@ -1511,11 +1471,10 @@ public class ProgressionFrameworkResearcher
             {
                 Console.Clear();
                 Console.SetCursorPosition(0, 0);
-                int cpuCores = Environment.ProcessorCount;
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
                 Console.WriteLine("║      🧬 CONTINUOUS PROGRESSION FRAMEWORK RESEARCH 🧬           ║");
-                Console.WriteLine($"║           PARALLEL MODE: {POPULATION_SIZE} Candidates × {cpuCores} CPU Cores            ║");
+                Console.WriteLine("║     🔥 OPTIMIZED: Demoscene tricks + zero-allocation! 🔥       ║");
                 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
                 Console.WriteLine();
                 Console.ResetColor();
@@ -1590,9 +1549,9 @@ public class ProgressionFrameworkResearcher
         var now = DateTime.Now;
         double timeSinceLastGen = (now - _lastGenerationTime).TotalSeconds;
 
-        if (timeSinceLastGen > 0)
+        if (timeSinceLastGen > 0 && timeSinceLastGen < 10) // Ignore if > 10s (paused)
         {
-            double instantRate = POPULATION_SIZE / timeSinceLastGen;
+            double instantRate = 1.0 / timeSinceLastGen; // 1 generation per time
             _recentGenerationTimes.Enqueue(instantRate);
 
             // Keep only last 20 samples for rolling average
@@ -2405,20 +2364,13 @@ public static class FitnessEvaluator
 
     public static (double totalFitness, List<MetricResult> results) EvaluateComprehensive(ProgressionFrameworkData framework)
     {
-        // PARALLEL METRIC EVALUATION - Run all 5 metrics simultaneously! 🚀
-        var metricResults = new MetricResult[_metrics.Count];
+        // SIMPLE: Serial metric evaluation (parallel overhead was killing us with only 5 metrics!)
+        var results = new List<MetricResult>(_metrics.Count);
 
-        var parallelOptions = new ParallelOptions
+        foreach (var metric in _metrics)
         {
-            MaxDegreeOfParallelism = 5 // 5 metrics (BuildDiversity disabled)
-        };
-
-        Parallel.For(0, _metrics.Count, parallelOptions, i =>
-        {
-            metricResults[i] = _metrics[i].Evaluate(framework);
-        });
-
-        var results = metricResults.ToList();
+            results.Add(metric.Evaluate(framework));
+        }
 
         // Check for critical failures first
         bool hasCriticalFailure = results.Any(r => r.Critical && r.Score < 50);

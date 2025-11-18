@@ -240,9 +240,9 @@
   },
   "Metadata": {
     "Timestamp": "2025-11-18T08:53:18.391378-08:00",
-    "SimulationsRun": 2752600,
-    "Generation": 275260,
-    "OverallFitness": 67.14096180817779,
+    "SimulationsRun": 3671000,
+    "Generation": 367100,
+    "OverallFitness": 69.28226615600389,
     "Version": "Generation 35"
   }
 }
