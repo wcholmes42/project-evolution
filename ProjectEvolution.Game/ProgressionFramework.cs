@@ -144,7 +144,7 @@ public class ProgressionFrameworkResearcher
 
     // Anti-flicker settings
     private const int UI_UPDATE_INTERVAL = 5; // Update UI every N generations
-    private const int CYCLE_DELAY_MS = 200; // Delay between generations (was 50ms)
+    private const int CYCLE_DELAY_MS = 100; // Delay between generations (balance flicker vs speed)
 
     // TUNING THE TUNER: Progressive difficulty based on champion performance
     public static double GetDifficultyMultiplier()
@@ -288,6 +288,12 @@ public class ProgressionFrameworkResearcher
 
             var summaryHeader = "═══ PROGRESSION RESEARCH SUMMARY ═══\n";
             SafeFileWriter.SafeWriteAllText("progression_summary.log", summaryHeader);
+        }
+
+        // Initial evaluation to populate metrics before first render
+        if (_bestFramework != null)
+        {
+            _bestFitness = EvaluateFramework(_bestFramework);
         }
 
         // Initial render once
@@ -1415,7 +1421,7 @@ public class ProgressionFrameworkResearcher
             _lastConsoleWidth = consoleWidth;
             _lastConsoleHeight = consoleHeight;
 
-            // Clear screen on resize
+            // Clear and redraw header on resize (don't return early - continue to render content)
             try
             {
                 Console.Clear();
@@ -1429,7 +1435,7 @@ public class ProgressionFrameworkResearcher
             }
             catch
             {
-                // Ignore errors during resize
+                // Ignore errors during resize but continue rendering
             }
         }
 
@@ -1501,11 +1507,11 @@ public class ProgressionFrameworkResearcher
         var armTiers = _bestFramework.Equipment.ArmorTiers.Take(3).ToList();
         SafeWriteLine(row++, $"   Armor   T0-2: [{string.Join(", ", armTiers.Select(t => $"+{t.BonusValue}={t.RecommendedCost}g"))}]", ConsoleColor.Cyan);
 
-        // Live Metrics (if available)
+        // Live Metrics - ALWAYS show section (even if pending)
+        SafeWriteLine(row++, "⚡ METRICS:", ConsoleColor.White);
+
         if (_latestMetricResults != null && _latestMetricResults.Count > 0)
         {
-            SafeWriteLine(row++, "⚡ METRICS:", ConsoleColor.White);
-
             foreach (var metric in _latestMetricResults)
             {
                 ConsoleColor color = metric.Score >= 80 ? ConsoleColor.Green :
@@ -1516,6 +1522,16 @@ public class ProgressionFrameworkResearcher
                 string metricName = metric.MetricName.PadRight(22);
                 SafeWriteLine(row++, $"   {metricName} {bar} {metric.Score,6:F1} → {metric.WeightedScore,6:F2}", color);
             }
+        }
+        else
+        {
+            // Placeholder while first evaluation runs
+            SafeWriteLine(row++, "   Evaluating initial framework...", ConsoleColor.DarkGray);
+            SafeWriteLine(row++, "", ConsoleColor.Black);
+            SafeWriteLine(row++, "", ConsoleColor.Black);
+            SafeWriteLine(row++, "", ConsoleColor.Black);
+            SafeWriteLine(row++, "", ConsoleColor.Black);
+            SafeWriteLine(row++, "", ConsoleColor.Black);
         }
 
         // Mutation strategy indicator
@@ -1687,7 +1703,7 @@ public class CombatBalanceMetric : IFitnessMetric
 
     private CombatStats SimulateCombatDetailed(int playerHP, int playerSTR, int playerDEF, int enemyHP, int enemyDMG, int level)
     {
-        const int SIMULATIONS = 20; // More sims for better statistics
+        const int SIMULATIONS = 10; // Reduced from 20 for speed (10 levels × 10 sims = 100 combats)
         int wins = 0;
         var turnCounts = new List<int>();
 
@@ -1941,8 +1957,9 @@ public class SkillBalanceMetric : IFitnessMetric
         var result = new MetricResult { MetricName = Name };
         var scores = new List<double>();
 
-        // Test skill usage across levels 1-10
-        for (int level = 1; level <= 10; level++)
+        // Test skill usage at key levels only (1, 3, 5, 7, 10) for speed
+        var testLevels = new[] { 1, 3, 5, 7, 10 };
+        foreach (int level in testLevels)
         {
             int playerHP = framework.PlayerProgression.BaseHP + (int)(level * framework.PlayerProgression.HPPerLevel);
             int playerSTR = framework.PlayerProgression.BaseSTR + level;
@@ -2021,7 +2038,7 @@ public class SkillBalanceMetric : IFitnessMetric
     {
         // Simulate repeated stun attempts (resistance builds up)
         int wins = 0;
-        const int sims = 20;
+        const int sims = 10; // Reduced from 20 for speed
 
         for (int i = 0; i < sims; i++)
         {
@@ -2063,7 +2080,7 @@ public class SkillBalanceMetric : IFitnessMetric
     {
         // Simulate combat with Berserker Rage (2x damage, 1.5x damage taken)
         int wins = 0;
-        const int sims = 20;
+        const int sims = 10; // Reduced from 20 for speed
 
         for (int i = 0; i < sims; i++)
         {
@@ -2109,7 +2126,7 @@ public class SkillBalanceMetric : IFitnessMetric
     private double SimulateCombat(int hp, int str, int def, int enemyHP, int enemyDMG, bool useSkills)
     {
         int wins = 0;
-        const int sims = 10;
+        const int sims = 5; // Reduced from 10 for speed (skill tests are expensive)
 
         for (int i = 0; i < sims; i++)
         {
