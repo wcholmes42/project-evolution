@@ -138,6 +138,10 @@ public class ProgressionFrameworkResearcher
     private static Queue<double> _recentGenerationTimes = new Queue<double>();
     private static DateTime _lastGenerationTime = DateTime.Now;
 
+    // Fitness trend tracking - see if we're improving or plateauing
+    private static Queue<(int generation, double fitness)> _fitnessHistory = new Queue<(int, double)>();
+    private const int FITNESS_HISTORY_SIZE = 100; // Track last 100 improvements
+
     // Champion/Rubric System - tracks best runs across resets
     private static ProgressionFrameworkData? _champion = null;
     private static double _championFitness = 0;
@@ -356,6 +360,11 @@ public class ProgressionFrameworkResearcher
                 _bestFramework = framework;
                 _generationsSinceImprovement = 0;
                 improved = true;
+
+                // Track fitness improvement history
+                _fitnessHistory.Enqueue((_generation, fitness));
+                while (_fitnessHistory.Count > FITNESS_HISTORY_SIZE)
+                    _fitnessHistory.Dequeue();
 
                 SaveFrameworkToJSON(framework);
                 GenerateGameCode(framework);
@@ -1571,11 +1580,86 @@ public class ProgressionFrameworkResearcher
         SafeWriteLine(4, $"⏱️  {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2} | Gen: {_generation,5} ({throughput}) | {fitnessDisplay}", ConsoleColor.Yellow);
         SafeWriteLine(6, _currentPhase, ConsoleColor.Cyan);
 
+        // Calculate fitness trend (slope of improvements)
+        string trendDisplay = "";
+        ConsoleColor trendColor = ConsoleColor.Gray;
+        if (_fitnessHistory.Count >= 10)
+        {
+            var recent = _fitnessHistory.ToArray();
+            var oldest = recent[0];
+            var newest = recent[recent.Length - 1];
+
+            double genDelta = newest.generation - oldest.generation;
+            double fitnessDelta = newest.fitness - oldest.fitness;
+            double slope = genDelta > 0 ? fitnessDelta / genDelta * 1000 : 0; // fitness gain per 1000 gens
+
+            if (slope > 0.5)
+            {
+                trendDisplay = $"📈 +{slope:F2}/1k gens";
+                trendColor = ConsoleColor.Green;
+            }
+            else if (slope > 0.1)
+            {
+                trendDisplay = $"📊 +{slope:F2}/1k gens";
+                trendColor = ConsoleColor.Yellow;
+            }
+            else if (slope >= 0)
+            {
+                trendDisplay = $"📉 +{slope:F2}/1k gens (plateau)";
+                trendColor = ConsoleColor.DarkYellow;
+            }
+            else
+            {
+                trendDisplay = $"⚠️  {slope:F2}/1k gens (declining!)";
+                trendColor = ConsoleColor.Red;
+            }
+        }
+        else if (_fitnessHistory.Count > 0)
+        {
+            trendDisplay = $"📊 {_fitnessHistory.Count} improvements tracked...";
+            trendColor = ConsoleColor.Cyan;
+        }
+
         string resetInfo = _resetCount > 0 ? $"  |  Resets: {_resetCount}" : "";
-        SafeWriteLine(7, $"Stuck: {_generationsSinceImprovement} gens | Saved: {sinceSave.TotalSeconds:F0}s ago{resetInfo}", ConsoleColor.DarkGray);
+        SafeWriteLine(7, $"Stuck: {_generationsSinceImprovement} gens | Saved: {sinceSave.TotalSeconds:F0}s ago{resetInfo} | {trendDisplay}", trendColor);
 
         // === ENHANCED PARAMETER DISPLAY (NON-SCROLLING) ===
         int row = 9;
+
+        // Fitness trend mini-graph (sparkline!)
+        if (_fitnessHistory.Count >= 5)
+        {
+            SafeWriteLine(row++, "📈 FITNESS TREND (last 20 improvements):", ConsoleColor.Cyan);
+
+            var graphData = _fitnessHistory.TakeLast(20).ToArray();
+            double minFit = graphData.Min(d => d.fitness);
+            double maxFit = graphData.Max(d => d.fitness);
+            double range = maxFit - minFit;
+
+            // Draw sparkline (8 height levels)
+            string sparkline = "   ";
+            foreach (var point in graphData)
+            {
+                // Normalize to 0-7 scale
+                int level = range > 0 ? (int)((point.fitness - minFit) / range * 7) : 4;
+                char bar = level switch
+                {
+                    0 => '▁',
+                    1 => '▂',
+                    2 => '▃',
+                    3 => '▄',
+                    4 => '▅',
+                    5 => '▆',
+                    6 => '▇',
+                    _ => '█'
+                };
+                sparkline += bar;
+            }
+            sparkline += $"  ({minFit:F1} → {maxFit:F1})";
+
+            SafeWriteLine(row++, sparkline, trendColor);
+            SafeWriteLine(row++, "", ConsoleColor.Black); // Spacing
+        }
 
         // Player Progression Parameters
         SafeWriteLine(row++, "👤 PLAYER:", ConsoleColor.Green);
