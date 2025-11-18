@@ -12,6 +12,39 @@ public class UIRenderer
 
     public void Initialize()
     {
+        // Target: 1920x1080 resolution = 240x67 chars (at 8x16 font)
+        const int targetWidth = 240;
+        const int targetHeight = 67;
+
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Windows: Set fixed window size (not resizable)
+                Console.SetWindowSize(targetWidth, targetHeight);
+                Console.SetBufferSize(targetWidth, targetHeight);
+            }
+            else
+            {
+                // macOS/Linux: Can't set window size programmatically
+                // User must manually resize terminal to 240x67 (1920x1080)
+                if (Console.WindowWidth < 120 || Console.WindowHeight < 30)
+                {
+                    Console.WriteLine("⚠️  WARNING: Terminal too small!");
+                    Console.WriteLine($"   Current: {Console.WindowWidth}x{Console.WindowHeight}");
+                    Console.WriteLine($"   Recommended: {targetWidth}x{targetHeight} (1920x1080)");
+                    Console.WriteLine($"   Minimum: 120x30");
+                    Console.WriteLine("\nResize your terminal window for best experience.");
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey(intercept: true);
+                }
+            }
+        }
+        catch
+        {
+            // Ignore if platform doesn't support window sizing
+        }
+
         Console.Clear();
         Console.CursorVisible = false;
         DrawBorders();
@@ -43,40 +76,68 @@ public class UIRenderer
 
     private void DrawBorders()
     {
+        const int Width = 80; // Fixed 80 column layout
+        const int InnerWidth = 78; // Width - 2 for borders
+
         // Top border
-        Console.SetCursorPosition(0, 0);
-        Console.Write("╔" + new string('═', 78) + "╗");
+        SafeWriteAt(0, 0, "╔" + new string('═', InnerWidth) + "╗");
 
         // Status section border
-        Console.SetCursorPosition(0, StatusBarHeight);
-        Console.Write("╠" + new string('═', 78) + "╣");
+        SafeWriteAt(0, StatusBarHeight, "╠" + new string('═', InnerWidth) + "╣");
 
         // Map section border
-        Console.SetCursorPosition(0, StatusBarHeight + MapViewHeight + 1);
-        Console.Write("╠" + new string('═', 78) + "╣");
+        SafeWriteAt(0, StatusBarHeight + MapViewHeight + 1, "╠" + new string('═', InnerWidth) + "╣");
 
         // Bottom border
-        Console.SetCursorPosition(0, StatusBarHeight + MapViewHeight + MessageLogHeight + 2);
-        Console.Write("╚" + new string('═', 78) + "╝");
+        SafeWriteAt(0, StatusBarHeight + MapViewHeight + MessageLogHeight + 2, "╚" + new string('═', InnerWidth) + "╝");
 
         // Side borders
         for (int i = 1; i < StatusBarHeight + MapViewHeight + MessageLogHeight + 2; i++)
         {
-            Console.SetCursorPosition(0, i);
-            Console.Write("║");
-            Console.SetCursorPosition(79, i);
-            Console.Write("║");
+            SafeWriteAt(0, i, "║");
+            SafeWriteAt(Width - 1, i, "║");
         }
+    }
+
+    // Helper: Safe console write with bounds checking
+    private void SafeWriteAt(int x, int y, string text, ConsoleColor? color = null)
+    {
+        try
+        {
+            if (x < 0 || y < 0 || x >= Console.WindowWidth || y >= Console.WindowHeight) return;
+
+            // Truncate text if it would exceed window width
+            int maxLen = Math.Max(0, Console.WindowWidth - x);
+            if (text.Length > maxLen)
+            {
+                text = text.Substring(0, maxLen);
+            }
+
+            Console.SetCursorPosition(x, y);
+            if (color.HasValue) Console.ForegroundColor = color.Value;
+            Console.Write(text);
+            if (color.HasValue) Console.ResetColor();
+        }
+        catch
+        {
+            // Ignore rendering errors (window resize, etc.)
+        }
+    }
+
+    // Helper: Truncate text to fit within width
+    private string TruncateText(string text, int maxWidth)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        if (text.Length <= maxWidth) return text;
+        return text.Substring(0, Math.Max(0, maxWidth - 3)) + "...";
     }
 
     public void RenderStatusBar(RPGGame game)
     {
-        Console.SetCursorPosition(2, 1);
-        Console.Write(new string(' ', 76)); // Clear line
-        Console.SetCursorPosition(2, 1);
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"PROJECT EVOLUTION - GENERATION 35: UX EVOLUTION!");
-        Console.ResetColor();
+        const int InnerWidth = 76; // 80 - 2 for borders - 2 for padding
+
+        SafeWriteAt(2, 1, new string(' ', InnerWidth));
+        SafeWriteAt(2, 1, TruncateText("PROJECT EVOLUTION - GENERATION 35: UX EVOLUTION!", InnerWidth), ConsoleColor.Yellow);
 
         // Render character sheet panel on the right!
         RenderCharacterPanel(game);

@@ -48,15 +48,22 @@ public class ScreenBuffer
 
     public void WriteAt(int x, int y, string text, ConsoleColor color = ConsoleColor.White, int maxWidth = -1)
     {
-        if (y < 0 || y >= _height) return;
+        if (y < 0 || y >= _height || x < 0 || x >= _width) return;
+        if (string.IsNullOrEmpty(text)) return;
 
         var target = _useBackBuffer ? _backBuffer : _buffer;
         var targetColor = _useBackBuffer ? _backColorBuffer : _colorBuffer;
 
+        // Strict bounds: never write past screen width or specified maxWidth
         int endX = maxWidth > 0 ? Math.Min(x + maxWidth, _width) : _width;
+        int availableWidth = endX - x;
 
-        for (int i = 0; i < text.Length && x + i < endX; i++)
+        // Truncate text if it would exceed bounds
+        int charsToWrite = Math.Min(text.Length, availableWidth);
+
+        for (int i = 0; i < charsToWrite; i++)
         {
+            if (x + i >= _width) break; // Extra safety check
             target[x + i, y] = text[i];
             targetColor[x + i, y] = color;
         }
@@ -65,17 +72,20 @@ public class ScreenBuffer
     public void WriteBox(int x, int y, int width, int height, string title = "", ConsoleColor color = ConsoleColor.White)
     {
         if (width < 3 || height < 3) return;
+        if (x < 0 || y < 0 || x + width > _width || y + height > _height) return;
 
         // Top border
         WriteAt(x, y, "╔", color);
-        WriteAt(x + 1, y, new string('═', width - 2), color);
+        WriteAt(x + 1, y, new string('═', Math.Max(0, width - 2)), color);
         WriteAt(x + width - 1, y, "╗", color);
 
-        // Title if provided
-        if (!string.IsNullOrEmpty(title) && title.Length < width - 4)
+        // Title if provided - truncate if too long
+        if (!string.IsNullOrEmpty(title))
         {
-            int titleX = x + (width - title.Length - 2) / 2;
-            WriteAt(titleX, y, $" {title} ", color);
+            int maxTitleLen = width - 4;
+            string truncTitle = title.Length > maxTitleLen ? title.Substring(0, maxTitleLen) : title;
+            int titleX = x + (width - truncTitle.Length - 2) / 2;
+            WriteAt(titleX, y, $" {truncTitle} ", color);
         }
 
         // Sides
@@ -87,7 +97,7 @@ public class ScreenBuffer
 
         // Bottom border
         WriteAt(x, y + height - 1, "╚", color);
-        WriteAt(x + 1, y + height - 1, new string('═', width - 2), color);
+        WriteAt(x + 1, y + height - 1, new string('═', Math.Max(0, width - 2)), color);
         WriteAt(x + width - 1, y + height - 1, "╝", color);
     }
 
@@ -113,8 +123,13 @@ public class ScreenBuffer
     public void Render()
     {
         // DEMOSCENE: Only redraw changed characters (minimize flicker!)
-        var source = _useBackBuffer ? _buffer : _backBuffer;
-        var sourceColor = _useBackBuffer ? _colorBuffer : _backColorBuffer;
+        // CRITICAL: Read from the buffer we just WROTE to (must match WriteAt logic!)
+        var source = _useBackBuffer ? _backBuffer : _buffer;
+        var sourceColor = _useBackBuffer ? _backColorBuffer : _colorBuffer;
+
+        // Compare with the OPPOSITE buffer (what's currently on screen)
+        var previous = _useBackBuffer ? _buffer : _backBuffer;
+        var previousColor = _useBackBuffer ? _colorBuffer : _backColorBuffer;
 
         try
         {
@@ -125,8 +140,8 @@ public class ScreenBuffer
                 for (int x = 0; x < _width; x++)
                 {
                     // Only redraw if character or color changed
-                    bool changed = source[x, y] != _backBuffer[x, y] ||
-                                  sourceColor[x, y] != _backColorBuffer[x, y];
+                    bool changed = source[x, y] != previous[x, y] ||
+                                  sourceColor[x, y] != previousColor[x, y];
 
                     if (changed || y == 0) // Always redraw first line to ensure visibility
                     {

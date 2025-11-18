@@ -147,13 +147,27 @@ public class ProgressionFrameworkResearcher
     private static double _championFitness = 0;
     private static int _championGeneration = 0;
     private static int _resetCount = 0;
+
+    // Track last BEST framework for change highlighting (only update on improvement!)
+    private static ProgressionFrameworkData? _previousBest = null;
+    private static double _previousBestFitness = 0;
     private const double AUTO_RESET_THRESHOLD = 85.0; // Reset if stuck near optimal
     private const int AUTO_RESET_STUCK_GENS = 150; // Must be stuck this long
     private const double AUTO_RESET_TREND_THRESHOLD = 0.05; // Reset if trend < +0.05/1k gens (plateau)
     private const int AUTO_RESET_MIN_IMPROVEMENTS = 20; // Need this many data points to trust trend
 
+    // ADAPTIVE POPULATION-BASED EVOLUTION (Self-tuning!)
+    private static int _populationSize = 10; // Start small, grow as needed
+    private const int MIN_POPULATION = 10;
+    private const int MAX_POPULATION = 100;
+    private static List<(ProgressionFrameworkData framework, double fitness)> _population = new();
+
+    // Track current candidate being evaluated (for live display)
+    private static ProgressionFrameworkData? _currentCandidate = null;
+    private static double _currentCandidateFitness = 0;
+
     // Anti-flicker settings
-    private const int UI_UPDATE_INTERVAL = 10; // Update UI every N generations (reduce for speed)
+    private const int UI_UPDATE_INTERVAL = 25; // Update UI every N generations (reduce flash)
     private const int CYCLE_DELAY_MS = 0; // NO DELAY - max speed!
 
     // PARALLEL EVOLUTION: Run multiple candidates simultaneously
@@ -413,32 +427,232 @@ public class ProgressionFrameworkResearcher
         {
             _generation++;
 
-            // SIMPLE: One candidate at a time (parallel overhead was killing us!)
-            ProgressionFrameworkData framework;
-            if (_generationsSinceImprovement > 100)
+            // Track generation throughput (gen/s)
+            var now = DateTime.Now;
+            var elapsed = (now - _lastGenerationTime).TotalSeconds;
+            if (elapsed > 0)
             {
-                _currentPhase = "🔄 RANDOM RESTART - Exploring new space...";
-                if (_generation % UI_UPDATE_INTERVAL == 0) RenderUltimaDashboard();
-                framework = CreateBaselineFramework();
-                _generationsSinceImprovement = 0;
-                Thread.Sleep(500);
+                double currentGenPerSec = 1.0 / elapsed;
+                _recentGenerationTimes.Enqueue(currentGenPerSec);
+                if (_recentGenerationTimes.Count > 30) // Average last 30 generations
+                    _recentGenerationTimes.Dequeue();
             }
+            _lastGenerationTime = now;
+
+            // POPULATION-BASED EVOLUTION (better for multi-objective optimization)
+            ProgressionFrameworkData framework;
+            double fitness;
+
+            // Initialize population if empty
+            if (_population.Count == 0)
+            {
+                _currentPhase = "🌱 Seeding population...";
+
+                // CRITICAL: Start from CHAMPION if available (the 70.9 solution!)
+                if (_champion != null && _championFitness > _bestFitness)
+                {
+                    var msg = $"📍 Seeding from CHAMPION (fitness {_championFitness:F1})";
+                    SafeFileWriter.SafeAppendAllText("progression_research.log", $"[{DateTime.Now:HH:mm:ss}] {msg}\n");
+                    _population.Add((_champion, _championFitness));
+                    _bestFramework = _champion;
+                    _bestFitness = _championFitness;
+                }
+                else if (_bestFramework != null)
+                {
+                    var msg = $"📍 Seeding from CURRENT BEST (fitness {_bestFitness:F1})";
+                    SafeFileWriter.SafeAppendAllText("progression_research.log", $"[{DateTime.Now:HH:mm:ss}] {msg}\n");
+                    _population.Add((_bestFramework, _bestFitness));
+                }
+
+                // Fill rest with variations of the best (champion or current)
+                ProgressionFrameworkData seed = _champion ?? _bestFramework ?? CreateBaselineFramework();
+                for (int i = _population.Count; i < _populationSize; i++)
+                {
+                    var variant = MutateFramework(seed);
+                    var variantFitness = EvaluateFramework(variant);
+                    _population.Add((variant, variantFitness));
+                    _totalSimulations += 65;
+                }
+                // Sort by fitness
+                _population.Sort((a, b) => b.fitness.CompareTo(a.fitness));
+            }
+
+            // ADAPTIVE POPULATION SIZING - Let it self-tune!
+            if (_generation % 500 == 0 && _population.Count > 2)
+            {
+                // Measure diversity: fitness range in population
+                var fitnesses = _population.Select(p => p.fitness).ToArray();
+                double diversityRange = fitnesses.Max() - fitnesses.Min();
+
+                // Measure throughput
+                double avgGenPerSec = _recentGenerationTimes.Count > 0 ? _recentGenerationTimes.Average() : 1000;
+
+                // GROW population aggressively if monoculture detected
+                if (diversityRange < 1.0 && _populationSize < MAX_POPULATION && avgGenPerSec > 1000)
+                {
+                    int oldSize = _populationSize;
+                    // Grow faster based on throughput - if fast, grow bigger jumps!
+                    int growthStep = avgGenPerSec > 15000 ? 50 : // 20k gen/s? Jump by 50!
+                                    avgGenPerSec > 10000 ? 30 : // 10k gen/s? Jump by 30
+                                    avgGenPerSec > 5000 ? 20 :  // 5k gen/s? Jump by 20
+                                    10;                         // Otherwise jump by 10
+
+                    _populationSize = Math.Min(MAX_POPULATION, _populationSize + growthStep);
+                    var msg = $"🔬 MONOCULTURE! Growing pop {oldSize}→{_populationSize} (diversity={diversityRange:F2}, speed={avgGenPerSec:F0}gen/s)";
+                    SafeFileWriter.SafeAppendAllText("progression_research.log", $"[{DateTime.Now:HH:mm:ss}] {msg}\n");
+                }
+                // SHRINK population if throughput drops below 3000 gen/s
+                else if (_populationSize > MIN_POPULATION && avgGenPerSec < 3000)
+                {
+                    int oldSize = _populationSize;
+                    _populationSize = Math.Max(MIN_POPULATION, _populationSize - 20);
+                    // Trim population to new size
+                    while (_population.Count > _populationSize)
+                        _population.RemoveAt(_population.Count - 1);
+                    var msg = $"⚡ Throughput dropped ({avgGenPerSec:F0}gen/s). Shrinking pop {oldSize}→{_populationSize}";
+                    SafeFileWriter.SafeAppendAllText("progression_research.log", $"[{DateTime.Now:HH:mm:ss}] {msg}\n");
+                }
+                // GROW slightly if diversity is low-medium and we have speed budget
+                else if (diversityRange < 2.0 && _populationSize < MAX_POPULATION && avgGenPerSec > 10000)
+                {
+                    int oldSize = _populationSize;
+                    _populationSize = Math.Min(MAX_POPULATION, _populationSize + 10);
+                    var msg = $"📈 Low diversity ({diversityRange:F2}), growing pop {oldSize}→{_populationSize}";
+                    SafeFileWriter.SafeAppendAllText("progression_research.log", $"[{DateTime.Now:HH:mm:ss}] {msg}\n");
+                }
+            }
+
+            // CHAMPION-GUIDED EXPLORATION when severely stuck
+            if (_generationsSinceImprovement > 3000)
+            {
+                // ULTRA STUCK: Every 500 gens, fully reseed population from champion
+                if (_generation % 500 == 0)
+                {
+                    _currentPhase = "🏆 ULTRA - Reseeding from CHAMPION!";
+                    _population.Clear();
+                    if (_champion != null)
+                    {
+                        // Refill ENTIRE population with champion variations
+                        for (int i = 0; i < _populationSize; i++)
+                        {
+                            var variant = MutateFramework(_champion);
+                            var varFit = EvaluateFramework(variant);
+                            _population.Add((variant, varFit));
+                            _totalSimulations += 65;
+                        }
+                        _population.Sort((a, b) => b.fitness.CompareTo(a.fitness));
+                    }
+                }
+
+                // Explore NEAR champion with big mutations
+                if (_champion != null)
+                {
+                    _currentPhase = "🏆 Champion-guided (2x)";
+                    framework = MutateFramework(_champion); // 2x strength
+                }
+                else
+                {
+                    framework = MutateFramework(_bestFramework ?? CreateBaselineFramework());
+                }
+
+                _currentCandidate = framework;
+                fitness = EvaluateFramework(framework);
+                _currentCandidateFitness = fitness;
+                _totalSimulations += 65;
+            }
+            else if (_generationsSinceImprovement > 1000)
+            {
+                // SEVERELY STUCK: 50% champion-guided, 50% crossover
+                var random = new Random(_generation * 19);
+                if (_champion != null && random.NextDouble() < 0.5)
+                {
+                    _currentPhase = "🏆 Champion-guided (1.5x mutations)";
+                    framework = MutateFramework(_champion); // 1.5x strength
+                }
+                else
+                {
+                    // Crossover best candidates + strong mutation
+                    _currentPhase = "🧬 Aggressive crossover...";
+                    var parent1 = TournamentSelect(_population);
+                    var parent2 = TournamentSelect(_population);
+                    framework = CrossoverFrameworks(parent1, parent2);
+                    framework = MutateFramework(framework); // 1.5x strength
+                }
+                _currentCandidate = framework;
+                fitness = EvaluateFramework(framework);
+                _currentCandidateFitness = fitness;
+                _totalSimulations += 65;
+            }
+            // Every 10 gens when stuck >500: inject diversity
+            else if (_generationsSinceImprovement > 500 && _generation % 10 == 0)
+            {
+                _currentPhase = "💥 DIVERSITY INJECTION - Big jumps!";
+                framework = CreateRandomFramework();
+                _currentCandidate = framework; // Track for live display
+                fitness = EvaluateFramework(framework);
+                _currentCandidateFitness = fitness;
+                _totalSimulations += 65;
+            }
+            // Every 20 gens when stuck >200: try random jumps
+            else if (_generationsSinceImprovement > 200 && _generation % 20 == 0)
+            {
+                _currentPhase = "🎲 Random exploration...";
+                framework = CreateRandomFramework();
+                _currentCandidate = framework; // Track for live display
+                fitness = EvaluateFramework(framework);
+                _currentCandidateFitness = fitness;
+                _totalSimulations += 65;
+            }
+            // Normal evolution: crossover + mutation
             else
             {
-                _currentPhase = "🔬 Mutating...";
-                framework = MutateFramework(_bestFramework ?? CreateBaselineFramework());
+                // Every 100 gens: inject champion to prevent population drift
+                if (_champion != null && _generation % 100 == 0)
+                {
+                    _currentPhase = "🏆 Champion injection - maintaining diversity";
+                    framework = MutateFramework(_champion); // Small variations on champion
+                }
+                else
+                {
+                    _currentPhase = "🧬 Crossover + Mutation...";
+
+                    // Tournament selection: pick 2 random, use better one
+                    var parent1 = TournamentSelect(_population);
+                    var parent2 = TournamentSelect(_population);
+
+                    // Crossover: combine traits from both parents
+                    framework = CrossoverFrameworks(parent1, parent2);
+
+                    // Mutate offspring
+                    framework = MutateFramework(framework);
+                }
+
+                // Evaluate
+                _currentCandidate = framework; // Track for live display
+                fitness = EvaluateFramework(framework);
+                _currentCandidateFitness = fitness;
+                _totalSimulations += 65;
             }
 
-            // PHASE 2: Evaluate (metrics still run in parallel internally)
-            _currentPhase = "📊 Evaluating...";
-            double fitness = EvaluateFramework(framework);
-            _totalSimulations += 65;
-
-            // PHASE 3: Update if better
+            // PHASE 3: Update population and track best
             bool improved = false;
+
+            // Add to population, remove worst if full
+            _population.Add((framework, fitness));
+            _population.Sort((a, b) => b.fitness.CompareTo(a.fitness));
+            if (_population.Count > _populationSize)
+            {
+                _population.RemoveAt(_population.Count - 1); // Remove worst
+            }
+
+            // Update global best
             if (fitness > _bestFitness || _bestFramework == null)
             {
                 _currentPhase = "🌟 NEW BEST! Saving...";
+
+                // Save previous best for delta display
+                _previousBest = _bestFramework;
+                _previousBestFitness = _bestFitness;
 
                 _bestFitness = fitness;
                 _bestFramework = framework;
@@ -454,8 +668,15 @@ public class ProgressionFrameworkResearcher
                 GenerateGameCode(framework);
                 _lastSaveTime = DateTime.Now;
 
-                // Full redraw when improved
-                RenderUltimaDashboard();
+                // Auto-update champion if we beat it!
+                if (_bestFitness > _championFitness)
+                {
+                    double oldChampFitness = _championFitness;
+                    SaveChampion(); // This updates _championFitness inside
+                    _currentPhase = $"🏆 NEW CHAMPION! {_bestFitness:F1} (beat {oldChampFitness:F1})";
+                }
+
+                // Render will happen below at normal interval
             }
             else
             {
@@ -475,7 +696,11 @@ public class ProgressionFrameworkResearcher
 
             // PHASE 5: Update UI (uses double-buffered Ultima dashboard)
             _currentPhase = improved ? "✅ Improved!" : "🔄 Searching...";
-            if (_generation % UI_UPDATE_INTERVAL == 0)
+
+            // Update UI at controlled intervals only
+            bool shouldRenderNow = (_generation % UI_UPDATE_INTERVAL == 0) || improved;
+
+            if (shouldRenderNow)
             {
                 RenderUltimaDashboard();
             }
@@ -486,7 +711,33 @@ public class ProgressionFrameworkResearcher
                 LogProgress(framework, fitness, improved);
             }
 
-            // Check for ESC or R (reset)
+            // Diagnostic: Log population diversity every 500 gens
+            if (_generation % 500 == 0 && _population.Count > 0)
+            {
+                var popFitnesses = _population.Select(p => p.fitness).ToArray();
+                double avgFit = popFitnesses.Average();
+                double minFit = popFitnesses.Min();
+                double maxFit = popFitnesses.Max();
+                var diagnostic = $"[{DateTime.Now:HH:mm:ss}] Gen {_generation} DIVERSITY: Pop={_population.Count}, Fit range={minFit:F1}-{maxFit:F1} (avg={avgFit:F1}), Stuck={_generationsSinceImprovement}\n";
+                SafeFileWriter.SafeAppendAllText("progression_research.log", diagnostic);
+
+                // Check for monoculture (all candidates within 0.5 fitness)
+                if (maxFit - minFit < 0.5)
+                {
+                    SafeFileWriter.SafeAppendAllText("progression_research.log", $"  ⚠️  MONOCULTURE DETECTED! Fitness range only {maxFit - minFit:F2}\n");
+                }
+            }
+
+            // AUTO-RESET: If stuck too long, perform automatic reset
+            // Increase threshold since we now have better stuck-escape mechanisms
+            if (_generationsSinceImprovement > 10000)
+            {
+                _currentPhase = "🔄 AUTO-RESET - Stuck >10k gens, promoting and restarting";
+                PerformReset(manual: false);
+                continue; // Skip rest of loop, render will happen next iteration
+            }
+
+            // Check for ESC or R (manual reset)
             if (Console.KeyAvailable)
             {
                 var key = Console.ReadKey(true).Key;
@@ -612,6 +863,18 @@ public class ProgressionFrameworkResearcher
                 {
                     _championFitness = _champion.Metadata.OverallFitness;
                     _championGeneration = _champion.Metadata.Generation;
+
+                    // Validate champion fitness is in reasonable range (0-100)
+                    if (_championFitness > 100 || _championFitness < 0)
+                    {
+                        Console.WriteLine($"⚠️  WARNING: Champion data corrupted (fitness={_championFitness:F1})");
+                        Console.WriteLine("   Clearing champion and starting fresh...");
+                        _champion = null;
+                        _championFitness = 0;
+                        _championGeneration = 0;
+                        File.Delete(championPath); // Delete corrupted file
+                        Thread.Sleep(2000);
+                    }
                 }
             }
             catch
@@ -671,14 +934,31 @@ public class ProgressionFrameworkResearcher
         log.AppendLine($"{'═',64}");
         SafeFileWriter.SafeAppendAllText("progression_research.log", log.ToString());
 
-        // Reset to baseline
-        _bestFramework = CreateBaselineFramework();
-        _bestFitness = EvaluateFramework(_bestFramework);
+        // Clear population to force reseeding from champion!
+        _population.Clear();
+
+        // Reset to champion if available, not baseline!
+        if (_champion != null)
+        {
+            _bestFramework = _champion;
+            _bestFitness = _championFitness;
+            var msg = $"🏆 Reset: Starting from CHAMPION (fitness {_championFitness:F1}, BaseDEF={_champion.PlayerProgression.BaseDEF})";
+            log.AppendLine($"  {msg}");
+        }
+        else
+        {
+            _bestFramework = CreateBaselineFramework();
+            _bestFitness = EvaluateFramework(_bestFramework);
+            var msg = $"📍 Reset: Starting from baseline (fitness {_bestFitness:F1})";
+            log.AppendLine($"  {msg}");
+        }
+
         _generation = 0;
         _generationsSinceImprovement = 0;
+        _previousBest = null;
+        _previousBestFitness = 0;
 
-        // Full redraw
-        RenderUltimaDashboard();
+        // Don't render here - will render on next iteration
     }
 
     private static ProgressionFrameworkData CreateBaselineFramework()
@@ -734,7 +1014,25 @@ public class ProgressionFrameworkResearcher
         double mutationRate = 0.3; // Base rate
         double mutationStrength = 1.0;
 
-        if (_generationsSinceImprovement > 100)
+        if (_generationsSinceImprovement > 2000)
+        {
+            // ULTRA STUCK! But use SMART exploration, not random chaos
+            mutationRate = 1.0;
+            mutationStrength = 2.0; // Medium jumps, not huge (±6 instead of ±15)
+        }
+        else if (_generationsSinceImprovement > 1000)
+        {
+            // SEVERELY STUCK! Mutate everything, but controlled
+            mutationRate = 1.0; // 100% - mutate everything!
+            mutationStrength = 1.5; // Moderate jumps (±4.5)
+        }
+        else if (_generationsSinceImprovement > 500)
+        {
+            // Stuck! Increase exploration
+            mutationRate = 0.8;
+            mutationStrength = 1.2;
+        }
+        else if (_generationsSinceImprovement > 100)
         {
             // Stuck! Explore more aggressively
             mutationRate = 0.7;
@@ -793,13 +1091,29 @@ public class ProgressionFrameworkResearcher
 
         // CRITICAL: Mutate ECONOMY parameters (higher rate for critical system)
         var economy = new EconomicProgression();
-        economy.BaseGoldPerCombat = random.NextDouble() < (mutationRate * 1.5) // 1.5x higher chance
-            ? Math.Clamp(parent.Economy.BaseGoldPerCombat + (int)((random.Next(-3, 4) * mutationStrength)), 8, 20)
-            : parent.Economy.BaseGoldPerCombat;
 
-        economy.GoldScalingCoefficient = random.NextDouble() < (mutationRate * 1.5)
-            ? Math.Clamp(parent.Economy.GoldScalingCoefficient + (random.NextDouble() - 0.5) * 2.0 * mutationStrength, 2.0, 6.0)
-            : parent.Economy.GoldScalingCoefficient;
+        // Force mutation when severely stuck (mutation rate > 1.0 = always mutate)
+        bool forceMutate = mutationRate >= 1.0;
+
+        if (forceMutate || random.NextDouble() < (mutationRate * 1.5))
+        {
+            int goldDelta = (int)((random.Next(-3, 4) * mutationStrength));
+            economy.BaseGoldPerCombat = Math.Clamp(parent.Economy.BaseGoldPerCombat + goldDelta, 8, 20);
+        }
+        else
+        {
+            economy.BaseGoldPerCombat = parent.Economy.BaseGoldPerCombat;
+        }
+
+        if (forceMutate || random.NextDouble() < (mutationRate * 1.5))
+        {
+            double scaleDelta = (random.NextDouble() - 0.5) * 2.0 * mutationStrength;
+            economy.GoldScalingCoefficient = Math.Clamp(parent.Economy.GoldScalingCoefficient + scaleDelta, 2.0, 6.0);
+        }
+        else
+        {
+            economy.GoldScalingCoefficient = parent.Economy.GoldScalingCoefficient;
+        }
 
         mutated.Economy = economy;
 
@@ -831,6 +1145,113 @@ public class ProgressionFrameworkResearcher
         mutated.Metadata.SimulationsRun = _totalSimulations;
 
         return mutated;
+    }
+
+    // GENETIC ALGORITHM HELPERS
+
+    private static ProgressionFrameworkData TournamentSelect(List<(ProgressionFrameworkData framework, double fitness)> population)
+    {
+        if (population.Count == 0) return CreateBaselineFramework();
+
+        var random = new Random(_generation * 13);
+        int idx1 = random.Next(population.Count);
+        int idx2 = random.Next(population.Count);
+
+        // Return the better of the two
+        return population[idx1].fitness > population[idx2].fitness
+            ? population[idx1].framework
+            : population[idx2].framework;
+    }
+
+    private static ProgressionFrameworkData CrossoverFrameworks(ProgressionFrameworkData parent1, ProgressionFrameworkData parent2)
+    {
+        var random = new Random(_generation * 17);
+        var child = new ProgressionFrameworkData();
+
+        // CROSSOVER: Mix parameters from both parents
+        // Each parameter has 50% chance from either parent
+
+        // Player progression
+        child.PlayerProgression.BaseHP = random.NextDouble() < 0.5 ? parent1.PlayerProgression.BaseHP : parent2.PlayerProgression.BaseHP;
+        child.PlayerProgression.HPPerLevel = random.NextDouble() < 0.5 ? parent1.PlayerProgression.HPPerLevel : parent2.PlayerProgression.HPPerLevel;
+        child.PlayerProgression.BaseSTR = random.NextDouble() < 0.5 ? parent1.PlayerProgression.BaseSTR : parent2.PlayerProgression.BaseSTR;
+        child.PlayerProgression.BaseDEF = random.NextDouble() < 0.5 ? parent1.PlayerProgression.BaseDEF : parent2.PlayerProgression.BaseDEF;
+        child.PlayerProgression.StatPointsPerLevel = random.NextDouble() < 0.5 ? parent1.PlayerProgression.StatPointsPerLevel : parent2.PlayerProgression.StatPointsPerLevel;
+
+        // Enemy progression
+        child.EnemyProgression.BaseHP = random.NextDouble() < 0.5 ? parent1.EnemyProgression.BaseHP : parent2.EnemyProgression.BaseHP;
+        child.EnemyProgression.HPScalingCoefficient = random.NextDouble() < 0.5 ? parent1.EnemyProgression.HPScalingCoefficient : parent2.EnemyProgression.HPScalingCoefficient;
+        child.EnemyProgression.BaseDamage = random.NextDouble() < 0.5 ? parent1.EnemyProgression.BaseDamage : parent2.EnemyProgression.BaseDamage;
+        child.EnemyProgression.DamageScalingCoefficient = random.NextDouble() < 0.5 ? parent1.EnemyProgression.DamageScalingCoefficient : parent2.EnemyProgression.DamageScalingCoefficient;
+
+        // Economy (take as a unit - more likely to be coherent)
+        if (random.NextDouble() < 0.5)
+        {
+            child.Economy.BaseGoldPerCombat = parent1.Economy.BaseGoldPerCombat;
+            child.Economy.GoldScalingCoefficient = parent1.Economy.GoldScalingCoefficient;
+        }
+        else
+        {
+            child.Economy.BaseGoldPerCombat = parent2.Economy.BaseGoldPerCombat;
+            child.Economy.GoldScalingCoefficient = parent2.Economy.GoldScalingCoefficient;
+        }
+
+        // Loot (also take as a unit)
+        if (random.NextDouble() < 0.5)
+        {
+            child.Loot.BaseTreasureGold = parent1.Loot.BaseTreasureGold;
+            child.Loot.TreasurePerDungeonDepth = parent1.Loot.TreasurePerDungeonDepth;
+            child.Loot.EquipmentDropRate = parent1.Loot.EquipmentDropRate;
+        }
+        else
+        {
+            child.Loot.BaseTreasureGold = parent2.Loot.BaseTreasureGold;
+            child.Loot.TreasurePerDungeonDepth = parent2.Loot.TreasurePerDungeonDepth;
+            child.Loot.EquipmentDropRate = parent2.Loot.EquipmentDropRate;
+        }
+
+        // Regenerate derived data
+        child.Equipment = GenerateEquipmentTiers(child);
+        child.Economy = SimulateEconomicProgression(child);
+        child.Builds = TestBuildViabilityQuick(child);
+
+        return child;
+    }
+
+    private static ProgressionFrameworkData CreateRandomFramework()
+    {
+        // For diversity injection: random values across entire valid range
+        var random = new Random(_generation * 23);
+        var framework = new ProgressionFrameworkData();
+
+        // Player - full random in valid ranges
+        framework.PlayerProgression.BaseHP = random.Next(15, 41);
+        framework.PlayerProgression.HPPerLevel = random.Next(1, 6);
+        framework.PlayerProgression.BaseSTR = random.Next(2, 6);
+        framework.PlayerProgression.BaseDEF = random.Next(0, 4);
+        framework.PlayerProgression.StatPointsPerLevel = random.Next(1, 4);
+
+        // Enemy
+        framework.EnemyProgression.BaseHP = random.Next(3, 13);
+        framework.EnemyProgression.HPScalingCoefficient = 0.5 + random.NextDouble() * 2.5;
+        framework.EnemyProgression.BaseDamage = random.Next(1, 6);
+        framework.EnemyProgression.DamageScalingCoefficient = 0.1 + random.NextDouble() * 0.9;
+
+        // Economy
+        framework.Economy.BaseGoldPerCombat = random.Next(8, 21);
+        framework.Economy.GoldScalingCoefficient = 2.0 + random.NextDouble() * 4.0;
+
+        // Loot
+        framework.Loot.BaseTreasureGold = random.Next(10, 51);
+        framework.Loot.TreasurePerDungeonDepth = random.Next(15, 61);
+        framework.Loot.EquipmentDropRate = random.Next(10, 41);
+
+        // Generate derived data
+        framework.Equipment = GenerateEquipmentTiers(framework);
+        framework.Economy = SimulateEconomicProgression(framework);
+        framework.Builds = TestBuildViabilityQuick(framework);
+
+        return framework;
     }
 
     private static ProgressionFrameworkData DiscoverProgressionFormulas()
@@ -873,12 +1294,28 @@ public class ProgressionFrameworkResearcher
 
     private static EconomicProgression SimulateEconomicProgression(ProgressionFrameworkData framework)
     {
-        var economy = new EconomicProgression();
-        var random = new Random(_generation * 3);
+        // USE the economy values that were already set (from mutation/crossover)
+        // DON'T overwrite them - just validate and set CanAffordProgression flag
+        var economy = framework.Economy;
 
-        // Test different gold scaling values
-        economy.BaseGoldPerCombat = 10;
-        economy.GoldScalingCoefficient = 2.0 + random.NextDouble() * 3.0; // 2.0 to 5.0 per enemy level
+        // DETERMINISTIC: Use framework hash for consistent randomness
+        int seed = HashCode.Combine(
+            framework.PlayerProgression.BaseHP,
+            framework.PlayerProgression.HPPerLevel,
+            framework.Economy.BaseGoldPerCombat,
+            framework.Economy.GoldScalingCoefficient
+        );
+        var random = new Random(seed);
+
+        // If economy values aren't set yet, use defaults
+        if (economy.BaseGoldPerCombat <= 0)
+        {
+            economy.BaseGoldPerCombat = 10;
+        }
+        if (economy.GoldScalingCoefficient <= 0)
+        {
+            economy.GoldScalingCoefficient = 2.0 + random.NextDouble() * 3.0;
+        }
 
         // Simulate progression from level 1 to 10
         int cumulativeGold = 50; // Starting gold
@@ -886,8 +1323,8 @@ public class ProgressionFrameworkResearcher
 
         for (int level = 1; level <= 10; level++)
         {
-            // Estimate combats per level (about 5-10)
-            int combatsThisLevel = 5 + random.Next(6);
+            // DETERMINISTIC: Fixed average combats per level
+            int combatsThisLevel = 7; // Was random 5-10, now fixed
             int avgEnemyLevel = level;
 
             // Gold earned this level
@@ -1503,9 +1940,14 @@ public class ProgressionFrameworkResearcher
             resets: _resetCount,
             phase: _currentPhase,
             elapsed: elapsed,
-            framework: _bestFramework,
+            currentCandidate: _currentCandidate,      // What we're trying NOW
+            currentCandidateFitness: _currentCandidateFitness,
+            bestFramework: _bestFramework,             // Current best
+            previousBest: _previousBest,               // Previous best
+            previousFitness: _previousBestFitness,
             metrics: _latestMetricResults,
-            fitnessHistory: _fitnessHistory
+            fitnessHistory: _fitnessHistory,
+            populationSize: _population.Count
         );
     }
 
@@ -2050,82 +2492,36 @@ public class SkillBalanceMetric : IFitnessMetric
 
     private double TestStunResistance(int hp, int str, int def, int enemyHP, int enemyDMG)
     {
-        // Simulate repeated stun attempts (resistance builds up)
-        int wins = 0;
-        const int sims = 10; // Reduced from 20 for speed
+        // DETERMINISTIC: Simplified stun benefit calculation
+        // Stun lets you skip ~25% of enemy turns (diminishing with resistance)
+        // Approximate benefit as reducing enemy effective damage by 15%
+        int normalTurns = (enemyHP / str) + 1;
+        int normalDamageTaken = normalTurns * Math.Max(1, enemyDMG - def);
 
-        for (int i = 0; i < sims; i++)
-        {
-            int playerHP = hp;
-            int eHP = enemyHP;
-            int stunResistance = 0;
-            int stamina = 12;
+        // With stuns: roughly 15% less damage taken (stuns land ~25% of time, save 1 hit each)
+        int stunDamageTaken = (int)(normalDamageTaken * 0.85);
 
-            while (playerHP > 0 && eHP > 0)
-            {
-                // Try Shield Bash if we have stamina
-                // DEMOSCENE: Use Random.Shared (thread-safe singleton, zero allocation!)
-                if (stamina >= 4 && Random.Shared.Next(100) < (100 - stunResistance * 25))
-                {
-                    stamina -= 4;
-                    stunResistance++;
-                    eHP -= (int)(str * 0.7); // Bash damage
-                    // Enemy stunned, skips turn
-                }
-                else
-                {
-                    // Normal attack
-                    stamina = Math.Max(0, stamina - 3);
-                    eHP -= str;
-                    playerHP -= Math.Max(1, enemyDMG - def);
-                }
-
-                if (stamina < 3) stamina = 12; // Regenerate if depleted
-            }
-
-            if (playerHP > 0) wins++;
-        }
-
-        double stunWinRate = wins / (double)sims;
-        double normalWinRate = SimulateCombat(hp, str, def, enemyHP, enemyDMG, false);
-        return stunWinRate - normalWinRate;
+        // Return benefit as percentage of HP saved
+        return (normalDamageTaken - stunDamageTaken) / (double)hp;
     }
 
     private double TestBerserkerRage(int hp, int str, int def, int enemyHP, int enemyDMG)
     {
-        // Simulate combat with Berserker Rage (2x damage, 1.5x damage taken)
-        int wins = 0;
-        const int sims = 10; // Reduced from 20 for speed
+        // DETERMINISTIC: Calculate berserker rage outcome mathematically
+        // With rage: 2x damage dealt, 1.5x damage taken for 3 turns
+        int rageTurns = Math.Min(3, (enemyHP / (str * 2)) + 1);
+        int normalTurnsToKill = (enemyHP / str) + (enemyHP % str > 0 ? 1 : 0);
 
-        for (int i = 0; i < sims; i++)
-        {
-            int playerHP = hp;
-            int eHP = enemyHP;
-            int rageTurns = 3; // Rage lasts 3 turns
+        // Damage taken with rage active (first 3 turns deal 2x damage, take 1.5x)
+        int rageDamageTaken = rageTurns * (int)(Math.Max(1, enemyDMG - def) * 1.5);
+        // Remaining turns (if any) are normal
+        int remainingTurns = Math.Max(0, normalTurnsToKill - rageTurns);
+        int normalDamageTaken = normalTurnsToKill * Math.Max(1, enemyDMG - def);
 
-            while (playerHP > 0 && eHP > 0)
-            {
-                if (rageTurns > 0)
-                {
-                    // Rage active
-                    eHP -= str * 2;
-                    playerHP -= (int)(Math.Max(1, enemyDMG - def) * 1.5);
-                    rageTurns--;
-                }
-                else
-                {
-                    // Normal combat
-                    eHP -= str;
-                    playerHP -= Math.Max(1, enemyDMG - def);
-                }
-            }
+        int totalDamageWithRage = rageDamageTaken + (remainingTurns * Math.Max(1, enemyDMG - def));
 
-            if (playerHP > 0) wins++;
-        }
-
-        double rageWinRate = wins / (double)sims;
-        double normalWinRate = SimulateCombat(hp, str, def, enemyHP, enemyDMG, false);
-        return rageWinRate - normalWinRate;
+        // Return benefit: negative if rage makes you take more damage
+        return (normalDamageTaken - totalDamageWithRage) / (double)hp;
     }
 
     private double TestStaminaEconomy(int str, int enemyHP)
@@ -2141,32 +2537,23 @@ public class SkillBalanceMetric : IFitnessMetric
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     private double SimulateCombat(int hp, int str, int def, int enemyHP, int enemyDMG, bool useSkills)
     {
-        int wins = 0;
-        const int sims = 5;
-
-        // DEMOSCENE: Precalculate skill damage multiplier
+        // DETERMINISTIC: Single combat simulation
         int strDamage = useSkills ? (int)(str * 1.5) : str;
 
-        for (int i = 0; i < sims; i++)
+        int playerHP = hp;
+        int eHP = enemyHP;
+
+        while (playerHP > 0 && eHP > 0)
         {
-            int playerHP = hp;
-            int eHP = enemyHP;
-
-            while (playerHP > 0 && eHP > 0)
+            eHP -= strDamage;
+            if (eHP > 0)
             {
-                eHP -= strDamage;
-                if (eHP > 0)
-                {
-                    // Inline Math.Max
-                    int damage = enemyDMG - def;
-                    playerHP -= damage > 1 ? damage : 1;
-                }
+                int damage = enemyDMG - def;
+                playerHP -= damage > 1 ? damage : 1;
             }
-
-            if (playerHP > 0) wins++;
         }
 
-        return wins / (double)sims;
+        return playerHP > 0 ? 1.0 : 0.0;
     }
 }
 
@@ -2346,28 +2733,25 @@ public class ProgressionStrataMetric : IFitnessMetric
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     private double TestWinRate(int hp, int str, int def, int enemyHP, int enemyDMG)
     {
-        int wins = 0;
-        const int sims = 10;
+        // DETERMINISTIC: Just calculate the combat outcome directly
+        // No randomness needed - it's turn-based math
+        int playerHP = hp;
+        int eHP = enemyHP;
 
-        for (int i = 0; i < sims; i++)
+        while (playerHP > 0 && eHP > 0)
         {
-            int playerHP = hp;
-            int eHP = enemyHP;
-
-            while (playerHP > 0 && eHP > 0)
+            // Player attacks
+            eHP -= str;
+            if (eHP > 0)
             {
-                eHP -= str;
-                if (eHP > 0)
-                {
-                    int damage = enemyDMG - def;
-                    playerHP -= damage > 1 ? damage : 1;
-                }
+                // Enemy attacks back
+                int damage = enemyDMG - def;
+                playerHP -= damage > 1 ? damage : 1;
             }
-
-            if (playerHP > 0) wins++;
         }
 
-        return wins / (double)sims;
+        // Return 1.0 if player wins, 0.0 if enemy wins
+        return playerHP > 0 ? 1.0 : 0.0;
     }
 }
 
