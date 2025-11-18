@@ -740,7 +740,7 @@ public class ProgressionFrameworkResearcher
                 BonusValue = tier, // Flat progression: 0, 1, 2, 3, 4, 5
                 RecommendedCost = tier * tier * 25 + 5, // Quadratic cost
                 RecommendedLevel = tier * 2, // Available every 2 levels
-                PowerIncrease = tier > 0 ? (tier / (double)(tier - 1 + 0.001) - 1) * 100 : 0
+                PowerIncrease = 0 // Calculate after all tiers are added
             });
         }
 
@@ -753,8 +753,40 @@ public class ProgressionFrameworkResearcher
                 BonusValue = tier,
                 RecommendedCost = tier * tier * 25 + 5,
                 RecommendedLevel = tier * 2,
-                PowerIncrease = tier > 0 ? (tier / (double)(tier - 1 + 0.001) - 1) * 100 : 0
+                PowerIncrease = 0 // Calculate after all tiers are added
             });
+        }
+
+        // Now calculate PowerIncrease based on actual BonusValues
+        for (int i = 1; i < progression.WeaponTiers.Count; i++)
+        {
+            var prev = progression.WeaponTiers[i - 1];
+            var curr = progression.WeaponTiers[i];
+
+            // Handle tier 0→1 specially (0 bonus to non-zero)
+            if (prev.BonusValue == 0 && curr.BonusValue > 0)
+            {
+                curr.PowerIncrease = 100; // First weapon = 100% increase from nothing
+            }
+            else if (prev.BonusValue > 0)
+            {
+                curr.PowerIncrease = ((curr.BonusValue - prev.BonusValue) / (double)prev.BonusValue) * 100;
+            }
+        }
+
+        for (int i = 1; i < progression.ArmorTiers.Count; i++)
+        {
+            var prev = progression.ArmorTiers[i - 1];
+            var curr = progression.ArmorTiers[i];
+
+            if (prev.BonusValue == 0 && curr.BonusValue > 0)
+            {
+                curr.PowerIncrease = 100; // First armor = 100% increase from nothing
+            }
+            else if (prev.BonusValue > 0)
+            {
+                curr.PowerIncrease = ((curr.BonusValue - prev.BonusValue) / (double)prev.BonusValue) * 100;
+            }
         }
 
         progression.RecommendedFormula = "Flat linear: Bonus = Tier";
@@ -766,18 +798,24 @@ public class ProgressionFrameworkResearcher
     {
         var viability = new BuildViability();
 
-        // Test 3 archetypes quickly
+        // Test 3 archetypes at level 5 (mid-game)
+        int testLevel = 5;
+        int baseHP = framework.PlayerProgression.BaseHP + (testLevel * (int)framework.PlayerProgression.HPPerLevel);
+        int enemyHP = framework.EnemyProgression.BaseHP + (int)(testLevel * framework.EnemyProgression.HPScalingCoefficient);
+        int enemyDMG = framework.EnemyProgression.BaseDamage + (int)(testLevel * framework.EnemyProgression.DamageScalingCoefficient);
+
+        // Test 3 archetypes with different stat allocations
         var builds = new[]
         {
-            ("GlassCannon", 10, 2),
-            ("Balanced", 6, 6),
-            ("Tank", 3, 10)
+            ("GlassCannon", 10, 2),  // High offense, low defense
+            ("Balanced", 6, 6),      // Even split
+            ("Tank", 2, 10)          // Low offense, high defense (was 3, now 2 for more variance)
         };
 
         foreach (var (name, str, def) in builds)
         {
-            int hp = framework.PlayerProgression.BaseHP + (5 * (int)framework.PlayerProgression.HPPerLevel);
-            double viabilityScore = QuickCombatTest(hp, str, def, 5, 7, 2);
+            // Test this build against actual framework enemy stats
+            double viabilityScore = QuickCombatTest(baseHP, str, def, testLevel, enemyHP, enemyDMG);
 
             viability.ViableBuilds[name] = new BuildRequirements
             {
