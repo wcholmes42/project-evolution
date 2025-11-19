@@ -34,13 +34,17 @@ COPY dashboard/ ./dashboard/
 # Copy C# game DLL (built separately)
 COPY game/ ./game/
 
-# Expose web port
-EXPOSE 8000
+# Expose web ports
+EXPOSE 8000 8501
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# Run FastAPI server
-CMD ["python3", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Run both FastAPI (8000) and Streamlit (8501)
+CMD ["/app/start.sh"]
