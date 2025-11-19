@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progression Tuner - GPU Accelerated</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-rows: 60px 1fr 80px;
+            height: 100vh;
+            padding: 10px;
+            gap: 10px;
+        }
+        .header {
+            background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 2px solid #00ff00;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .panel {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            padding: 15px;
+        }
+        .panel h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #00ffff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        .controls {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { box-shadow: 0 0 20px #00ff00; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .metric {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ffff;
+        }
+        .warning {
+            background: #ff6600;
+            color: #000;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>>ì PROGRESSION TUNER</h1>
+            <div style="display:flex;gap:20px;">
+                <div><span id="generation" style="color:#00ffff;font-size:20px">0</span> Gen</div>
+                <div><span id="fitness" style="color:#00ffff;font-size:20px">0.00</span> Fitness</div>
+                <div><span id="device" style="color:#00ffff;font-size:20px">CUDA</span></div>
+                <div><span id="connection" style="color:#00ff00">Ï</span> Live</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <h2>FITNESS PROGRESSION</h2>
+                <canvas id="fitnessChart" height="200"></canvas>
+            </div>
+            <div class="panel">
+                <h2>GPU UTILIZATION</h2>
+                <canvas id="gpuChart" height="200"></canvas>
+            </div>
+            <div class="panel">
+                <h2>HARDWARE</h2>
+                <div class="metric-grid">
+                    <div class="metric"><div>CPU</div><div class="metric-value" id="cpu-usage">0%</div></div>
+                    <div class="metric"><div>GPU</div><div class="metric-value" id="gpu-usage">0%</div></div>
+                    <div class="metric"><div>TEMP</div><div class="metric-value" id="gpu-temp">0°C</div></div>
+                    <div class="metric"><div>VRAM</div><div class="metric-value" id="gpu-vram">0GB</div></div>
+                    <div class="metric"><div>RAM</div><div class="metric-value" id="ram-usage">0GB</div></div>
+                    <div class="metric"><div>GEN/S</div><div class="metric-value" id="gen-per-sec">0</div></div>
+                </div>
+                <div id="throttle-warning" style="margin-top:10px;"></div>
+            </div>
+            <div class="panel">
+                <h2>EVOLUTION</h2>
+                <div class="metric-grid">
+                    <div class="metric"><div>BEST</div><div class="metric-value" id="best-fitness">0.00</div></div>
+                    <div class="metric"><div>AVG</div><div class="metric-value" id="avg-fitness">0.00</div></div>
+                    <div class="metric"><div>POP</div><div class="metric-value" id="population">0</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="startEvolution()">¶ START</button>
+            <button onclick="pauseEvolution()">ø PAUSE</button>
+            <button onclick="stopEvolution()">ù STOP</button>
+            <span style="color:#00ff00;margin-left:20px;">THROTTLE:</span>
+            <button onclick="setThrottle(100)">100%</button>
+            <button onclick="setThrottle(75)">75%</button>
+            <button onclick="setThrottle(50)">50%</button>
+            <button onclick="setThrottle(25)">25%</button>
+            <span id="status-msg" style="margin-left:auto;color:#00ffff;"></span>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://192.168.68.42:8000/ws');
+        let lastGen = 0, lastTime = Date.now();
+
+        const fitnessChart = new Chart(document.getElementById('fitnessChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ data: [], borderColor: '#00ff00', borderWidth: 2, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { max: 100 } }, plugins: { legend: { display: false } } }
+        });
+
+        const gpuChart = new Chart(document.getElementById('gpuChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ data: [], borderColor: '#ff6600', borderWidth: 2, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { max: 100 } }, plugins: { legend: { display: false } } }
+        });
+
+        ws.onmessage = (e) => {
+            const d = JSON.parse(e.data);
+            const hw = d.hardware, evo = d.evolution;
+
+            document.getElementById('generation').textContent = evo.generation.toLocaleString();
+            document.getElementById('fitness').textContent = evo.best_fitness.toFixed(2);
+            document.getElementById('device').textContent = evo.device.toUpperCase();
+            document.getElementById('cpu-usage').textContent = hw.cpu_percent.toFixed(1) + '%';
+            document.getElementById('gpu-usage').textContent = hw.gpu_percent + '%';
+            document.getElementById('gpu-temp').textContent = hw.gpu_temp + '°C';
+            document.getElementById('gpu-vram').textContent = hw.gpu_mem_used_gb.toFixed(1) + 'GB';
+            document.getElementById('ram-usage').textContent = hw.ram_used_gb.toFixed(1) + 'GB';
+            document.getElementById('population').textContent = evo.population_size;
+            document.getElementById('best-fitness').textContent = evo.best_fitness.toFixed(2);
+            document.getElementById('avg-fitness').textContent = (evo.avg_fitness || 0).toFixed(2);
+
+            const now = Date.now(), genDelta = evo.generation - lastGen, timeDelta = (now - lastTime) / 1000;
+            if (genDelta > 0) {
+                document.getElementById('gen-per-sec').textContent = (genDelta / timeDelta).toFixed(0);
+                lastGen = evo.generation; lastTime = now;
+            }
+
+            if (hw.should_throttle) {
+                document.getElementById('throttle-warning').innerHTML = `<div class="warning">  ${hw.throttle_reason}</div>`;
+            } else {
+                document.getElementById('throttle-warning').innerHTML = '';
+            }
+
+            if (fitnessChart.data.labels.length > 100) { fitnessChart.data.labels.shift(); fitnessChart.data.datasets[0].data.shift(); }
+            fitnessChart.data.labels.push('');
+            fitnessChart.data.datasets[0].data.push(evo.best_fitness);
+            fitnessChart.update('none');
+
+            if (gpuChart.data.labels.length > 100) { gpuChart.data.labels.shift(); gpuChart.data.datasets[0].data.shift(); }
+            gpuChart.data.labels.push('');
+            gpuChart.data.datasets[0].data.push(hw.gpu_percent);
+            gpuChart.update('none');
+        };
+
+        async function startEvolution() { await fetch('http://192.168.68.42:8000/api/evolution/start', {method:'POST'}); }
+        async function pauseEvolution() { await fetch('http://192.168.68.42:8000/api/evolution/pause', {method:'POST'}); }
+        async function stopEvolution() { await fetch('http://192.168.68.42:8000/api/evolution/stop', {method:'POST'}); }
+        async function setThrottle(p) { await fetch(`http://192.168.68.42:8000/api/throttle/${p}`, {method:'POST'}); document.getElementById('status-msg').textContent=`Throttle: ${p}%`; }
+    </script>
+</body>
+</html>

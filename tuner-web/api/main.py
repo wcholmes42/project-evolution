@@ -39,9 +39,16 @@ async def shutdown_event():
         evolution_engine.stop()
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Health check"""
+    """Serve dashboard"""
+    with open("dashboard/index.html", encoding='utf-8') as f:
+        return f.read()
+
+
+@app.get("/health")
+async def health_check():
+    """API health check"""
     return {
         "status": "running",
         "gpu_available": hardware_monitor.has_gpu(),
