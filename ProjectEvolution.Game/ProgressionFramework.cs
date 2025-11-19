@@ -1961,6 +1961,24 @@ public class ProgressionFrameworkResearcher
             fitnessHistory: _fitnessHistory,
             populationSize: _population.Count
         );
+
+        // Update web state for dashboard
+        var avgFitness = _population.Count > 0 ? _population.Average(p => p.fitness) : _bestFitness;
+        TunerWebState.Update(new TunerStateData
+        {
+            Generation = _generation,
+            BestFitness = _bestFitness,
+            AvgFitness = avgFitness,
+            GenPerSec = genPerSec,
+            StuckGens = _generationsSinceImprovement,
+            Phase = _currentPhase,
+            PopulationSize = _population.Count,
+            ChampionFitness = _championFitness,
+            ChampionGen = _championGeneration,
+            Resets = _resetCount,
+            Device = "CPU",
+            Elapsed = elapsed
+        });
     }
 
     private static void RenderResearchDashboard()

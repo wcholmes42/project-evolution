@@ -1,44 +1,50 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
+using ProjectEvolution.Game;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add CORS for web dashboard
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 var app = builder.Build();
-
 app.UseCors();
 
-// Serve the Ultima dashboard
+// Serve Ultima dashboard
 app.MapGet("/", () => Results.Content(File.ReadAllText("wwwroot/ultima.html"), "text/html"));
 
-// Stream tuner state (reads from file written by C# tuner)
-app.MapGet("/api/tuner/state", () =>
+// Get current tuner state (from shared memory)
+app.MapGet("/api/state", () =>
 {
-    try
+    var state = TunerWebState.GetCurrent();
+    return Results.Json(new
     {
-        var statePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tuner_state.json");
-        if (File.Exists(statePath))
+        evolution = new
         {
-            var json = File.ReadAllText(statePath);
-            return Results.Content(json, "application/json");
-        }
-        return Results.Json(new { error = "Tuner not running" });
-    }
-    catch (Exception ex)
-    {
-        return Results.Json(new { error = ex.Message });
-    }
+            generation = state.Generation,
+            best_fitness = state.BestFitness,
+            avg_fitness = state.AvgFitness,
+            gen_per_sec = state.GenPerSec,
+            stuck_gens = state.StuckGens,
+            phase = state.Phase,
+            population_size = state.PopulationSize,
+            champion_fitness = state.ChampionFitness,
+            champion_gen = state.ChampionGen,
+            resets = state.Resets,
+            device = state.Device
+        },
+        hardware = new
+        {
+            cpu_percent = 0.0,
+            gpu_percent = 0,
+            gpu_temp = 0,
+            ram_used_gb = 0.0
+        },
+        timestamp = DateTime.Now
+    });
 });
 
+Console.WriteLine("🌐 WebApi running on http://localhost:8000");
 app.Run("http://0.0.0.0:8000");
