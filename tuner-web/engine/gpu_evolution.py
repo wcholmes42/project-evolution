@@ -82,17 +82,43 @@ class GPUEvolutionEngine:
             "device": str(self.device)
         }
     
+    async def start(self):
+        """Start the evolution loop"""
+        if self.running:
+            return  # Already running
+
+        self.running = True
+        print("🧬 Starting GPU-accelerated evolution...")
+
+        # For now, just run a simple loop that updates stats
+        # TODO: Implement full evolution with C# game integration
+        while self.running:
+            if not self.paused:
+                self.generation += 1
+                # Simulate progress for demo
+                self.best_fitness = min(100, self.best_fitness + 0.01)
+
+                self.stats.update({
+                    "generation": self.generation,
+                    "best_fitness": self.best_fitness,
+                    "avg_fitness": self.best_fitness * 0.9,
+                    "running": True
+                })
+
+            await asyncio.sleep(0.1)  # 10 updates per second
+
     def get_stats(self) -> Dict:
         return self.stats.copy()
-    
+
     def stop(self):
         self.running = False
-    
+        self.stats["running"] = False
+
     def pause(self):
         self.paused = not self.paused
-    
+
     def set_throttle(self, percentage: int):
         self.throttle = max(0, min(100, percentage))
-    
+
     def auto_throttle(self, level: int):
         self.set_throttle(level)
