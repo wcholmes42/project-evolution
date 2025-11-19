@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY ProjectEvolution.WebApi/publish/ /app/webapi/
+COPY ProjectEvolution.Game/publish/ /app/game/
+COPY tuner-web/dashboard/ultima.html /app/webapi/wwwroot/ultima.html
+EXPOSE 8000
+CMD ["dotnet", "/app/webapi/ProjectEvolution.WebApi.dll", "auto"]

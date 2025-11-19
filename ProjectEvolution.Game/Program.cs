@@ -41,6 +41,14 @@ if (args.Length > 0 && args[0] == "evaluate")
     }
 }
 
+// DOCKER MODE: Auto-start continuous research if console is not interactive
+if (args.Length > 0 && args[0] == "auto" || Console.IsInputRedirected)
+{
+    Console.WriteLine("🐳 Docker mode detected - Starting continuous research automatically...");
+    ProgressionFrameworkResearcher.RunContinuousResearch();
+    return;
+}
+
 // Main menu
 Console.Clear();
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progression Research Dashboard v2.0-DETERM-ADAPTIVE</title>
+    <title>Progression Research Dashboard v2.0-DETERM-ADAPTIVE-FIXED</title>
     <style>
         * {
             margin: 0;
@@ -25,9 +25,18 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
-            height: calc(100vh - 180px);
+            height: calc(100vh - 200px); /* Slightly less to prevent overflow */
             margin-top: 5px;
             margin-bottom: 5px;
+            grid-template-rows: 1fr;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* Fill grid cell */
+            min-height: 0;
+            overflow: hidden;
         }
 
         .header {
@@ -57,6 +66,8 @@
             scrollbar-width: thin;
             scrollbar-color: #0f0 #000;
             word-wrap: break-word;
+            white-space: normal; /* Allow wrapping */
+            text-overflow: clip; /* Don't ellipse */
         }
 
         .box::-webkit-scrollbar {
@@ -73,15 +84,19 @@
 
         .box-title {
             position: absolute;
-            top: -10px;
+            top: -12px; /* Move up more to prevent cutoff */
             left: 10px;
             background: #000;
             padding: 0 5px;
             font-weight: bold;
+            z-index: 10; /* Above box border */
+            white-space: nowrap; /* Don't wrap title */
         }
 
         .box-content {
             margin-top: 10px;
+            overflow-wrap: break-word; /* Break long words */
+            word-break: break-word; /* Force break if needed */
         }
 
         .cyan { color: #0ff; }
@@ -99,11 +114,16 @@
         .status-box {
             border-color: #0ff;
             margin-bottom: 10px;
+            height: 30vh; /* 30% of viewport height */
+            max-height: 30vh;
+            flex-shrink: 0;
+            overflow-y: auto;
         }
 
         .metrics-box {
             border-color: #ff0;
-            max-height: 500px;
+            flex: 1; /* Take remaining space */
+            min-height: 0; /* Allow scrolling */
         }
 
         .params-box {
@@ -114,12 +134,16 @@
         .trend-box {
             border-color: #f0f;
             margin-bottom: 8px;
-            max-height: 280px;
+            height: 30vh; /* 30% of viewport height */
+            max-height: 30vh;
+            flex-shrink: 0;
+            overflow-y: auto;
         }
 
         .health-box {
             border-color: #ff0;
-            max-height: calc(100% - 300px);
+            flex: 1; /* Take remaining space */
+            min-height: 0; /* Allow scrolling */
         }
 
         .progress-bar-container {
@@ -390,10 +414,10 @@
             🔄 Auto-reset when: fitness ≥85 + stuck 150 OR trend <0.05/1k + stuck 100
         </div>
         <div class="footer-controls">
-            <button class="control-btn" onclick="startEvolution()">▶️ START EVOLUTION</button>
-            <button class="control-btn" onclick="pauseEvolution()">⏸️ PAUSE</button>
-            <button class="control-btn danger" onclick="stopEvolution()">⏹️ STOP & SAVE</button>
-            <button class="control-btn" onclick="resetToChampion()">🔄 RESET → CHAMPION</button>
+            <button class="control-btn" disabled style="opacity: 0.3;" title="Auto-running">▶️ AUTO-RUNNING</button>
+            <button class="control-btn" disabled style="opacity: 0.3;" title="Not implemented">⏸️ PAUSE</button>
+            <button class="control-btn danger" disabled style="opacity: 0.3;" title="Not implemented">⏹️ STOP & SAVE</button>
+            <button class="control-btn" disabled style="opacity: 0.3;" title="Not implemented">🔄 RESET</button>
         </div>
         <div style="text-align: center; margin-top: 8px; color: #888; font-size: 11px;">
             Keyboard: [ESC] Stop | [R] Reset | [P] Pause | Throttle: [1]00% [7]5% [5]0% [2]5%
@@ -401,53 +425,48 @@
     </div>
 
     <script>
-        // WebSocket connection
-        let ws = null;
-        let reconnectTimer = null;
+        // REST API polling (replacing WebSocket)
+        let pollTimer = null;
         let startTime = Date.now();
         let fitnessHistory = [];
         let lastData = null;
+        let lastValidFramework = null; // Cache last valid framework
+        let lastParamsHtml = ''; // Cache last rendered HTML
+        let isConnected = false;
 
-        const WS_URL = 'ws://192.168.68.42:8000/ws';
+        const API_URL = '/api/state';
+        const POLL_INTERVAL = 100; // Poll every 100ms for smooth updates
 
-        function connectWebSocket() {
+        async function pollAPI() {
             try {
-                ws = new WebSocket(WS_URL);
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    console.error('API request failed:', response.status);
+                    throw new Error('API request failed');
+                }
 
-                ws.onopen = () => {
-                    console.log('WebSocket connected');
+                const data = await response.json();
+                updateDashboard(data);
+
+                if (!isConnected) {
+                    isConnected = true;
                     updateWSStatus(true);
-                    if (reconnectTimer) {
-                        clearTimeout(reconnectTimer);
-                        reconnectTimer = null;
-                    }
-                };
-
-                ws.onmessage = (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-                        updateDashboard(data);
-                    } catch (e) {
-                        console.error('Error parsing WebSocket message:', e);
-                    }
-                };
-
-                ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    updateWSStatus(false);
-                };
-
-                ws.onclose = () => {
-                    console.log('WebSocket disconnected');
-                    updateWSStatus(false);
-                    // Reconnect after 2 seconds
-                    reconnectTimer = setTimeout(connectWebSocket, 2000);
-                };
+                }
             } catch (e) {
-                console.error('Error connecting to WebSocket:', e);
-                updateWSStatus(false);
-                reconnectTimer = setTimeout(connectWebSocket, 2000);
+                console.error('Poll error:', e.message, e.stack);
+                if (isConnected) {
+                    isConnected = false;
+                    updateWSStatus(false);
+                }
             }
+        }
+
+        function startPolling() {
+            // Initial poll
+            pollAPI();
+            // Set up interval
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(pollAPI, POLL_INTERVAL);
         }
 
         function updateWSStatus(connected) {
@@ -469,34 +488,42 @@
         function updateDashboard(data) {
             lastData = data;
 
-            // Update header
-            const generation = data.evolution?.generation || 0;
-            const fitness = data.evolution?.best_fitness || 0;
-            const genPerSec = data.evolution?.gen_per_sec || 0;
+            // Update header (always works)
+            try {
+                const generation = data.evolution?.generation || data.evolution?.Generation || 0;
+                const fitness = data.evolution?.best_fitness || data.evolution?.BestFitness || 0;
+                const genPerSec = data.evolution?.gen_per_sec || data.evolution?.GenPerSec || 0;
 
-            document.getElementById('gen').textContent = generation.toLocaleString();
-            document.getElementById('genPerSec').textContent = genPerSec.toFixed(0);
-            document.getElementById('fitness').textContent = fitness.toFixed(2);
+                document.getElementById('gen').textContent = generation.toLocaleString();
+                document.getElementById('genPerSec').textContent = genPerSec.toFixed(0);
+                document.getElementById('fitness').textContent = fitness.toFixed(2);
+            } catch (e) {
+                console.error('Header update failed:', e.message);
+            }
 
-            // Update status box
-            updateStatusBox(data);
+            // Update each section independently - don't let one failure break others
+            try { updateStatusBox(data); } catch (e) { console.error('Status update failed:', e.message); }
+            try { updateMetricsBox(data); } catch (e) { console.error('Metrics update failed:', e.message); }
+            try { updateParametersBox(data); } catch (e) { console.error('Params update failed:', e.message); }
 
-            // Update metrics box
-            updateMetricsBox(data);
+            try {
+                const generation = data.evolution?.generation || 0;
+                const fitness = data.evolution?.best_fitness || 0;
+                updateTrendBox(data, generation, fitness);
+                updateHealthBox(data, fitness);
+            } catch (e) {
+                console.error('Trend/Health update failed:', e.message);
+            }
 
-            // Update parameters box
-            updateParametersBox(data);
+            try { updateFooter(data); } catch (e) { console.error('Footer update failed:', e.message); }
+        }
 
-            // Update trend box
-            updateTrendBox(data, generation, fitness);
-
-            // Update health box
-            updateHealthBox(data, fitness);
-
-            // Update footer
-            updateFooter(data);
-
-            // Update runtime
+        function safeUpdate() {
+            try {
+                if (lastData) updateDashboard(lastData);
+            } catch (e) {
+                console.error('Dashboard update failed:', e);
+            }
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             document.getElementById('runtime').textContent = formatTime(elapsed);
         }
@@ -603,14 +630,30 @@
         }
 
         function updateParametersBox(data) {
-            const current = data.evolution?.current_candidate;
-            const best = data.evolution?.best_framework;
-            const prev = data.evolution?.previous_best;
-            const liveFitness = data.evolution?.current_candidate_fitness || 0;
-            const bestFitness = data.evolution?.best_fitness || 0;
-            const prevFitness = data.evolution?.previous_fitness || 0;
+            let best = data.framework || data.Framework;
 
-            if (!best) return;
+            // Use cached framework if current one is invalid
+            if (best && (best.PlayerProgression || best.playerProgression)) {
+                lastValidFramework = best;
+            } else {
+                best = lastValidFramework;
+            }
+
+            if (!best) {
+                // Only show loading on first load
+                if (!lastParamsHtml) {
+                    document.getElementById('exploringStatus').textContent = 'Initializing...';
+                    document.getElementById('paramsList').innerHTML = '<div class="dark-gray">Loading parameters...</div>';
+                }
+                return;
+            }
+
+            // Live candidate tracking (not implemented yet)
+            const current = null;
+            const prev = null;
+            const liveFitness = 0;
+            const bestFitness = data.evolution?.best_fitness || data.evolution?.BestFitness || 0;
+            const prevFitness = 0;
 
             // Check if live is different
             const liveIsDifferent = current && !areFrameworksEqual(current, best);
@@ -629,49 +672,102 @@
             const paramsList = document.getElementById('paramsList');
             let html = '';
 
+            // Support both PascalCase and camelCase
+            const player = best.PlayerProgression || best.playerProgression;
+            const enemy = best.EnemyProgression || best.enemyProgression;
+            const economy = best.Economy || best.economy;
+            const loot = best.Loot || best.loot;
+            const combat = best.Combat || best.combat;
+            const skills = best.Skills || best.skills;
+
+            if (!player) {
+                paramsList.innerHTML = '<div class="red">Error: No player progression data</div>';
+                return;
+            }
+
             // Player section
             html += '<div class="param-section"><div class="param-header green">👤 PLAYER</div>';
-            html += renderParamInt('BaseHP', current?.PlayerProgression?.BaseHP, best.PlayerProgression.BaseHP, prev?.PlayerProgression?.BaseHP);
-            html += renderParamDouble('HP/Lvl', current?.PlayerProgression?.HPPerLevel, best.PlayerProgression.HPPerLevel, prev?.PlayerProgression?.HPPerLevel, 1);
-            html += renderParamInt('BaseSTR', current?.PlayerProgression?.BaseSTR, best.PlayerProgression.BaseSTR, prev?.PlayerProgression?.BaseSTR);
-            html += renderParamInt('BaseDEF', current?.PlayerProgression?.BaseDEF, best.PlayerProgression.BaseDEF, prev?.PlayerProgression?.BaseDEF);
-            html += renderParamInt('StatPts', current?.PlayerProgression?.StatPointsPerLevel, best.PlayerProgression.StatPointsPerLevel, prev?.PlayerProgression?.StatPointsPerLevel);
+            html += renderParamInt('BaseHP', null, player.BaseHP || player.baseHP, null);
+            html += renderParamDouble('HP/Lvl', null, player.HPPerLevel || player.hpPerLevel, null, 1);
+            html += renderParamInt('BaseSTR', null, player.BaseSTR || player.baseSTR, null);
+            html += renderParamInt('BaseDEF', null, player.BaseDEF || player.baseDEF, null);
+            html += renderParamInt('StatPts', null, player.StatPointsPerLevel || player.statPointsPerLevel, null);
             html += '</div>';
 
-            // Enemy section
+            // Enemy section - always show
             html += '<div class="param-section"><div class="param-header red">👹 ENEMY</div>';
-            html += renderParamInt('BaseHP', current?.EnemyProgression?.BaseHP, best.EnemyProgression.BaseHP, prev?.EnemyProgression?.BaseHP);
-            html += renderParamDouble('HP×Lvl', current?.EnemyProgression?.HPScalingCoefficient, best.EnemyProgression.HPScalingCoefficient, prev?.EnemyProgression?.HPScalingCoefficient, 2);
-            html += renderParamInt('BaseDMG', current?.EnemyProgression?.BaseDamage, best.EnemyProgression.BaseDamage, prev?.EnemyProgression?.BaseDamage);
-            html += renderParamDouble('DMG×Lvl', current?.EnemyProgression?.DamageScalingCoefficient, best.EnemyProgression.DamageScalingCoefficient, prev?.EnemyProgression?.DamageScalingCoefficient, 2);
+            if (enemy) {
+                html += renderParamInt('BaseHP', null, enemy.BaseHP || enemy.baseHP, null);
+                html += renderParamDouble('HP×Lvl', null, enemy.HPScalingCoefficient || enemy.hpScalingCoefficient, null, 2);
+                html += renderParamInt('BaseDMG', null, enemy.BaseDamage || enemy.baseDamage, null);
+                html += renderParamDouble('DMG×Lvl', null, enemy.DamageScalingCoefficient || enemy.damageScalingCoefficient, null, 2);
+            } else {
+                html += '<div class="dark-gray">Loading...</div>';
+            }
             html += '</div>';
 
-            // Economy section
+            // Economy section - always show
             html += '<div class="param-section"><div class="param-header yellow">💰 ECONOMY</div>';
-            html += renderParamInt('BaseGold', current?.Economy?.BaseGoldPerCombat, best.Economy.BaseGoldPerCombat, prev?.Economy?.BaseGoldPerCombat);
-            html += renderParamDouble('Gold×Lvl', current?.Economy?.GoldScalingCoefficient, best.Economy.GoldScalingCoefficient, prev?.Economy?.GoldScalingCoefficient, 2);
+            if (economy) {
+                html += renderParamInt('BaseGold', null, economy.BaseGoldPerCombat || economy.baseGoldPerCombat, null);
+                html += renderParamDouble('Gold×Lvl', null, economy.GoldScalingCoefficient || economy.goldScalingCoefficient, null, 2);
+            } else {
+                html += '<div class="dark-gray">Loading...</div>';
+            }
             html += '</div>';
 
-            // Loot section
+            // Loot section - always show
             html += '<div class="param-section"><div class="param-header magenta">🎁 LOOT</div>';
-            html += renderParamInt('Treasure', current?.Loot?.BaseTreasureGold, best.Loot.BaseTreasureGold, prev?.Loot?.BaseTreasureGold);
-            html += renderParamInt('Loot×Dep', current?.Loot?.TreasurePerDungeonDepth, best.Loot.TreasurePerDungeonDepth, prev?.Loot?.TreasurePerDungeonDepth);
-            html += renderParamDouble('DropRate', current?.Loot?.EquipmentDropRate, best.Loot.EquipmentDropRate, prev?.Loot?.EquipmentDropRate, 0);
+            if (loot) {
+                html += renderParamInt('Treasure', null, loot.BaseTreasureGold || loot.baseTreasureGold, null);
+                html += renderParamInt('Loot×Dep', null, loot.TreasurePerDungeonDepth || loot.treasurePerDungeonDepth, null);
+                html += renderParamDouble('DropRate', null, loot.EquipmentDropRate || loot.equipmentDropRate, null, 0);
+            } else {
+                html += '<div class="dark-gray">Loading...</div>';
+            }
             html += '</div>';
 
-            paramsList.innerHTML = html;
+            // Combat section - ALWAYS render all 6 params (use 0 if missing)
+            html += '<div class="param-section"><div class="param-header red">⚔️ COMBAT</div>';
+            html += renderParamDouble('CritBase%', null, combat?.BaseCritChance || combat?.baseCritChance || 0, null, 1);
+            html += renderParamDouble('Crit/Lvl', null, combat?.CritChancePerLevel || combat?.critChancePerLevel || 0, null, 2);
+            html += renderParamDouble('CritDmg×', null, combat?.CritDamageMultiplier || combat?.critDamageMultiplier || 0, null, 2);
+            html += renderParamDouble('Dodge%', null, combat?.BaseDodgeChance || combat?.baseDodgeChance || 0, null, 1);
+            html += renderParamDouble('Block%', null, combat?.BaseBlockChance || combat?.baseBlockChance || 0, null, 1);
+            html += renderParamDouble('BlkDmg%', null, combat?.BlockDamageReduction || combat?.blockDamageReduction || 0, null, 0);
+            html += '</div>';
+
+            // Skills section - ALWAYS render all 5 params (use 0 if missing)
+            html += '<div class="param-section"><div class="param-header cyan">🔮 SKILLS</div>';
+            html += renderParamInt('SkillPts', null, skills?.SkillPointsPerLevel || skills?.skillPointsPerLevel || 0, null);
+            html += renderParamDouble('SkillDmg', null, skills?.SkillDamageBase || skills?.skillDamageBase || 0, null, 1);
+            html += renderParamInt('ManaCost', null, skills?.SkillManaCost || skills?.skillManaCost || 0, null);
+            html += renderParamInt('BaseMana', null, skills?.BaseMana || skills?.baseMana || 0, null);
+            html += renderParamDouble('Mana/Lvl', null, skills?.ManaPerLevel || skills?.manaPerLevel || 0, null, 1);
+            html += '</div>';
+
+            // Only update if HTML actually changed to prevent flicker
+            if (html !== lastParamsHtml) {
+                paramsList.innerHTML = html;
+                lastParamsHtml = html;
+            }
         }
 
         function renderParamInt(name, live, best, prev) {
-            const liveVal = live !== undefined ? live : best;
-            const delta = prev !== undefined ? best - prev : null;
+            // Always render, use dash if no value
+            if (best === null || best === undefined) {
+                best = 0;
+            }
+
+            const liveVal = (live !== undefined && live !== null) ? live : best;
+            const delta = (prev !== undefined && prev !== null) ? best - prev : null;
             const deltaStr = delta !== null ? (delta > 0 ? `+${delta}` : delta.toString()) : ' - ';
 
-            const isDifferent = live !== undefined && live !== best;
+            const isDifferent = (live !== undefined && live !== null) && live !== best;
             const liveColor = isDifferent ? 'cyan' : 'gray';
-            const bestColor = prev !== undefined && best !== prev ? 'yellow' : 'white';
+            const bestColor = (prev !== undefined && prev !== null) && best !== prev ? 'yellow' : 'white';
             const liveStr = isDifferent ? `${liveVal.toString().padStart(3)}*` : liveVal.toString().padStart(4);
-            const prevStr = prev !== undefined ? prev.toString().padStart(3) : ' - ';
+            const prevStr = (prev !== undefined && prev !== null) ? prev.toString().padStart(3) : ' - ';
 
             return `
                 <div class="param-row">
@@ -684,15 +780,20 @@
         }
 
         function renderParamDouble(name, live, best, prev, decimals) {
-            const liveVal = live !== undefined ? live : best;
-            const delta = prev !== undefined ? best - prev : null;
+            // Always render, use 0 if no value
+            if (best === null || best === undefined) {
+                best = 0.0;
+            }
+
+            const liveVal = (live !== undefined && live !== null) ? live : best;
+            const delta = (prev !== undefined && prev !== null) ? best - prev : null;
             const deltaStr = delta !== null ? (delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1)) : '  -  ';
 
-            const isDifferent = live !== undefined && Math.abs(live - best) > 0.01;
+            const isDifferent = (live !== undefined && live !== null) && Math.abs(live - best) > 0.01;
             const liveColor = isDifferent ? 'cyan' : 'gray';
-            const bestColor = prev !== undefined && Math.abs(best - prev) > 0.01 ? 'yellow' : 'white';
+            const bestColor = (prev !== undefined && prev !== null) && Math.abs(best - prev) > 0.01 ? 'yellow' : 'white';
             const liveStr = isDifferent ? `${liveVal.toFixed(decimals).padStart(4)}*` : liveVal.toFixed(decimals).padStart(5);
-            const prevStr = prev !== undefined ? prev.toFixed(decimals).padStart(4) : '  - ';
+            const prevStr = (prev !== undefined && prev !== null) ? prev.toFixed(decimals).padStart(4) : '  - ';
 
             return `
                 <div class="param-row">
@@ -989,7 +1090,7 @@
         }
 
         // Initialize
-        connectWebSocket();
+        startPolling();
 
         // Keyboard controls
         document.addEventListener('keydown', (e) => {

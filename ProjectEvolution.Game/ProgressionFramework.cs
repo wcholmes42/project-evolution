@@ -12,6 +12,8 @@ public class ProgressionFrameworkData
     public EconomicProgression Economy { get; set; } = new();
     public LootProgression Loot { get; set; } = new();
     public BuildViability Builds { get; set; } = new();
+    public CombatMechanics Combat { get; set; } = new(); // NEW
+    public SkillSystem Skills { get; set; } = new(); // NEW
     public ResearchMetadata Metadata { get; set; } = new();
 }
 
@@ -110,13 +112,38 @@ public class BuildRequirements
     public double ViabilityScore { get; set; }
 }
 
+// NEW: Combat mechanics tuning
+public class CombatMechanics
+{
+    public double BaseCritChance { get; set; } // Base % chance (0-20)
+    public double CritChancePerLevel { get; set; } // Per level increase
+    public double CritDamageMultiplier { get; set; } // 1.5 = 150% damage
+    public double BaseDodgeChance { get; set; } // Base % (0-15)
+    public double DodgePerDEF { get; set; } // % per DEF point
+    public double BaseBlockChance { get; set; } // Base % with shield (0-25)
+    public double BlockPerDEF { get; set; } // % per DEF point
+    public double BlockDamageReduction { get; set; } // % damage reduced on block
+}
+
+// NEW: Skill system tuning
+public class SkillSystem
+{
+    public int SkillPointsPerLevel { get; set; } // How many skill points per level
+    public double SkillDamageBase { get; set; } // Base skill damage multiplier
+    public double SkillDamagePerLevel { get; set; } // Skill scaling per level
+    public int SkillManaCost { get; set; } // Base mana cost
+    public int BaseMana { get; set; } // Starting mana pool
+    public double ManaPerLevel { get; set; } // Mana scaling
+    public double SkillCooldown { get; set; } // Turns between skill uses
+}
+
 public class ResearchMetadata
 {
     public DateTime Timestamp { get; set; }
     public int SimulationsRun { get; set; }
     public int Generation { get; set; }
     public double OverallFitness { get; set; }
-    public string Version { get; set; } = "Generation 35";
+    public string Version { get; set; } = "Generation 36 - Combat + Skills";
 }
 
 public class ProgressionFrameworkResearcher
@@ -253,6 +280,12 @@ public class ProgressionFrameworkResearcher
         return genDelta > 0 ? fitnessDelta / genDelta * 1000 : 0; // fitness gain per 1000 gens
     }
 
+    public static void RunContinuousResearchHeadless()
+    {
+        // Simple wrapper that sets Console.IsInputRedirected simulation
+        RunContinuousResearch();
+    }
+
     public static void RunContinuousResearch()
     {
         Console.Clear();
@@ -263,39 +296,49 @@ public class ProgressionFrameworkResearcher
         Console.WriteLine("╚════════════════════════════════════════════════════════════════╝\n");
 
         // Configure output path
-        Console.WriteLine("📁 Output Configuration:");
-        Console.WriteLine("   [1] Local directory (current folder)");
-        Console.WriteLine("   [2] Unraid share (network mount)");
-        Console.WriteLine("   [3] Custom path\n");
-        Console.Write("Select output location [1-3]: ");
-
-        var pathChoice = Console.ReadKey(intercept: true);
-        Console.WriteLine();
-
-        if (pathChoice.Key == ConsoleKey.D2 || pathChoice.KeyChar == '2')
+        // Docker mode: auto-use /data volume
+        if (Console.IsInputRedirected || Directory.Exists("/data"))
         {
-            Console.Write("\nEnter Unraid share path (e.g., /mnt/user/GameResearch): ");
-            string? unraidPath = Console.ReadLine();
-            if (!string.IsNullOrWhiteSpace(unraidPath))
-            {
-                SafeFileWriter.SetOutputPath(unraidPath);
-                Console.WriteLine($"✅ Output path set to: {unraidPath}");
-            }
-        }
-        else if (pathChoice.Key == ConsoleKey.D3 || pathChoice.KeyChar == '3')
-        {
-            Console.Write("\nEnter custom path: ");
-            string? customPath = Console.ReadLine();
-            if (!string.IsNullOrWhiteSpace(customPath))
-            {
-                SafeFileWriter.SetOutputPath(customPath);
-                Console.WriteLine($"✅ Output path set to: {customPath}");
-            }
+            string dockerPath = "/data";
+            SafeFileWriter.SetOutputPath(dockerPath);
+            Console.WriteLine($"🐳 Docker mode: Using volume path: {dockerPath}");
         }
         else
         {
-            SafeFileWriter.SetOutputPath(".");
-            Console.WriteLine("✅ Using local directory");
+            Console.WriteLine("📁 Output Configuration:");
+            Console.WriteLine("   [1] Local directory (current folder)");
+            Console.WriteLine("   [2] Unraid share (network mount)");
+            Console.WriteLine("   [3] Custom path\n");
+            Console.Write("Select output location [1-3]: ");
+
+            var pathChoice = Console.ReadKey(intercept: true);
+            Console.WriteLine();
+
+            if (pathChoice.Key == ConsoleKey.D2 || pathChoice.KeyChar == '2')
+            {
+                Console.Write("\nEnter Unraid share path (e.g., /mnt/user/GameResearch): ");
+                string? unraidPath = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(unraidPath))
+                {
+                    SafeFileWriter.SetOutputPath(unraidPath);
+                    Console.WriteLine($"✅ Output path set to: {unraidPath}");
+                }
+            }
+            else if (pathChoice.Key == ConsoleKey.D3 || pathChoice.KeyChar == '3')
+            {
+                Console.Write("\nEnter custom path: ");
+                string? customPath = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(customPath))
+                {
+                    SafeFileWriter.SetOutputPath(customPath);
+                    Console.WriteLine($"✅ Output path set to: {customPath}");
+                }
+            }
+            else
+            {
+                SafeFileWriter.SetOutputPath(".");
+                Console.WriteLine("✅ Using local directory");
+            }
         }
 
         Console.WriteLine("\nTesting write access...");
@@ -385,8 +428,16 @@ public class ProgressionFrameworkResearcher
             Console.ResetColor();
         }
 
-        Console.WriteLine("\nPress ESC to stop, any other key to start...");
-        if (Console.ReadKey().Key == ConsoleKey.Escape) return;
+        // Docker mode: auto-start
+        if (!Console.IsInputRedirected)
+        {
+            Console.WriteLine("\nPress ESC to stop, any other key to start...");
+            if (Console.ReadKey().Key == ConsoleKey.Escape) return;
+        }
+        else
+        {
+            Console.WriteLine("\n🐳 Docker mode: Auto-starting research...");
+        }
 
         // === ANTI-FLICKER SETUP ===
         Console.CursorVisible = false; // Hide cursor to prevent blinking
@@ -478,13 +529,23 @@ public class ProgressionFrameworkResearcher
 
                 // Fill rest with variations of the best (champion or current)
                 ProgressionFrameworkData seed = _champion ?? _bestFramework ?? CreateBaselineFramework();
-                for (int i = _population.Count; i < _populationSize; i++)
+
+                // PARALLEL EVALUATION: Utilize all CPU cores
+                int needed = _populationSize - _population.Count;
+                var newCandidates = new System.Collections.Concurrent.ConcurrentBag<(ProgressionFrameworkData, double)>();
+                Parallel.For(0, needed, i =>
                 {
                     var variant = MutateFramework(seed);
                     var variantFitness = EvaluateFramework(variant);
-                    _population.Add((variant, variantFitness));
-                    _totalSimulations += 65;
+                    newCandidates.Add((variant, variantFitness));
+                    Interlocked.Add(ref _totalSimulations, 65);
+                });
+
+                foreach (var candidate in newCandidates)
+                {
+                    _population.Add(candidate);
                 }
+
                 // Sort by fitness
                 _population.Sort((a, b) => b.fitness.CompareTo(a.fitness));
             }
@@ -657,24 +718,52 @@ public class ProgressionFrameworkResearcher
                 _population.RemoveAt(_population.Count - 1); // Remove worst
             }
 
-            // Update global best
+            // Update global best (with SIMULATED ANNEALING for plateau escape)
+            bool acceptSolution = false;
+
             if (fitness > _bestFitness || _bestFramework == null)
             {
-                _currentPhase = "🌟 NEW BEST! Saving...";
+                // Always accept improvements
+                acceptSolution = true;
+                improved = true;
+            }
+            else if (_generationsSinceImprovement > 1000)
+            {
+                // SIMULATED ANNEALING: Accept worse solutions when stuck to escape plateau
+                // Temperature based on how stuck we are
+                double temperature = 1.0 + (_generationsSinceImprovement / 10000.0); // Increases with stuckness
+                double fitnessDelta = fitness - _bestFitness; // Negative value
+                double acceptanceProbability = Math.Exp(fitnessDelta / temperature);
+
+                var random = new Random(_generation * 31);
+                if (random.NextDouble() < acceptanceProbability)
+                {
+                    acceptSolution = true;
+                    SafeFileWriter.SafeAppendAllText("progression_research.log",
+                        $"[{DateTime.Now:HH:mm:ss}] 🌡️ ANNEALING: Accepted {fitness:F2} (was {_bestFitness:F2}, prob={acceptanceProbability:F4}, stuck={_generationsSinceImprovement})\n");
+                }
+            }
+
+            if (acceptSolution)
+            {
+                _currentPhase = fitness > _bestFitness ? "🌟 NEW BEST! Saving..." : "🌡️ Annealing accepted";
 
                 // Save previous best for delta display
                 _previousBest = _bestFramework;
                 _previousBestFitness = _bestFitness;
 
-                _bestFitness = fitness;
-                _bestFramework = framework;
-                _generationsSinceImprovement = 0;
-                improved = true;
+                if (fitness > _bestFitness)
+                {
+                    _bestFitness = fitness;
+                    _generationsSinceImprovement = 0;
 
-                // Track fitness improvement history
-                _fitnessHistory.Enqueue((_generation, fitness));
-                while (_fitnessHistory.Count > FITNESS_HISTORY_SIZE)
-                    _fitnessHistory.Dequeue();
+                    // Track fitness improvement history
+                    _fitnessHistory.Enqueue((_generation, fitness));
+                    while (_fitnessHistory.Count > FITNESS_HISTORY_SIZE)
+                        _fitnessHistory.Dequeue();
+                }
+
+                _bestFramework = framework;
 
                 SaveFrameworkToJSON(framework);
                 GenerateGameCode(framework);
@@ -709,6 +798,25 @@ public class ProgressionFrameworkResearcher
             // PHASE 5: Update UI (uses double-buffered Ultima dashboard)
             _currentPhase = improved ? "✅ Improved!" : "🔄 Searching...";
 
+            // Update web state (for API integration)
+            var webElapsed = DateTime.Now - _startTime;
+            double webGenPerSec = _recentGenerationTimes.Count > 0 ? _recentGenerationTimes.Average() : 0;
+            TunerWebState.Update(new TunerStateData
+            {
+                Generation = _generation,
+                BestFitness = _bestFitness,
+                AvgFitness = _population.Count > 0 ? _population.Average(p => p.fitness) : _bestFitness,
+                GenPerSec = webGenPerSec,
+                StuckGens = _generationsSinceImprovement,
+                Phase = _currentPhase,
+                PopulationSize = _population.Count,
+                ChampionFitness = _championFitness,
+                ChampionGen = _championGeneration,
+                Resets = _resetCount,
+                Device = "CPU",
+                Elapsed = webElapsed
+            });
+
             // Update UI at controlled intervals only
             bool shouldRenderNow = (_generation % UI_UPDATE_INTERVAL == 0) || improved;
 
@@ -741,16 +849,16 @@ public class ProgressionFrameworkResearcher
             }
 
             // AUTO-RESET: If stuck too long, perform automatic reset
-            // Increase threshold since we now have better stuck-escape mechanisms
-            if (_generationsSinceImprovement > 10000)
+            // Increased from 10k to 100k to allow proper exploration before resetting
+            if (_generationsSinceImprovement > 100000)
             {
-                _currentPhase = "🔄 AUTO-RESET - Stuck >10k gens, promoting and restarting";
+                _currentPhase = "🔄 AUTO-RESET - Stuck >100k gens, promoting and restarting";
                 PerformReset(manual: false);
                 continue; // Skip rest of loop, render will happen next iteration
             }
 
-            // Check for ESC or R (manual reset)
-            if (Console.KeyAvailable)
+            // Check for ESC or R (manual reset) - Skip in Docker mode
+            if (!Console.IsInputRedirected && Console.KeyAvailable)
             {
                 var key = Console.ReadKey(true).Key;
                 if (key == ConsoleKey.Escape)
@@ -782,10 +890,11 @@ public class ProgressionFrameworkResearcher
             }
 
             // Trigger 2: Plateau detected (low improvement slope)
+            // Increased to 50k to allow MUCH longer exploration before giving up
             double trend = CalculateFitnessTrend();
             if (_fitnessHistory.Count >= AUTO_RESET_MIN_IMPROVEMENTS &&
                 trend < AUTO_RESET_TREND_THRESHOLD &&
-                _generationsSinceImprovement >= 100)
+                _generationsSinceImprovement >= 50000)
             {
                 shouldAutoReset = true;
                 resetReason = $"Plateau detected (trend: +{trend:F2}/1k, stuck: {_generationsSinceImprovement})";
@@ -1004,6 +1113,25 @@ public class ProgressionFrameworkResearcher
         loot.EquipmentDropRate = 20;
         framework.Loot = loot;
 
+        // NEW: Combat mechanics baseline
+        framework.Combat.BaseCritChance = 5.0; // 5% base crit
+        framework.Combat.CritChancePerLevel = 0.5; // +0.5% per level
+        framework.Combat.CritDamageMultiplier = 1.5; // 150% damage on crit
+        framework.Combat.BaseDodgeChance = 5.0; // 5% base dodge
+        framework.Combat.DodgePerDEF = 1.0; // +1% per DEF
+        framework.Combat.BaseBlockChance = 10.0; // 10% base block (with shield)
+        framework.Combat.BlockPerDEF = 1.5; // +1.5% per DEF
+        framework.Combat.BlockDamageReduction = 50.0; // Block reduces 50% damage
+
+        // NEW: Skill system baseline
+        framework.Skills.SkillPointsPerLevel = 1; // 1 skill point per level
+        framework.Skills.SkillDamageBase = 2.0; // 2x normal attack damage
+        framework.Skills.SkillDamagePerLevel = 0.3; // +30% per level
+        framework.Skills.SkillManaCost = 10; // Costs 10 mana
+        framework.Skills.BaseMana = 20; // Start with 20 mana
+        framework.Skills.ManaPerLevel = 5; // +5 mana per level
+        framework.Skills.SkillCooldown = 3; // Use every 3 turns
+
         // Generate equipment and test economy
         framework.Equipment = GenerateEquipmentTiers(framework);
         framework.Economy = SimulateEconomicProgression(framework);
@@ -1012,7 +1140,7 @@ public class ProgressionFrameworkResearcher
         // Metadata
         framework.Metadata.Timestamp = DateTime.Now;
         framework.Metadata.Generation = 0;
-        framework.Metadata.Version = "Generation 35";
+        framework.Metadata.Version = "Generation 36 - Combat + Skills";
 
         return framework;
     }
@@ -1145,6 +1273,68 @@ public class ProgressionFrameworkResearcher
 
         mutated.Loot = loot;
 
+        // NEW: Mutate COMBAT MECHANICS
+        mutated.Combat.BaseCritChance = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.BaseCritChance + (random.NextDouble() - 0.5) * 5 * mutationStrength, 0, 20)
+            : parent.Combat.BaseCritChance;
+
+        mutated.Combat.CritChancePerLevel = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.CritChancePerLevel + (random.NextDouble() - 0.5) * 0.5 * mutationStrength, 0, 2)
+            : parent.Combat.CritChancePerLevel;
+
+        mutated.Combat.CritDamageMultiplier = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.CritDamageMultiplier + (random.NextDouble() - 0.5) * 0.5 * mutationStrength, 1.2, 3.0)
+            : parent.Combat.CritDamageMultiplier;
+
+        mutated.Combat.BaseDodgeChance = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.BaseDodgeChance + (random.NextDouble() - 0.5) * 5 * mutationStrength, 0, 20)
+            : parent.Combat.BaseDodgeChance;
+
+        mutated.Combat.DodgePerDEF = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.DodgePerDEF + (random.NextDouble() - 0.5) * 1 * mutationStrength, 0, 3)
+            : parent.Combat.DodgePerDEF;
+
+        mutated.Combat.BaseBlockChance = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.BaseBlockChance + (random.NextDouble() - 0.5) * 10 * mutationStrength, 0, 40)
+            : parent.Combat.BaseBlockChance;
+
+        mutated.Combat.BlockPerDEF = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.BlockPerDEF + (random.NextDouble() - 0.5) * 1 * mutationStrength, 0, 3)
+            : parent.Combat.BlockPerDEF;
+
+        mutated.Combat.BlockDamageReduction = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Combat.BlockDamageReduction + (random.NextDouble() - 0.5) * 20 * mutationStrength, 25, 75)
+            : parent.Combat.BlockDamageReduction;
+
+        // NEW: Mutate SKILL SYSTEM
+        mutated.Skills.SkillPointsPerLevel = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.SkillPointsPerLevel + random.Next(-1, 2), 1, 3)
+            : parent.Skills.SkillPointsPerLevel;
+
+        mutated.Skills.SkillDamageBase = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.SkillDamageBase + (random.NextDouble() - 0.5) * 1 * mutationStrength, 1.0, 4.0)
+            : parent.Skills.SkillDamageBase;
+
+        mutated.Skills.SkillDamagePerLevel = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.SkillDamagePerLevel + (random.NextDouble() - 0.5) * 0.3 * mutationStrength, 0.1, 1.0)
+            : parent.Skills.SkillDamagePerLevel;
+
+        mutated.Skills.SkillManaCost = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.SkillManaCost + random.Next(-5, 6), 5, 30)
+            : parent.Skills.SkillManaCost;
+
+        mutated.Skills.BaseMana = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.BaseMana + random.Next(-10, 11), 10, 50)
+            : parent.Skills.BaseMana;
+
+        mutated.Skills.ManaPerLevel = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.ManaPerLevel + (random.NextDouble() - 0.5) * 5 * mutationStrength, 2, 15)
+            : parent.Skills.ManaPerLevel;
+
+        mutated.Skills.SkillCooldown = random.NextDouble() < mutationRate
+            ? Math.Clamp(parent.Skills.SkillCooldown + (random.NextDouble() - 0.5) * 2 * mutationStrength, 1, 10)
+            : parent.Skills.SkillCooldown;
+
         // Re-generate equipment tiers and simulate economy with mutated values
         mutated.Equipment = GenerateEquipmentTiers(mutated);
         mutated.Economy = SimulateEconomicProgression(mutated);
@@ -1153,7 +1343,7 @@ public class ProgressionFrameworkResearcher
         // Metadata
         mutated.Metadata.Timestamp = DateTime.Now;
         mutated.Metadata.Generation = _generation;
-        mutated.Metadata.Version = "Generation 35";
+        mutated.Metadata.Version = "Generation 36 - Combat + Skills";
         mutated.Metadata.SimulationsRun = _totalSimulations;
 
         return mutated;
