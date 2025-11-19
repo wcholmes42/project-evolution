@@ -41,8 +41,8 @@ async def shutdown_event():
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve dashboard"""
-    with open("dashboard/index.html", encoding='utf-8') as f:
+    """Serve Ultima-style dashboard"""
+    with open("dashboard/ultima.html", encoding='utf-8') as f:
         return f.read()
 
 

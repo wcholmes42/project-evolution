@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progression Research Dashboard v2.0-DETERM-ADAPTIVE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            height: calc(100vh - 120px);
+            margin-top: 10px;
+        }
+
+        .header {
+            text-align: center;
+            border: 2px solid #0ff;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            color: #ff0;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .header .stats {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .box {
+            border: 2px solid;
+            padding: 10px;
+            position: relative;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #0f0 #000;
+        }
+
+        .box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .box::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .box::-webkit-scrollbar-thumb {
+            background: #0f0;
+        }
+
+        .box-title {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #000;
+            padding: 0 5px;
+            font-weight: bold;
+        }
+
+        .box-content {
+            margin-top: 10px;
+        }
+
+        .cyan { color: #0ff; }
+        .yellow { color: #ff0; }
+        .green { color: #0f0; }
+        .red { color: #f00; }
+        .magenta { color: #f0f; }
+        .white { color: #fff; }
+        .gray { color: #888; }
+        .dark-gray { color: #555; }
+        .dark-cyan { color: #088; }
+        .dark-yellow { color: #880; }
+        .dark-red { color: #800; }
+
+        .status-box {
+            border-color: #0ff;
+            margin-bottom: 10px;
+        }
+
+        .metrics-box {
+            border-color: #ff0;
+            min-height: 400px;
+        }
+
+        .params-box {
+            border-color: #0f0;
+            height: 100%;
+        }
+
+        .trend-box {
+            border-color: #f0f;
+            margin-bottom: 10px;
+            height: 300px;
+        }
+
+        .health-box {
+            border-color: #ff0;
+            height: calc(100% - 320px);
+        }
+
+        .progress-bar-container {
+            display: inline-block;
+            width: 120px;
+            height: 14px;
+            background: #333;
+            border: 1px solid #555;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .metric-row {
+            margin: 5px 0;
+            white-space: nowrap;
+        }
+
+        .metric-name {
+            display: inline-block;
+            width: 180px;
+            color: #fff;
+        }
+
+        .metric-score {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+        }
+
+        .param-table {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .param-row {
+            margin: 2px 0;
+        }
+
+        .param-header {
+            color: #088;
+            margin: 8px 0 2px 0;
+        }
+
+        .param-section {
+            margin-top: 10px;
+        }
+
+        .sparkline {
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #0ff;
+            margin: 10px 0;
+            word-wrap: break-word;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000;
+            border-top: 1px solid #555;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .footer-warning {
+            color: #f00;
+            margin-bottom: 5px;
+        }
+
+        .footer-info {
+            color: #088;
+            margin-bottom: 5px;
+        }
+
+        .footer-controls {
+            color: #ff0;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-line {
+            margin: 3px 0;
+        }
+
+        .ws-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #333;
+        }
+
+        .ws-connected {
+            color: #0f0;
+        }
+
+        .ws-disconnected {
+            color: #f00;
+        }
+
+        .monospace {
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 1600px) {
+            body {
+                font-size: 12px;
+            }
+            .metric-name {
+                width: 150px;
+            }
+            .progress-bar-container {
+                width: 100px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .box {
+                height: auto;
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ws-status" id="wsStatus">
+        <span class="ws-disconnected">● DISCONNECTED</span>
+    </div>
+
+    <div class="header">
+        <h1>🧬 PROGRESSION RESEARCH v2.0-DETERM-ADAPTIVE 🧬</h1>
+        <div class="stats" id="headerStats">
+            Gen: <span id="gen">0</span> | <span id="genPerSec">0</span> gen/s | Current Best: <span id="fitness">0.00</span>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- COLUMN 1: STATUS + METRICS -->
+        <div class="column">
+            <div class="box status-box">
+                <div class="box-title cyan">STATUS</div>
+                <div class="box-content" id="statusContent">
+                    <div class="status-line">Current: <span id="currentFitness">0.00</span></div>
+                    <div class="status-line">Previous: <span id="previousFitness">--</span></div>
+                    <div class="status-line">Runtime: <span id="runtime">00:00:00</span></div>
+                    <div class="status-line">Phase: <span id="phase">Initializing</span></div>
+                    <div class="status-line">Pop: <span id="population">0 (NORM)</span></div>
+                    <div class="status-line">Stuck: <span id="stuck">0 gens</span></div>
+                    <div class="status-line">Champion: <span id="champion">None yet</span></div>
+                    <div class="status-line">Resets: <span id="resets">0</span></div>
+                </div>
+            </div>
+
+            <div class="box metrics-box">
+                <div class="box-title yellow">METRICS</div>
+                <div class="box-content" id="metricsContent">
+                    <div id="metricsList"></div>
+                    <div class="status-line dark-cyan" style="margin-top: 15px;">What these mean:</div>
+                    <div class="status-line dark-gray">Combat: 4-6 turn fights</div>
+                    <div class="status-line dark-gray">Economy: Can afford gear</div>
+                    <div class="status-line dark-gray">Strata: Gear progression</div>
+                    <div class="status-line dark-gray">Skills: Useful not OP</div>
+                    <div class="status-line dark-gray">Equipment: Meaningful ups</div>
+                    <div class="status-line dark-gray">Pacing: Smooth curve</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: PARAMETERS -->
+        <div class="column">
+            <div class="box params-box">
+                <div class="box-title green">PARAMS (Live|Best|Prev|Δ)</div>
+                <div class="box-content param-table" id="paramsContent">
+                    <div class="param-row cyan" id="exploringStatus">MONOCULTURE! Live=0.0 Best=0.0</div>
+                    <div class="param-row dark-gray">Live=trying Best=keeper Prev=old</div>
+                    <div class="param-row dark-cyan">Param    Live Best Prev   Δ</div>
+                    <div style="height: 5px;"></div>
+                    <div id="paramsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: TREND + HEALTH -->
+        <div class="column">
+            <div class="box trend-box">
+                <div class="box-title magenta">FITNESS TREND</div>
+                <div class="box-content" id="trendContent">
+                    <div class="sparkline" id="sparkline">▁▂▃▄▅▆▇█</div>
+                    <div class="status-line">Range: <span id="trendRange">0.0 → 0.0</span></div>
+                    <div class="status-line">Slope: <span id="slope">+0.000/1k gens</span></div>
+                    <div class="status-line">ETA: <span id="eta">Collecting data...</span></div>
+                </div>
+            </div>
+
+            <div class="box health-box">
+                <div class="box-title yellow">TUNER HEALTH</div>
+                <div class="box-content" id="healthContent">
+                    <div class="status-line">Quality: <span id="quality">POOR (0.0)</span></div>
+                    <div class="status-line">Throughput: <span id="throughput">0 gen/s</span></div>
+                    <div class="status-line">Stuckness: <span id="stuckness">0 gens</span></div>
+                    <div class="status-line">Trend: <span id="trendHealth">+0.000/1k</span></div>
+                    <div style="height: 15px;"></div>
+                    <div class="status-line">STATUS: <span id="healthStatus">Healthy</span></div>
+                    <div class="status-line">Action: <span id="healthAction">Normal crossover</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-warning" id="footerWarning" style="display: none;">
+            🔄 AUTO-RESET IMMINENT! [Trigger condition]
+        </div>
+        <div class="footer-info" id="footerInfo">
+            🔄 Auto-reset when: fitness ≥85 + stuck 150 OR trend <0.05/1k + stuck 100
+        </div>
+        <div class="footer-controls">
+            [ESC] Stop & Save  |  [R] Manual Reset → Champion
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let reconnectTimer = null;
+        let startTime = Date.now();
+        let fitnessHistory = [];
+        let lastData = null;
+
+        const WS_URL = 'ws://192.168.68.42:8000/ws';
+
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket(WS_URL);
+
+                ws.onopen = () => {
+                    console.log('WebSocket connected');
+                    updateWSStatus(true);
+                    if (reconnectTimer) {
+                        clearTimeout(reconnectTimer);
+                        reconnectTimer = null;
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        updateDashboard(data);
+                    } catch (e) {
+                        console.error('Error parsing WebSocket message:', e);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateWSStatus(false);
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket disconnected');
+                    updateWSStatus(false);
+                    // Reconnect after 2 seconds
+                    reconnectTimer = setTimeout(connectWebSocket, 2000);
+                };
+            } catch (e) {
+                console.error('Error connecting to WebSocket:', e);
+                updateWSStatus(false);
+                reconnectTimer = setTimeout(connectWebSocket, 2000);
+            }
+        }
+
+        function updateWSStatus(connected) {
+            const status = document.getElementById('wsStatus');
+            if (connected) {
+                status.innerHTML = '<span class="ws-connected">● CONNECTED</span>';
+            } else {
+                status.innerHTML = '<span class="ws-disconnected">● DISCONNECTED</span>';
+            }
+        }
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateDashboard(data) {
+            lastData = data;
+
+            // Update header
+            const generation = data.evolution?.generation || 0;
+            const fitness = data.evolution?.best_fitness || 0;
+            const genPerSec = data.evolution?.gen_per_sec || 0;
+
+            document.getElementById('gen').textContent = generation.toLocaleString();
+            document.getElementById('genPerSec').textContent = genPerSec.toFixed(0);
+            document.getElementById('fitness').textContent = fitness.toFixed(2);
+
+            // Update status box
+            updateStatusBox(data);
+
+            // Update metrics box
+            updateMetricsBox(data);
+
+            // Update parameters box
+            updateParametersBox(data);
+
+            // Update trend box
+            updateTrendBox(data, generation, fitness);
+
+            // Update health box
+            updateHealthBox(data, fitness);
+
+            // Update footer
+            updateFooter(data);
+
+            // Update runtime
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('runtime').textContent = formatTime(elapsed);
+        }
+
+        function updateStatusBox(data) {
+            const fitness = data.evolution?.best_fitness || 0;
+            const previousFitness = data.evolution?.previous_fitness || 0;
+            const championFitness = data.evolution?.champion_fitness || 0;
+            const championGen = data.evolution?.champion_gen || 0;
+            const stuckGens = data.evolution?.stuck_gens || 0;
+            const resets = data.evolution?.resets || 0;
+            const phase = data.evolution?.phase || 'Exploring';
+            const populationSize = data.evolution?.population_size || 0;
+
+            // Current fitness with delta
+            const currentEl = document.getElementById('currentFitness');
+            if (previousFitness > 0 && Math.abs(fitness - previousFitness) > 0.01) {
+                const delta = fitness - previousFitness;
+                const deltaStr = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
+                const color = delta > 0 ? 'green' : 'red';
+                currentEl.innerHTML = `<span class="${color}">${fitness.toFixed(2)} (${deltaStr})</span>`;
+            } else {
+                currentEl.innerHTML = `<span class="${getQualityColor(fitness)}">${fitness.toFixed(2)}</span>`;
+            }
+
+            // Previous fitness
+            if (previousFitness > 0) {
+                document.getElementById('previousFitness').innerHTML = `<span class="dark-gray">${previousFitness.toFixed(2)}</span>`;
+            }
+
+            // Phase
+            document.getElementById('phase').innerHTML = `<span class="cyan">${phase}</span>`;
+
+            // Population
+            if (populationSize > 0) {
+                const popColor = populationSize >= 200 ? 'magenta' :
+                                populationSize >= 100 ? 'cyan' :
+                                populationSize >= 50 ? 'green' :
+                                populationSize >= 30 ? 'yellow' :
+                                populationSize >= 20 ? 'dark-yellow' : 'red';
+                const sizeIndicator = populationSize >= 200 ? 'HUGE' :
+                                     populationSize >= 100 ? 'XLRG' :
+                                     populationSize >= 50 ? 'LARG' :
+                                     populationSize >= 30 ? 'MED' :
+                                     populationSize >= 20 ? 'NORM' : 'SMAL';
+                document.getElementById('population').innerHTML = `<span class="${popColor}">${populationSize} (${sizeIndicator})</span>`;
+            }
+
+            // Stuck
+            const stuckColor = stuckGens > 1000 ? 'red' :
+                              stuckGens > 500 ? 'dark-yellow' :
+                              stuckGens > 200 ? 'yellow' : 'gray';
+            document.getElementById('stuck').innerHTML = `<span class="${stuckColor}">${stuckGens} gens</span>`;
+
+            // Champion
+            if (championFitness > 0 && championFitness <= 100) {
+                if (fitness > championFitness) {
+                    document.getElementById('champion').innerHTML = `<span class="yellow">${championFitness.toFixed(1)} (Promoting...)</span>`;
+                } else {
+                    document.getElementById('champion').innerHTML = `<span class="magenta">${championFitness.toFixed(1)} (Gen ${championGen})</span>`;
+                }
+            } else if (championFitness > 100) {
+                document.getElementById('champion').innerHTML = `<span class="dark-gray">[Corrupted data]</span>`;
+            } else {
+                document.getElementById('champion').innerHTML = `<span class="dark-gray">None yet</span>`;
+            }
+
+            // Resets
+            document.getElementById('resets').innerHTML = `<span class="gray">${resets}</span>`;
+        }
+
+        function updateMetricsBox(data) {
+            const metrics = data.evolution?.metrics || [];
+            const metricsList = document.getElementById('metricsList');
+
+            if (metrics.length === 0) {
+                metricsList.innerHTML = '<div class="dark-gray">No metrics available</div>';
+                return;
+            }
+
+            let html = '';
+            metrics.forEach(metric => {
+                const score = metric.score || 0;
+                const color = score >= 80 ? 'green' :
+                             score >= 60 ? 'yellow' : 'red';
+
+                const barColor = score >= 80 ? '#0f0' :
+                                score >= 60 ? '#ff0' : '#f00';
+
+                const nameColor = (metric.name === 'Progression Strata' && score < 20) ? 'dark-red' : 'white';
+
+                html += `
+                    <div class="metric-row">
+                        <span class="metric-name ${nameColor}">${metric.name}</span>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: ${score}%; background: ${barColor};"></div>
+                        </div>
+                        <span class="metric-score ${color}">${score.toFixed(0)}</span>
+                    </div>
+                `;
+            });
+
+            metricsList.innerHTML = html;
+        }
+
+        function updateParametersBox(data) {
+            const current = data.evolution?.current_candidate;
+            const best = data.evolution?.best_framework;
+            const prev = data.evolution?.previous_best;
+            const liveFitness = data.evolution?.current_candidate_fitness || 0;
+            const bestFitness = data.evolution?.best_fitness || 0;
+            const prevFitness = data.evolution?.previous_fitness || 0;
+
+            if (!best) return;
+
+            // Check if live is different
+            const liveIsDifferent = current && !areFrameworksEqual(current, best);
+            const status = liveIsDifferent ? 'EXPLORING' : 'MONOCULTURE!';
+            const statusColor = liveIsDifferent ? 'cyan' : 'red';
+
+            let fitLine = `${status} Live=${liveFitness.toFixed(1)} Best=${bestFitness.toFixed(1)}`;
+            if (prevFitness > 0) {
+                fitLine += ` Δ${(bestFitness - prevFitness > 0 ? '+' : '')}${(bestFitness - prevFitness).toFixed(1)}`;
+            }
+
+            document.getElementById('exploringStatus').className = `param-row ${statusColor}`;
+            document.getElementById('exploringStatus').textContent = fitLine;
+
+            // Render parameters
+            const paramsList = document.getElementById('paramsList');
+            let html = '';
+
+            // Player section
+            html += '<div class="param-section"><div class="param-header green">👤 PLAYER</div>';
+            html += renderParamInt('BaseHP', current?.PlayerProgression?.BaseHP, best.PlayerProgression.BaseHP, prev?.PlayerProgression?.BaseHP);
+            html += renderParamDouble('HP/Lvl', current?.PlayerProgression?.HPPerLevel, best.PlayerProgression.HPPerLevel, prev?.PlayerProgression?.HPPerLevel, 1);
+            html += renderParamInt('BaseSTR', current?.PlayerProgression?.BaseSTR, best.PlayerProgression.BaseSTR, prev?.PlayerProgression?.BaseSTR);
+            html += renderParamInt('BaseDEF', current?.PlayerProgression?.BaseDEF, best.PlayerProgression.BaseDEF, prev?.PlayerProgression?.BaseDEF);
+            html += renderParamInt('StatPts', current?.PlayerProgression?.StatPointsPerLevel, best.PlayerProgression.StatPointsPerLevel, prev?.PlayerProgression?.StatPointsPerLevel);
+            html += '</div>';
+
+            // Enemy section
+            html += '<div class="param-section"><div class="param-header red">👹 ENEMY</div>';
+            html += renderParamInt('BaseHP', current?.EnemyProgression?.BaseHP, best.EnemyProgression.BaseHP, prev?.EnemyProgression?.BaseHP);
+            html += renderParamDouble('HP×Lvl', current?.EnemyProgression?.HPScalingCoefficient, best.EnemyProgression.HPScalingCoefficient, prev?.EnemyProgression?.HPScalingCoefficient, 2);
+            html += renderParamInt('BaseDMG', current?.EnemyProgression?.BaseDamage, best.EnemyProgression.BaseDamage, prev?.EnemyProgression?.BaseDamage);
+            html += renderParamDouble('DMG×Lvl', current?.EnemyProgression?.DamageScalingCoefficient, best.EnemyProgression.DamageScalingCoefficient, prev?.EnemyProgression?.DamageScalingCoefficient, 2);
+            html += '</div>';
+
+            // Economy section
+            html += '<div class="param-section"><div class="param-header yellow">💰 ECONOMY</div>';
+            html += renderParamInt('BaseGold', current?.Economy?.BaseGoldPerCombat, best.Economy.BaseGoldPerCombat, prev?.Economy?.BaseGoldPerCombat);
+            html += renderParamDouble('Gold×Lvl', current?.Economy?.GoldScalingCoefficient, best.Economy.GoldScalingCoefficient, prev?.Economy?.GoldScalingCoefficient, 2);
+            html += '</div>';
+
+            // Loot section
+            html += '<div class="param-section"><div class="param-header magenta">🎁 LOOT</div>';
+            html += renderParamInt('Treasure', current?.Loot?.BaseTreasureGold, best.Loot.BaseTreasureGold, prev?.Loot?.BaseTreasureGold);
+            html += renderParamInt('Loot×Dep', current?.Loot?.TreasurePerDungeonDepth, best.Loot.TreasurePerDungeonDepth, prev?.Loot?.TreasurePerDungeonDepth);
+            html += renderParamDouble('DropRate', current?.Loot?.EquipmentDropRate, best.Loot.EquipmentDropRate, prev?.Loot?.EquipmentDropRate, 0);
+            html += '</div>';
+
+            paramsList.innerHTML = html;
+        }
+
+        function renderParamInt(name, live, best, prev) {
+            const liveVal = live !== undefined ? live : best;
+            const delta = prev !== undefined ? best - prev : null;
+            const deltaStr = delta !== null ? (delta > 0 ? `+${delta}` : delta.toString()) : ' - ';
+
+            const isDifferent = live !== undefined && live !== best;
+            const liveColor = isDifferent ? 'cyan' : 'gray';
+            const bestColor = prev !== undefined && best !== prev ? 'yellow' : 'white';
+            const liveStr = isDifferent ? `${liveVal.toString().padStart(3)}*` : liveVal.toString().padStart(4);
+            const prevStr = prev !== undefined ? prev.toString().padStart(3) : ' - ';
+
+            return `
+                <div class="param-row">
+                    <span class="white">${name.padEnd(8)}</span>
+                    <span class="${liveColor}">${liveStr}</span>
+                    <span class="${bestColor}">${best.toString().padStart(3)}</span>
+                    <span class="dark-gray">${prevStr} ${deltaStr.padStart(4)}</span>
+                </div>
+            `;
+        }
+
+        function renderParamDouble(name, live, best, prev, decimals) {
+            const liveVal = live !== undefined ? live : best;
+            const delta = prev !== undefined ? best - prev : null;
+            const deltaStr = delta !== null ? (delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1)) : '  -  ';
+
+            const isDifferent = live !== undefined && Math.abs(live - best) > 0.01;
+            const liveColor = isDifferent ? 'cyan' : 'gray';
+            const bestColor = prev !== undefined && Math.abs(best - prev) > 0.01 ? 'yellow' : 'white';
+            const liveStr = isDifferent ? `${liveVal.toFixed(decimals).padStart(4)}*` : liveVal.toFixed(decimals).padStart(5);
+            const prevStr = prev !== undefined ? prev.toFixed(decimals).padStart(4) : '  - ';
+
+            return `
+                <div class="param-row">
+                    <span class="white">${name.padEnd(8)}</span>
+                    <span class="${liveColor}">${liveStr}</span>
+                    <span class="${bestColor}">${best.toFixed(decimals).padStart(4)}</span>
+                    <span class="dark-gray">${prevStr} ${deltaStr}</span>
+                </div>
+            `;
+        }
+
+        function areFrameworksEqual(a, b) {
+            if (!a || !b) return false;
+
+            return a.PlayerProgression.BaseHP === b.PlayerProgression.BaseHP &&
+                   Math.abs(a.PlayerProgression.HPPerLevel - b.PlayerProgression.HPPerLevel) < 0.01 &&
+                   a.PlayerProgression.BaseSTR === b.PlayerProgression.BaseSTR &&
+                   a.PlayerProgression.BaseDEF === b.PlayerProgression.BaseDEF &&
+                   a.PlayerProgression.StatPointsPerLevel === b.PlayerProgression.StatPointsPerLevel &&
+                   a.EnemyProgression.BaseHP === b.EnemyProgression.BaseHP &&
+                   Math.abs(a.EnemyProgression.HPScalingCoefficient - b.EnemyProgression.HPScalingCoefficient) < 0.01 &&
+                   a.EnemyProgression.BaseDamage === b.EnemyProgression.BaseDamage &&
+                   Math.abs(a.EnemyProgression.DamageScalingCoefficient - b.EnemyProgression.DamageScalingCoefficient) < 0.01 &&
+                   a.Economy.BaseGoldPerCombat === b.Economy.BaseGoldPerCombat &&
+                   Math.abs(a.Economy.GoldScalingCoefficient - b.Economy.GoldScalingCoefficient) < 0.01 &&
+                   a.Loot.BaseTreasureGold === b.Loot.BaseTreasureGold &&
+                   a.Loot.TreasurePerDungeonDepth === b.Loot.TreasurePerDungeonDepth &&
+                   Math.abs(a.Loot.EquipmentDropRate - b.Loot.EquipmentDropRate) < 0.1;
+        }
+
+        function updateTrendBox(data, generation, fitness) {
+            const history = data.evolution?.fitness_history || [];
+
+            // Update fitness history
+            if (history.length > 0) {
+                fitnessHistory = history.map(h => ({ gen: h.gen, fit: h.fit }));
+            }
+
+            if (fitnessHistory.length >= 3) {
+                const last40 = fitnessHistory.slice(-40);
+                const minFit = Math.min(...last40.map(h => h.fit));
+                const maxFit = Math.max(...last40.map(h => h.fit));
+                const range = maxFit - minFit;
+
+                // Generate sparkline
+                let sparkline = '';
+                const bars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+                last40.forEach(point => {
+                    const level = range > 0.01 ? Math.floor((point.fit - minFit) / range * 7) : 4;
+                    sparkline += bars[Math.min(7, Math.max(0, level))];
+                });
+
+                document.getElementById('sparkline').textContent = sparkline;
+                document.getElementById('trendRange').innerHTML = `<span class="gray">${minFit.toFixed(1)} → ${maxFit.toFixed(1)}</span>`;
+
+                // Calculate trend
+                if (last40.length >= 10) {
+                    const oldest = last40[0];
+                    const newest = last40[last40.length - 1];
+                    const genDelta = newest.gen - oldest.gen;
+                    const fitDelta = newest.fit - oldest.fit;
+                    const slope = genDelta > 0 ? fitDelta / genDelta * 1000 : 0;
+
+                    const gensSinceLastImprovement = generation - newest.gen;
+                    const trendStale = gensSinceLastImprovement > 50;
+
+                    const slopeColor = slope > 0.5 ? 'green' :
+                                      slope > 0.1 ? 'yellow' :
+                                      slope > 0 ? 'dark-yellow' : 'red';
+
+                    if (trendStale) {
+                        document.getElementById('slope').innerHTML = `<span class="red">+${slope.toFixed(3)}/1k (STALE!)</span><br><span class="dark-gray">  Last improve: ${gensSinceLastImprovement} gens ago</span>`;
+                    } else {
+                        document.getElementById('slope').innerHTML = `<span class="${slopeColor}">+${slope.toFixed(3)}/1k gens</span>`;
+                    }
+
+                    // ETA calculation
+                    const stuckGens = data.evolution?.stuck_gens || 0;
+                    const genPerSec = data.evolution?.gen_per_sec || 0;
+                    updateETA(fitness, slope, trendStale, stuckGens, genPerSec);
+                }
+            } else {
+                document.getElementById('sparkline').textContent = '▁▂▃▄▅▆▇█';
+                document.getElementById('trendRange').innerHTML = '<span class="gray">0.0 → 0.0</span>';
+                document.getElementById('slope').innerHTML = '<span class="gray">Collecting data...</span>';
+                document.getElementById('eta').innerHTML = `<span class="dark-gray">Collecting data... (${fitnessHistory.length}/3 improvements)</span>`;
+            }
+        }
+
+        function updateETA(currentFitness, slope, trendStale, stuckGens, genPerSec) {
+            const targets = [70, 75, 80, 85, 90];
+            const nextTarget = targets.find(t => t > currentFitness);
+
+            if (!nextTarget) {
+                document.getElementById('eta').innerHTML = '<span class="green">Target reached!</span>';
+                return;
+            }
+
+            if (trendStale || stuckGens > 100) {
+                document.getElementById('eta').innerHTML = `<span class="red">ETA: STALE! Stuck ${stuckGens} gens</span>`;
+            } else if (slope < 0.05) {
+                document.getElementById('eta').innerHTML = `<span class="dark-yellow">ETA: Plateau (${slope.toFixed(2)}/1k too low)</span>`;
+            } else if (slope > 0.01) {
+                const fitnessNeeded = nextTarget - currentFitness;
+                const gensNeeded = fitnessNeeded / (slope / 1000.0);
+                const secondsNeeded = gensNeeded / Math.max(1, genPerSec);
+
+                let eta, etaColor;
+                if (secondsNeeded < 60) {
+                    eta = `${secondsNeeded.toFixed(0)}sec`;
+                    etaColor = 'green';
+                } else if (secondsNeeded < 3600) {
+                    eta = `${(secondsNeeded / 60).toFixed(1)}min`;
+                    etaColor = secondsNeeded < 1800 ? 'green' : 'yellow';
+                } else if (secondsNeeded < 86400) {
+                    eta = `${(secondsNeeded / 3600).toFixed(1)}hrs`;
+                    etaColor = 'yellow';
+                } else {
+                    eta = `${(secondsNeeded / 86400).toFixed(1)}days`;
+                    etaColor = 'dark-yellow';
+                }
+
+                document.getElementById('eta').innerHTML = `
+                    <span class="${etaColor}">ETA to ${nextTarget.toFixed(0)}: ~${eta}</span><br>
+                    <span class="dark-gray">  (${gensNeeded.toFixed(0)} gens @ ${genPerSec.toFixed(0)}/s)</span>
+                `;
+            } else {
+                document.getElementById('eta').innerHTML = '<span class="gray">ETA: Unknown (no trend)</span>';
+            }
+        }
+
+        function updateHealthBox(data, fitness) {
+            const stuckGens = data.evolution?.stuck_gens || 0;
+            const genPerSec = data.evolution?.gen_per_sec || 0;
+
+            // Quality
+            const quality = fitness >= 90 ? 'OPTIMAL' :
+                           fitness >= 80 ? 'EXCELLENT' :
+                           fitness >= 70 ? 'GOOD' :
+                           fitness >= 60 ? 'FAIR' : 'POOR';
+            const qualityColor = fitness >= 80 ? 'green' :
+                                fitness >= 70 ? 'yellow' :
+                                fitness >= 60 ? 'cyan' : 'red';
+            document.getElementById('quality').innerHTML = `<span class="${qualityColor}">${quality} (${fitness.toFixed(1)})</span>`;
+
+            // Throughput
+            const throughputColor = genPerSec > 100 ? 'green' :
+                                   genPerSec > 10 ? 'yellow' : 'red';
+            document.getElementById('throughput').innerHTML = `<span class="${throughputColor}">${genPerSec.toFixed(0)} gen/s</span>`;
+
+            // Stuckness
+            const stuckColor = stuckGens > 1000 ? 'red' :
+                              stuckGens > 500 ? 'dark-yellow' :
+                              stuckGens > 200 ? 'yellow' : 'green';
+            document.getElementById('stuckness').innerHTML = `<span class="${stuckColor}">${stuckGens} gens</span>`;
+
+            // Trend
+            if (fitnessHistory.length >= 10) {
+                const slope = calculateTrend(fitnessHistory);
+                const trendColor = slope > 1.0 ? 'green' :
+                                  slope > 0.1 ? 'yellow' :
+                                  slope > 0.01 ? 'dark-yellow' : 'red';
+                document.getElementById('trendHealth').innerHTML = `<span class="${trendColor}">+${slope.toFixed(3)}/1k</span>`;
+            }
+
+            // Status and action
+            let status, statusColor, action, actionColor;
+            if (stuckGens > 5000) {
+                status = 'At champion peak';
+                statusColor = 'yellow';
+                action = 'Explore neighbors';
+                actionColor = 'dark-gray';
+            } else if (stuckGens > 2000) {
+                status = 'Near optimum';
+                statusColor = 'yellow';
+                action = 'Fine-tune search';
+                actionColor = 'dark-gray';
+            } else if (stuckGens > 1000) {
+                status = 'SEVERELY STUCK';
+                statusColor = 'red';
+                action = 'Champion guide';
+                actionColor = 'yellow';
+            } else if (stuckGens > 500) {
+                status = 'Plateau';
+                statusColor = 'dark-yellow';
+                action = 'Diversity boost';
+                actionColor = 'yellow';
+            } else if (stuckGens > 200) {
+                status = 'Slow progress';
+                statusColor = 'yellow';
+                action = 'Random jumps';
+                actionColor = 'dark-gray';
+            } else {
+                status = 'Healthy';
+                statusColor = 'green';
+                action = 'Normal crossover';
+                actionColor = 'dark-gray';
+            }
+
+            document.getElementById('healthStatus').innerHTML = `<span class="${statusColor}">${status}</span>`;
+            document.getElementById('healthAction').innerHTML = `<span class="${actionColor}">${action}</span>`;
+        }
+
+        function updateFooter(data) {
+            const fitness = data.evolution?.best_fitness || 0;
+            const stuckGens = data.evolution?.stuck_gens || 0;
+            const trend = calculateTrend(fitnessHistory);
+
+            const trigger1 = fitness >= 85 && stuckGens >= 150;
+            const trigger2 = fitnessHistory.length >= 20 && trend < 0.05 && stuckGens >= 100;
+
+            const warningEl = document.getElementById('footerWarning');
+            const infoEl = document.getElementById('footerInfo');
+
+            if (trigger1 || trigger2) {
+                let msg = '🔄 AUTO-RESET IMMINENT! ';
+                if (trigger1) msg += '[High fitness stuck] ';
+                if (trigger2) msg += `[Plateau ${trend.toFixed(2)}/1k] `;
+                warningEl.textContent = msg;
+                warningEl.style.display = 'block';
+                infoEl.style.display = 'none';
+            } else {
+                warningEl.style.display = 'none';
+                infoEl.style.display = 'block';
+            }
+        }
+
+        function calculateTrend(history) {
+            if (history.length < 10) return 10.0;
+
+            const oldest = history[0];
+            const newest = history[history.length - 1];
+            const genDelta = newest.gen - oldest.gen;
+            const fitDelta = newest.fit - oldest.fit;
+
+            return genDelta > 0 ? fitDelta / genDelta * 1000 : 0;
+        }
+
+        function getQualityColor(fitness) {
+            if (fitness >= 80) return 'green';
+            if (fitness >= 70) return 'yellow';
+            if (fitness >= 60) return 'cyan';
+            return 'red';
+        }
+
+        // Initialize
+        connectWebSocket();
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                console.log('ESC pressed - Stop & Save requested');
+                // Send stop command to server if API available
+            } else if (e.key === 'r' || e.key === 'R') {
+                console.log('R pressed - Manual Reset requested');
+                // Send reset command to server if API available
+            }
+        });
+
+        // Demo data for testing without WebSocket (remove in production)
+        if (window.location.hash === '#demo') {
+            setTimeout(() => {
+                updateDashboard({
+                    evolution: {
+                        generation: 12345,
+                        best_fitness: 73.5,
+                        previous_fitness: 71.2,
+                        champion_fitness: 82.3,
+                        champion_gen: 8421,
+                        stuck_gens: 234,
+                        resets: 3,
+                        phase: 'Exploration',
+                        population_size: 150,
+                        gen_per_sec: 245,
+                        current_candidate_fitness: 72.1,
+                        metrics: [
+                            { name: 'Combat Duration', score: 85 },
+                            { name: 'Economy Balance', score: 72 },
+                            { name: 'Progression Strata', score: 68 },
+                            { name: 'Skills Balance', score: 91 },
+                            { name: 'Equipment Progression', score: 78 },
+                            { name: 'Level Pacing', score: 83 }
+                        ],
+                        best_framework: {
+                            PlayerProgression: { BaseHP: 15, HPPerLevel: 2.0, BaseSTR: 3, BaseDEF: 3, StatPointsPerLevel: 1 },
+                            EnemyProgression: { BaseHP: 12, HPScalingCoefficient: 3.0, BaseDamage: 5, DamageScalingCoefficient: 1.0 },
+                            Economy: { BaseGoldPerCombat: 10, GoldScalingCoefficient: 3.75 },
+                            Loot: { BaseTreasureGold: 50, TreasurePerDungeonDepth: 60, EquipmentDropRate: 40 }
+                        },
+                        fitness_history: [
+                            { gen: 12100, fit: 71.2 },
+                            { gen: 12150, fit: 71.5 },
+                            { gen: 12200, fit: 72.1 },
+                            { gen: 12250, fit: 72.8 },
+                            { gen: 12300, fit: 73.5 }
+                        ]
+                    }
+                });
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
