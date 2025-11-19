@@ -1,41 +1,44 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Add CORS for web dashboard
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseCors();
+
+// Serve the Ultima dashboard
+app.MapGet("/", () => Results.Content(File.ReadAllText("wwwroot/ultima.html"), "text/html"));
+
+// Stream tuner state (reads from file written by C# tuner)
+app.MapGet("/api/tuner/state", () =>
 {
-    app.MapOpenApi();
-}
+    try
+    {
+        var statePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tuner_state.json");
+        if (File.Exists(statePath))
+        {
+            var json = File.ReadAllText(statePath);
+            return Results.Content(json, "application/json");
+        }
+        return Results.Json(new { error = "Tuner not running" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message });
+    }
+});
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+app.Run("http://0.0.0.0:8000");
