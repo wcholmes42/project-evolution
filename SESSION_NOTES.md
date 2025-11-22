@@ -42,6 +42,7 @@ These are now the game defaults!
 - Different mob types beyond goblins
 - Boss encounters
 - Quest system
+- **Vision**: "Ultima IV, Baldur's Gate and Diablo had a love child"
 
 ## Generation 34: Equipment System ⚔️
 **Goal**: Make equipment functional and purchasable.
