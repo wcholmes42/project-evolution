@@ -122,6 +122,54 @@ public class RPGGame
         return PlayerInventory.GetTotalDefense(PlayerDefense);
     }
 
+    public bool BuyWeapon(Weapon weapon)
+    {
+        if (PlayerGold >= weapon.Value)
+        {
+            PlayerGold -= weapon.Value;
+            
+            // Move current weapon to inventory if it's not the default rusty dagger
+            if (PlayerInventory.EquippedWeapon.Name != "Rusty Dagger")
+            {
+                PlayerInventory.Weapons.Add(PlayerInventory.EquippedWeapon);
+            }
+            
+            PlayerInventory.EquippedWeapon = weapon;
+            return true;
+        }
+        return false;
+    }
+
+    public bool BuyArmor(Armor armor)
+    {
+        if (PlayerGold >= armor.Value)
+        {
+            PlayerGold -= armor.Value;
+            
+            // Move current armor to inventory if it's not the default cloth rags
+            if (PlayerInventory.EquippedArmor.Name != "Cloth Rags")
+            {
+                PlayerInventory.Armors.Add(PlayerInventory.EquippedArmor);
+            }
+            
+            PlayerInventory.EquippedArmor = armor;
+            return true;
+        }
+        return false;
+    }
+
+    public List<Weapon> GetShopWeapons()
+    {
+        // Return all weapons except the starter one
+        return Weapon.AllWeapons.Skip(1).ToList();
+    }
+
+    public List<Armor> GetShopArmors()
+    {
+        // Return all armor except the starter one
+        return Armor.AllArmor.Skip(1).ToList();
+    }
+
     // ════════════════════════════════════════════════════════════════════
     // SKILL SYSTEM (Generation 35)
     // ════════════════════════════════════════════════════════════════════
@@ -726,7 +774,7 @@ public class RPGGame
         // Player deals damage based on Strength
         if (playerAttacks && !enemyDefends)
         {
-            int damage = PlayerStrength;
+            int damage = GetEffectiveStrength();
             EnemyHP = Math.Max(0, EnemyHP - damage);
             CombatLog += $"You strike for {damage} damage! ";
         }
@@ -735,7 +783,7 @@ public class RPGGame
         if (enemyAttacks && !playerDefends)
         {
             int enemyDamage = 1; // Enemy base damage
-            int actualDamage = Math.Max(1, enemyDamage - PlayerDefense); // Minimum 1 damage
+            int actualDamage = Math.Max(1, enemyDamage - GetEffectiveDefense()); // Minimum 1 damage
             PlayerHP = Math.Max(0, PlayerHP - actualDamage);
             CombatLog += $"The goblin strikes for {actualDamage} damage! ";
         }
@@ -2690,7 +2738,7 @@ public class RPGGame
         else
         {
             // Failed to flee, enemy gets free hit!
-            int damage = Math.Max(1, EnemyDamage - PlayerDefense);
+            int damage = Math.Max(1, EnemyDamage - GetEffectiveDefense());
             PlayerHP = Math.Max(0, PlayerHP - damage);
             CombatLog = $"Failed to flee! {EnemyName} hits you for {damage} damage!";
 

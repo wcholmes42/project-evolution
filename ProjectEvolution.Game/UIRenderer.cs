@@ -179,7 +179,12 @@ public class UIRenderer
         Console.Write(new string(' ', 76));
         Console.SetCursorPosition(2, 4);
         Console.ForegroundColor = ConsoleColor.White;
-        Console.Write($"STR: {game.PlayerStrength,2}  DEF: {game.PlayerDefense,2}");
+        string weapon = game.PlayerInventory.EquippedWeapon.Name;
+        string armor = game.PlayerInventory.EquippedArmor.Name;
+        if (weapon.Length > 15) weapon = weapon.Substring(0, 12) + "...";
+        if (armor.Length > 15) armor = armor.Substring(0, 12) + "...";
+        
+        Console.Write($"STR: {game.GetEffectiveStrength(),2} ({weapon})  DEF: {game.GetEffectiveDefense(),2} ({armor})");
         if (game.AvailableStatPoints > 0)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;

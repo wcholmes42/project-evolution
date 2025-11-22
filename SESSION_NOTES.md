@@ -1,7 +1,7 @@
 # Project Evolution - Session Notes
 
 **Last Updated**: 2025-11-16
-**Current Generation**: 33 (ML Optimization Complete!) 🎛️
+**Current Generation**: 34 (Equipment System) ⚔️
 **Status**: ✅ 9-Mode Self-Tuning System + 2M+ Games Tested!
 
 ## 🎮 PLAYABLE DEFAULTS (Human-Friendly!)
@@ -42,6 +42,15 @@ These are now the game defaults!
 - Different mob types beyond goblins
 - Boss encounters
 - Quest system
+
+## Generation 34: Equipment System ⚔️
+**Goal**: Make equipment functional and purchasable.
+**Changes**:
+- **Combat Math**: `GetEffectiveStrength` and `GetEffectiveDefense` now used in all combat calculations.
+- **Shop**: Added Blacksmith Shop to Towns (`[S]hop`).
+- **UI**: Status bar displays equipped items and effective stats.
+- **Tests**: Added `EquipmentTests.cs` and fixed regressions in `UnitTest1.cs`.
+**Status**: ✅ Complete & Verified
 
 ## 🏆 LINE IN THE SAND - What We've Built
 

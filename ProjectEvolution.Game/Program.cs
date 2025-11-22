@@ -237,6 +237,71 @@ void HandleDeath(string killerName)
     ui.RenderCommandBar(false);
 }
 
+void HandleShop(RPGGame game, UIRenderer ui)
+{
+    bool shopping = true;
+    while (shopping)
+    {
+        ui.AddMessage("--- BLACKSMITH SHOP ---");
+        ui.AddMessage("[W]eapons | [A]rmor | [X]it");
+        ui.RenderStatusBar(game);
+        
+        var key = Console.ReadKey(intercept: true).Key;
+        if (key == ConsoleKey.X) return;
+        
+        if (key == ConsoleKey.W)
+        {
+            var weapons = game.GetShopWeapons();
+            ui.AddMessage("WEAPONS FOR SALE:");
+            int index = 1;
+            foreach (var w in weapons)
+            {
+                ui.AddMessage($"[{index}] {w.Name} (+{w.BonusStrength} STR) - {w.Value}g");
+                index++;
+            }
+            ui.AddMessage("Press [1-9] to buy, or any other key to cancel.");
+            
+            var buyKey = Console.ReadKey(intercept: true);
+            if (char.IsDigit(buyKey.KeyChar))
+            {
+                int selection = int.Parse(buyKey.KeyChar.ToString()) - 1;
+                if (selection >= 0 && selection < weapons.Count)
+                {
+                    if (game.BuyWeapon(weapons[selection]))
+                        ui.AddMessage($"BOUGHT {weapons[selection].Name}!");
+                    else
+                        ui.AddMessage("Not enough gold!");
+                }
+            }
+        }
+        else if (key == ConsoleKey.A)
+        {
+            var armors = game.GetShopArmors();
+            ui.AddMessage("ARMOR FOR SALE:");
+            int index = 1;
+            foreach (var a in armors)
+            {
+                ui.AddMessage($"[{index}] {a.Name} (+{a.BonusDefense} DEF) - {a.Value}g");
+                index++;
+            }
+            ui.AddMessage("Press [1-9] to buy, or any other key to cancel.");
+            
+            var buyKey = Console.ReadKey(intercept: true);
+            if (char.IsDigit(buyKey.KeyChar))
+            {
+                int selection = int.Parse(buyKey.KeyChar.ToString()) - 1;
+                if (selection >= 0 && selection < armors.Count)
+                {
+                    if (game.BuyArmor(armors[selection]))
+                        ui.AddMessage($"BOUGHT {armors[selection].Name}!");
+                    else
+                        ui.AddMessage("Not enough gold!");
+                }
+            }
+        }
+    }
+}
+
 while (playing)
 {
     // Position cursor for input
@@ -375,7 +440,7 @@ while (playing)
             else if (terrain == "Town")
             {
                 ui.AddMessage("Entered Town!");
-                ui.AddMessage("[I]nn (10g heal) | [B]uy Potion (5g) | [X]it");
+                ui.AddMessage("[I]nn (10g) | [B]uy Potion (5g) | [S]hop | [X]it");
                 Thread.Sleep(400); // Brief pause to see options
 
                 var townKey = Console.ReadKey(intercept: true).Key;
@@ -398,6 +463,10 @@ while (playing)
                         Thread.Sleep(600); // Potion acquired!
                     }
                     else ui.AddMessage("NO Not enough gold (need 5g)");
+                }
+                else if (townKey == ConsoleKey.S)
+                {
+                    HandleShop(game, ui);
                 }
             }
             else if (terrain == "Dungeon")

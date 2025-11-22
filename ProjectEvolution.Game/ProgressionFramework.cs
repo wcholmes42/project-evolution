@@ -3009,9 +3009,41 @@ public static class FitnessEvaluator
         // Sum weighted scores
         double totalWeightedScore = results.Sum(r => r.WeightedScore);
 
-        // Sum of weighted scores already represents 0-100 scale
-        // (each metric: score 0-100 × weight, all weights sum to 1.0)
-        double totalFitness = totalWeightedScore;
+        // BONUS: Combat/Skills parameters (quick integration until proper metrics added)
+        double combatBonus = 0;
+        double skillsBonus = 0;
+
+        // Combat balance bonus (up to +5 points)
+        if (framework.Combat != null)
+        {
+            // Reward balanced crit (5-15%), reasonable multiplier (1.5-2.5x), useful dodge/block
+            bool critBalanced = framework.Combat.BaseCritChance >= 3 && framework.Combat.BaseCritChance <= 15;
+            bool critMultOk = framework.Combat.CritDamageMultiplier >= 1.3 && framework.Combat.CritDamageMultiplier <= 2.5;
+            bool dodgeUseful = framework.Combat.BaseDodgeChance >= 3 && framework.Combat.BaseDodgeChance <= 20;
+            bool blockUseful = framework.Combat.BaseBlockChance >= 5 && framework.Combat.BaseBlockChance <= 35;
+
+            if (critBalanced) combatBonus += 1.5;
+            if (critMultOk) combatBonus += 1.0;
+            if (dodgeUseful) combatBonus += 1.0;
+            if (blockUseful) combatBonus += 1.5;
+        }
+
+        // Skills balance bonus (up to +5 points)
+        if (framework.Skills != null)
+        {
+            // Reward useful skill system (enough mana, reasonable costs, good scaling)
+            bool manaAdequate = framework.Skills.BaseMana >= 15 && framework.Skills.ManaPerLevel >= 3;
+            bool costReasonable = framework.Skills.SkillManaCost >= 5 && framework.Skills.SkillManaCost <= 25;
+            bool damageWorthwhile = framework.Skills.SkillDamageBase >= 1.5 && framework.Skills.SkillDamageBase <= 3.5;
+            bool cooldownOk = framework.Skills.SkillCooldown >= 2 && framework.Skills.SkillCooldown <= 6;
+
+            if (manaAdequate) skillsBonus += 1.5;
+            if (costReasonable) skillsBonus += 1.0;
+            if (damageWorthwhile) skillsBonus += 1.5;
+            if (cooldownOk) skillsBonus += 1.0;
+        }
+
+        double totalFitness = totalWeightedScore + combatBonus + skillsBonus;
 
         return (totalFitness, results);
     }
