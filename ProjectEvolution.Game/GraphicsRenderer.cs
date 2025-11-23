@@ -113,7 +113,20 @@ public class GraphicsRenderer : IDisposable
     /// <param name="tint">Optional color tint (default: white)</param>
     public void DrawTileAt(int tileId, int pixelX, int pixelY, Color? tint = null)
     {
-        if (!initialized) return;
+        if (!initialized)
+        {
+            Console.WriteLine($"WARNING: DrawTileAt called but not initialized!");
+            return;
+        }
+
+        // DEBUG: Check if texture is valid
+        if (tileset.id == 0)
+        {
+            Console.WriteLine($"ERROR: Tileset texture ID is 0 (invalid)!");
+            // Draw red rectangle as placeholder
+            Raylib.DrawRectangle(pixelX, pixelY, SCALED_TILE_SIZE, SCALED_TILE_SIZE, Raylib.RED);
+            return;
+        }
 
         // Calculate source position in the tileset (accounting for 1px spacing)
         int tileRow = tileId / TILES_PER_ROW;
@@ -135,7 +148,11 @@ public class GraphicsRenderer : IDisposable
             height = SCALED_TILE_SIZE
         };
 
+        // DEBUG: Draw the tile - if texture is bad, this won't show anything
         Raylib.DrawTexturePro(tileset, source, dest, Vector2.Zero, 0f, tint ?? Raylib.WHITE);
+
+        // DEBUG: Draw a small dot to show tile position was calculated
+        // Raylib.DrawPixel(pixelX + SCALED_TILE_SIZE / 2, pixelY + SCALED_TILE_SIZE / 2, Raylib.YELLOW);
     }
 
     /// <summary>
