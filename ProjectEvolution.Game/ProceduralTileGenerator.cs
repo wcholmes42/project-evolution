@@ -65,6 +65,19 @@ public static class ProceduralTileGenerator
         Raylib.BeginTextureMode(renderTexture);
         Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)255));
 
+        Console.WriteLine($"Generating tileset: {textureWidth}x{textureHeight} pixels");
+        Console.WriteLine($"  Tiles: {TILES_PER_ROW}x{TILES_PER_COLUMN} = {TILES_PER_ROW * TILES_PER_COLUMN} total");
+        Console.WriteLine($"  Tile size: {TILE_SIZE}x{TILE_SIZE} + {TILE_SPACING}px spacing");
+
+        // DEBUG: Draw a test pattern to verify rendering works
+        Console.WriteLine("  - Drawing test pattern...");
+        for (int i = 0; i < 10; i++)
+        {
+            Raylib.DrawRectangle(i * 20, 0, 16, 16, Raylib.RED);
+            Raylib.DrawRectangle(i * 20, 20, 16, 16, Raylib.GREEN);
+            Raylib.DrawRectangle(i * 20, 40, 16, 16, Raylib.BLUE);
+        }
+
         Console.WriteLine("Generating tiles...");
 
         // Generate all tiles (using TileMapper IDs for consistency)
