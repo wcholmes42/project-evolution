@@ -8,18 +8,17 @@ namespace ProjectEvolution.Game;
 /// </summary>
 public class GraphicsRenderer : IDisposable
 {
-    private const int TILE_SIZE = 16;
-    private const int TILE_SPACING = 1; // 1px margin between tiles
-    private const int TILES_PER_ROW = 57; // Kenney's roguelike pack: 968px / (16 + 1) = 57 tiles per row
+    private const int TILE_SIZE = 32; // Authentic Ultima IV tiles are 32x32
+    private const int TILE_SPACING = 0; // No spacing in Ultima IV tileset
+    private const int TILES_PER_ROW = 16; // Ultima IV tileset is 16 tiles wide
     private int SCREEN_WIDTH;
     private int SCREEN_HEIGHT;
-    private const int SCALE = 3; // 3x scaling for better visibility on modern displays
+    private const int SCALE = 2; // 2x scaling for 64x64 display (good for 2560x1600)
     private const int SCALED_TILE_SIZE = TILE_SIZE * SCALE;
 
     private Texture tileset;
     private bool initialized = false;
-    private string cacheDir = "Assets/Generated";
-    private string cachedTilesetPath = "Assets/Generated/procedural_tileset.png";
+    private string tilesetPath = "Assets/Tilesets/ultima4-shapes.png";
 
     public GraphicsRenderer()
     {
@@ -57,34 +56,23 @@ public class GraphicsRenderer : IDisposable
 
         Console.WriteLine($"✓ Window created at {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
 
-        // Load or generate tileset (Ultima IV style!)
-        if (File.Exists(cachedTilesetPath))
+        // Load AUTHENTIC Ultima IV tileset
+        if (!File.Exists(tilesetPath))
         {
-            Console.WriteLine("📦 Loading cached procedural tileset...");
-            tileset = Raylib.LoadTexture(cachedTilesetPath);
-            Console.WriteLine($"✓ Tileset loaded from cache: {tileset.width}x{tileset.height}");
+            Console.WriteLine($"ERROR: Authentic Ultima IV tileset not found!");
+            Console.WriteLine($"Expected: {Path.GetFullPath(tilesetPath)}");
+            Raylib.CloseWindow();
+            throw new FileNotFoundException($"Tileset not found: {tilesetPath}");
         }
-        else
-        {
-            Console.WriteLine("🎨 Generating Ultima IV-style tileset procedurally...");
-            Console.WriteLine("   (This only happens once - will be cached!)");
 
-            var startTime = DateTime.Now;
-            tileset = ProceduralTileGenerator.GenerateTileset();
-            var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
-
-            Console.WriteLine($"✓ Tileset generated in {elapsed:F0}ms: {tileset.width}x{tileset.height}");
-
-            // Save to cache for future runs
-            ProceduralTileGenerator.SaveTileset(tileset, cachedTilesetPath);
-        }
+        Console.WriteLine("🎨 Loading AUTHENTIC Ultima IV tileset...");
+        tileset = Raylib.LoadTexture(tilesetPath);
 
         initialized = true;
 
+        Console.WriteLine($"✓ Tileset loaded: {tileset.width}x{tileset.height}");
         Console.WriteLine($"✓ Graphics initialized: {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
-        Console.WriteLine($"✓ Tile size: {TILE_SIZE}x{TILE_SIZE} + {TILE_SPACING}px spacing (scaled {SCALE}x)");
-        Console.WriteLine($"✓ Tiles per row: {TILES_PER_ROW}");
-        Console.WriteLine("✓ NO EXTERNAL DEPENDENCIES - Pure procedural generation!");
+        Console.WriteLine($"✓ Tile size: {TILE_SIZE}x{TILE_SIZE}, {TILES_PER_ROW} per row (scaled {SCALE}x = {SCALED_TILE_SIZE}px)");
     }
 
     /// <summary>
@@ -209,28 +197,8 @@ public class GraphicsRenderer : IDisposable
                 string terrain = game.GetTerrainAt(worldX, worldY);
                 int tileId = TileMapper.GetTerrainTileId(terrain);
 
-                // TEMPORARY: Use colored rectangles (WORKS) while debugging texture issue
-                Color tileColor = terrain switch
-                {
-                    "Grass" or "Grassland" => UltimaIVPalette.Terrain.Grass,
-                    "Forest" => UltimaIVPalette.Terrain.Forest,
-                    "Mountain" => UltimaIVPalette.Terrain.Mountain,
-                    "Water" => UltimaIVPalette.Terrain.DeepWater,
-                    "Town" => UltimaIVPalette.Structures.TownWall,
-                    "Temple" => UltimaIVPalette.Structures.Temple,
-                    "Dungeon" => UltimaIVPalette.Structures.Dungeon,
-                    _ => UltimaIVPalette.White
-                };
-
-                Raylib.DrawRectangle(
-                    mapOffsetX + screenX * SCALED_TILE_SIZE,
-                    mapOffsetY + screenY * SCALED_TILE_SIZE,
-                    SCALED_TILE_SIZE - 2,
-                    SCALED_TILE_SIZE - 2,
-                    tileColor);
-
-                // TODO: Fix DrawTileAt texture rendering
-                // DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
+                // Draw authentic Ultima IV tile
+                DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
             }
         }
 
@@ -242,32 +210,15 @@ public class GraphicsRenderer : IDisposable
             {
                 int screenX = mob.X - startX;
                 int screenY = mob.Y - startY;
-
-                // Draw mob as colored circle for now
-                Color mobColor = UltimaIVPalette.Monsters.Goblin; // Default green
-                Raylib.DrawCircle(
-                    mapOffsetX + screenX * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
-                    mapOffsetY + screenY * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
-                    SCALED_TILE_SIZE / 3,
-                    mobColor);
+                int mobTileId = TileMapper.GetMobTileId(mob.Type);
+                DrawTileAt(mobTileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
             }
         }
 
-        // Draw player (use bright white square for now)
+        // Draw player (authentic Ultima IV Avatar)
         int playerScreenX = game.PlayerX - startX;
         int playerScreenY = game.PlayerY - startY;
-        Raylib.DrawRectangle(
-            mapOffsetX + playerScreenX * SCALED_TILE_SIZE + 2,
-            mapOffsetY + playerScreenY * SCALED_TILE_SIZE + 2,
-            SCALED_TILE_SIZE - 4,
-            SCALED_TILE_SIZE - 4,
-            UltimaIVPalette.White);
-        // Red center to make player obvious
-        Raylib.DrawCircle(
-            mapOffsetX + playerScreenX * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
-            mapOffsetY + playerScreenY * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
-            SCALED_TILE_SIZE / 4,
-            UltimaIVPalette.BrightRed);
+        DrawTileAt(TileMapper.PLAYER_TILE, mapOffsetX + playerScreenX * SCALED_TILE_SIZE, mapOffsetY + playerScreenY * SCALED_TILE_SIZE);
 
         // Draw UI overlay
         DrawUI(game, viewPixelsWidth + mapOffsetX + 20, mapOffsetY);
