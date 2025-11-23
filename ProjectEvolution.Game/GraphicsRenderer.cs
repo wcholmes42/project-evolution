@@ -178,6 +178,9 @@ public class GraphicsRenderer : IDisposable
         // Draw map background
         Raylib.DrawRectangle(mapOffsetX, mapOffsetY, viewWidth * SCALED_TILE_SIZE, viewHeight * SCALED_TILE_SIZE, Raylib.BLACK);
 
+        // DEBUG: Red border to verify map area
+        Raylib.DrawRectangleLines(mapOffsetX, mapOffsetY, viewWidth * SCALED_TILE_SIZE, viewHeight * SCALED_TILE_SIZE, Raylib.RED);
+
         // Draw terrain
         for (int worldY = startY; worldY < endY; worldY++)
         {
