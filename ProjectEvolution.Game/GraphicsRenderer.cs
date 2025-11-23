@@ -32,8 +32,8 @@ public class GraphicsRenderer : IDisposable
     public void Initialize(bool fullscreen = true)
     {
         // GENERATION 47: EXCLUSIVE FULLSCREEN MODE!
-        SCREEN_WIDTH = 1920;
-        SCREEN_HEIGHT = 1080;
+        SCREEN_WIDTH = 2560;
+        SCREEN_HEIGHT = 1600;
 
         if (fullscreen)
         {

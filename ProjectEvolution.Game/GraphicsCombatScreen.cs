@@ -41,8 +41,8 @@ public class GraphicsCombatScreen
         Raylib.DrawRectangle(0, 0, screenWidth, screenHeight, new Color(20, 20, 30, 255));
 
         // Combat arena (centered)
-        int arenaWidth = 1200;
-        int arenaHeight = 800;
+        int arenaWidth = 1600;
+        int arenaHeight = 1000;
         int arenaX = (screenWidth - arenaWidth) / 2 + shakeX;
         int arenaY = (screenHeight - arenaHeight) / 2 + shakeY;
 
