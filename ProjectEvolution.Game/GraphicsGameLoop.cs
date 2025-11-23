@@ -19,8 +19,9 @@ public static class GraphicsGameLoop
 
         logger.LogEvent("GAME", "Project Evolution started! (Graphics Mode)");
 
-        // GENERATION 47: Create combat screen
+        // GENERATION 47: Create combat screen and death screen
         var combatScreen = new GraphicsCombatScreen(renderer.GetScreenWidth(), renderer.GetScreenHeight());
+        var deathScreen = new GraphicsDeathScreen(renderer.GetScreenWidth(), renderer.GetScreenHeight());
 
         // Load AI-tuned config
         var optimalConfig = ConfigPersistence.LoadOptimalConfig();
@@ -129,12 +130,14 @@ public static class GraphicsGameLoop
                 droppedItems.Add(game.PlayerInventory.EquippedArmor.Name);
 
             int goldBeforeDeath = game.PlayerGold;
+            int deathsBeforeRespawn = game.TotalDeaths;
             game.HandlePlayerDeath();
             int goldLost = goldBeforeDeath - game.PlayerGold;
 
             logger.LogEvent("DEATH", $"Killed by {killerName}. Respawned at Temple. Deaths: {game.TotalDeaths}");
 
-            // TODO: Show death screen in graphics mode (Evolution 2)
+            // GENERATION 47 EVOLUTION 2: Show dramatic death screen!
+            deathScreen.ShowDeathSequence(game, killerName, goldLost, droppedItems);
         }
 
         // Main game loop
