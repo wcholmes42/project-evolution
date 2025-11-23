@@ -54,25 +54,26 @@ public class GraphicsRenderer : IDisposable
         SCREEN_WIDTH = Raylib.GetScreenWidth();
         SCREEN_HEIGHT = Raylib.GetScreenHeight();
 
-        Console.WriteLine($"✓ Window created at {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
+        DebugLogger.Log($"✓ Window created at {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
 
         // Load AUTHENTIC Ultima IV tileset
         if (!File.Exists(tilesetPath))
         {
-            Console.WriteLine($"ERROR: Authentic Ultima IV tileset not found!");
-            Console.WriteLine($"Expected: {Path.GetFullPath(tilesetPath)}");
+            DebugLogger.Log($"ERROR: Authentic Ultima IV tileset not found!");
+            DebugLogger.Log($"Expected: {Path.GetFullPath(tilesetPath)}");
             Raylib.CloseWindow();
             throw new FileNotFoundException($"Tileset not found: {tilesetPath}");
         }
 
-        Console.WriteLine("🎨 Loading AUTHENTIC Ultima IV tileset...");
+        DebugLogger.Log("🎨 Loading AUTHENTIC Ultima IV tileset...");
         tileset = Raylib.LoadTexture(tilesetPath);
 
         initialized = true;
 
-        Console.WriteLine($"✓ Tileset loaded: {tileset.width}x{tileset.height}");
-        Console.WriteLine($"✓ Graphics initialized: {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
-        Console.WriteLine($"✓ Tile size: {TILE_SIZE}x{TILE_SIZE}, {TILES_PER_ROW} per row (scaled {SCALE}x = {SCALED_TILE_SIZE}px)");
+        DebugLogger.Log($"✓ Tileset loaded: {tileset.width}x{tileset.height}");
+        DebugLogger.Log($"✓ Tileset texture ID: {tileset.id}");
+        DebugLogger.Log($"✓ Graphics initialized: {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
+        DebugLogger.Log($"✓ Tile size: {TILE_SIZE}x{TILE_SIZE}, {TILES_PER_ROW} per row (scaled {SCALE}x = {SCALED_TILE_SIZE}px)");
     }
 
     /// <summary>
@@ -107,13 +108,22 @@ public class GraphicsRenderer : IDisposable
             return;
         }
 
-        // DEBUG: Check if texture is valid
+        // Check if texture is valid
         if (tileset.id == 0)
         {
-            Console.WriteLine($"ERROR: Tileset texture ID is 0 (invalid)!");
-            // Draw red rectangle as placeholder
+            DebugLogger.Log($"ERROR: Tileset texture ID is 0 (invalid)!");
             Raylib.DrawRectangle(pixelX, pixelY, SCALED_TILE_SIZE, SCALED_TILE_SIZE, Raylib.RED);
             return;
+        }
+
+        // DEBUG: Log first few DrawTileAt calls
+        static int drawCallCount = 0;
+        if (drawCallCount < 10)
+        {
+            drawCallCount++;
+            int row = tileId / TILES_PER_ROW;
+            int col = tileId % TILES_PER_ROW;
+            DebugLogger.Log($"DrawTileAt #{drawCallCount}: tileId={tileId} row={row} col={col} -> source=({col * TILE_SIZE}, {row * TILE_SIZE}) dest=({pixelX},{pixelY})");
         }
 
         // Calculate source position in the tileset (accounting for 1px spacing)
@@ -197,11 +207,18 @@ public class GraphicsRenderer : IDisposable
                 string terrain = game.GetTerrainAt(worldX, worldY);
                 int tileId = TileMapper.GetTerrainTileId(terrain);
 
-                // DEBUG: Log first tile to see what we're getting
-                if (worldX == 10 && worldY == 10)
+                // DEBUG: Log sample tiles
+                if ((worldX == 10 && worldY == 10) || (screenX == 0 && screenY == 0))
                 {
-                    Console.WriteLine($"DEBUG: Tile at (10,10): terrain='{terrain}' -> tileId={tileId}");
-                    Console.WriteLine($"  Expected: Temple should be tile 22");
+                    DebugLogger.Log($"Drawing tile at world({worldX},{worldY}) screen({screenX},{screenY}): terrain='{terrain}' -> tileId={tileId}");
+                }
+
+                // Log first 5 unique terrains
+                static HashSet<string> loggedTerrains = new HashSet<string>();
+                if (loggedTerrains.Count < 5 && !loggedTerrains.Contains(terrain))
+                {
+                    loggedTerrains.Add(terrain);
+                    DebugLogger.Log($"Terrain type '{terrain}' maps to tile {tileId}");
                 }
 
                 // Draw authentic Ultima IV tile
