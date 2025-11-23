@@ -73,6 +73,16 @@ public partial class RPGGame
     public bool RunWon { get; private set; } = false;
     public int WorldTurn { get; private set; } = 0;
     private List<Mob> _activeMobs = new List<Mob>();
+    private List<NPC> _activeNPCs = new List<NPC>(); // GENERATION 38: NPCs in world
+    private List<Quest> _activeQuests = new List<Quest>(); // GENERATION 39: Quest log
+    private List<Quest> _completedQuests = new List<Quest>();
+    public ReputationSystem Reputation { get; private set; } = new ReputationSystem(); // GENERATION 40
+    public Companion? ActiveCompanion { get; private set; } = null; // GENERATION 41
+    private List<Companion> _availableCompanions = new List<Companion>(); // Not yet recruited
+    public VirtueSystem Virtues { get; private set; } = new VirtueSystem(); // GENERATION 42
+    public MainQuestline MainQuest { get; private set; } = new MainQuestline(); // GENERATION 43
+    public WorldSecrets Secrets { get; private set; } = new WorldSecrets(); // GENERATION 44
+    public AchievementSystem Achievements { get; private set; } = new AchievementSystem(); // GENERATION 46
     private bool[,] _exploredTiles;
     private int _mobDetectionRange = 2; // Easy mode
     private const int PlayerVisionRange = 3; // Player can see 3 tiles around
@@ -99,6 +109,13 @@ public partial class RPGGame
     public string LastSkillUsed { get; private set; } = "";
     public Skill? QueuedSkill { get; private set; } = null;
     private int _enemyStunResistance = 0; // Builds up each time enemy is stunned (anti-stun-lock)
+
+    // NEW: Enemy Abilities (Generation 37)
+    public EnemyAbility CurrentEnemyAbility { get; private set; } = EnemyAbility.None;
+    public int PoisonTurnsRemaining { get; private set; } = 0;
+    public int BurningTurnsRemaining { get; private set; } = 0;
+    public int MaxEnemyHP { get; private set; } = 0; // Track for regeneration
+    private bool _teleportEnemy = false; // Harder to flee
 
     public RPGGame()
     {
@@ -132,6 +149,12 @@ public partial class RPGGame
         PlayerY = 10;
         PlayerHP = MaxPlayerHP;
         PlayerStamina = 12;
+
+        // GENERATION 41: Spawn companions in world
+        if (_availableCompanions.Count == 0)
+        {
+            SpawnCompanions();
+        }
         WorldTurn = 0;
         GenerateWorld();
         SpawnMobs();
@@ -355,6 +378,31 @@ public partial class RPGGame
         }
     }
 
+    // GENERATION 37: DoT (Damage over Time) effects
+    public string TickDoTEffects()
+    {
+        string message = "";
+
+        // Poison damage
+        if (PoisonTurnsRemaining > 0)
+        {
+            int poisonDmg = CurrentEnemyAbility == EnemyAbility.Poison ? 1 : 2; // Zombie=1, Serpent=2
+            PlayerHP = Math.Max(0, PlayerHP - poisonDmg);
+            message += $"Poison deals {poisonDmg} damage! ";
+            PoisonTurnsRemaining--;
+        }
+
+        // Burning damage
+        if (BurningTurnsRemaining > 0)
+        {
+            PlayerHP = Math.Max(0, PlayerHP - 1);
+            message += "Burning deals 1 damage! ";
+            BurningTurnsRemaining--;
+        }
+
+        return message;
+    }
+
     public void ClearCombatBuffsAndSkills()
     {
         PlayerBuffs.Clear();
@@ -362,6 +410,10 @@ public partial class RPGGame
         _usedOncePerCombatSkills.Clear();
         LastSkillUsed = "";
         _enemyStunResistance = 0; // Reset stun resistance for new combat
+
+        // GENERATION 37: Clear DoT effects
+        PoisonTurnsRemaining = 0;
+        BurningTurnsRemaining = 0;
     }
 
     public List<Skill> GetAvailableSkills()
@@ -783,7 +835,7 @@ public partial class RPGGame
 
     public void StartCombatWithRandomEnemyType()
     {
-        EnemyType randomType = (EnemyType)_random.Next(3); // 0=Scout, 1=Warrior, 2=Archer
+        EnemyType randomType = (EnemyType)_random.Next(12); // All 12 enemy types
         StartCombatWithEnemyType(randomType);
     }
 
@@ -913,26 +965,95 @@ public partial class RPGGame
 
     private void InitializeEnemyWithVariableStats(EnemyType enemyType)
     {
-        CurrentEnemyType = enemyType; // Store the enemy type!
+        CurrentEnemyType = enemyType;
+        CurrentEnemyAbility = EnemyAbility.None; // Reset ability
+        _teleportEnemy = false;
 
         switch (enemyType)
         {
+            // GOBLIN FAMILY - Basic enemies
             case EnemyType.GoblinScout:
                 EnemyHP = _random.Next(1, 4); // 1-3 HP
                 EnemyDamage = 1;
                 EnemyName = "Goblin Scout";
+                CurrentEnemyAbility = EnemyAbility.None;
                 break;
             case EnemyType.GoblinWarrior:
                 EnemyHP = _random.Next(4, 7); // 4-6 HP
                 EnemyDamage = _random.Next(1, 3); // 1-2 damage
                 EnemyName = "Goblin Warrior";
+                CurrentEnemyAbility = EnemyAbility.None;
                 break;
             case EnemyType.GoblinArcher:
                 EnemyHP = _random.Next(2, 5); // 2-4 HP
                 EnemyDamage = _random.Next(1, 4); // 1-3 damage
                 EnemyName = "Goblin Archer";
+                CurrentEnemyAbility = EnemyAbility.None;
+                break;
+
+            // UNDEAD FAMILY - Regeneration & debuffs
+            case EnemyType.Skeleton:
+                EnemyHP = 4;
+                EnemyDamage = 1;
+                EnemyName = "Skeleton";
+                CurrentEnemyAbility = EnemyAbility.Regeneration;
+                break;
+            case EnemyType.Zombie:
+                EnemyHP = 6;
+                EnemyDamage = 1;
+                EnemyName = "Zombie";
+                CurrentEnemyAbility = EnemyAbility.Poison;
+                break;
+            case EnemyType.Wraith:
+                EnemyHP = 3;
+                EnemyDamage = 2;
+                EnemyName = "Wraith";
+                CurrentEnemyAbility = EnemyAbility.LifeDrain;
+                break;
+
+            // BEAST FAMILY - Pack tactics & counters
+            case EnemyType.Wolf:
+                EnemyHP = 4;
+                EnemyDamage = 1;
+                EnemyName = "Wolf";
+                CurrentEnemyAbility = EnemyAbility.PackTactics;
+                break;
+            case EnemyType.Bear:
+                EnemyHP = 8;
+                EnemyDamage = 2;
+                EnemyName = "Bear";
+                CurrentEnemyAbility = EnemyAbility.CounterAttack;
+                break;
+            case EnemyType.Serpent:
+                EnemyHP = 3;
+                EnemyDamage = 1;
+                EnemyName = "Serpent";
+                CurrentEnemyAbility = EnemyAbility.HighEvasion;
+                break;
+
+            // DEMON FAMILY - Fire & chaos
+            case EnemyType.Imp:
+                EnemyHP = 3;
+                EnemyDamage = 1;
+                EnemyName = "Imp";
+                CurrentEnemyAbility = EnemyAbility.Teleport;
+                _teleportEnemy = true;
+                break;
+            case EnemyType.Hellhound:
+                EnemyHP = 5;
+                EnemyDamage = 2;
+                EnemyName = "Hellhound";
+                CurrentEnemyAbility = EnemyAbility.Burning;
+                break;
+            case EnemyType.Demon:
+                EnemyHP = 7;
+                EnemyDamage = 3;
+                EnemyName = "Demon";
+                CurrentEnemyAbility = EnemyAbility.CastSkills;
                 break;
         }
+
+        MaxEnemyHP = EnemyHP; // Track starting HP for regeneration
     }
 
     public void StartCombatWithVariableStats(EnemyType enemyType)
@@ -951,7 +1072,7 @@ public partial class RPGGame
 
     public void StartCombatWithRandomVariableEnemy()
     {
-        EnemyType randomType = (EnemyType)_random.Next(3);
+        EnemyType randomType = (EnemyType)_random.Next(12);
         StartCombatWithVariableStats(randomType);
     }
 
@@ -1087,7 +1208,7 @@ public partial class RPGGame
         _aiCombat = false;
         PlayerHP = 10;
         PlayerStamina = 12;
-        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(12));
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1102,7 +1223,7 @@ public partial class RPGGame
         _aiCombat = false;
         PlayerHP = 10;
         PlayerStamina = 12;
-        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(12));
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1259,7 +1380,7 @@ public partial class RPGGame
         _aiCombat = false;
         PlayerHP = 10;
         PlayerStamina = 12;
-        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(12));
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1273,7 +1394,7 @@ public partial class RPGGame
         _aiCombat = false;
         PlayerHP = 10;
         PlayerStamina = 12;
-        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(12));
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1443,7 +1564,7 @@ public partial class RPGGame
         _aiCombat = false;
         PlayerHP = 10;
         PlayerStamina = 12;
-        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(12));
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1457,7 +1578,7 @@ public partial class RPGGame
         _aiCombat = false;
         PlayerHP = 10;
         PlayerStamina = 12;
-        InitializeEnemyWithVariableStats((EnemyType)_random.Next(3));
+        InitializeEnemyWithVariableStats((EnemyType)_random.Next(12));
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1695,7 +1816,7 @@ public partial class RPGGame
         PlayerStamina = 12;
         // Enemy level near player level (player level +/- 1)
         int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        InitializeEnemyWithLevel((EnemyType)_random.Next(12), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1782,7 +1903,7 @@ public partial class RPGGame
         PlayerHP = MaxPlayerHP;
         PlayerStamina = 12;
         int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        InitializeEnemyWithLevel((EnemyType)_random.Next(12), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1880,7 +2001,7 @@ public partial class RPGGame
         CombatsWon = 0;
         RunEnded = false;
         int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        InitializeEnemyWithLevel((EnemyType)_random.Next(12), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -1893,7 +2014,7 @@ public partial class RPGGame
         PlayerHP = MaxPlayerHP; // Restore HP between fights
         PlayerStamina = 12; // Restore stamina
         int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        InitializeEnemyWithLevel((EnemyType)_random.Next(12), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = string.Empty;
@@ -2036,6 +2157,9 @@ public partial class RPGGame
         {
             CombatsWon++;
             ProcessMaxHPGrowth(); // Check for level up
+
+            // GENERATION 39: Track quest progress
+            OnEnemyKilled(CurrentEnemyType);
         }
     }
 
@@ -2061,6 +2185,25 @@ public partial class RPGGame
         _worldMap[15, 15] = "Town";
         _worldMap[10, 5] = "Dungeon";
         _worldMap[10, 15] = "Dungeon";
+
+        // GENERATION 38: Spawn NPCs in towns
+        SpawnTownNPCs();
+    }
+
+    private void SpawnTownNPCs()
+    {
+        // Town 1 (5, 5) - Western town
+        _activeNPCs.Add(NPC.CreateInnkeeper(5, 5));
+        _activeNPCs.Add(NPC.CreateBlacksmith(5, 6));
+        _activeNPCs.Add(NPC.CreateGuard(6, 5));
+
+        // Town 2 (15, 15) - Eastern town
+        _activeNPCs.Add(NPC.CreateInnkeeper(15, 15));
+        _activeNPCs.Add(NPC.CreateBlacksmith(15, 16));
+        _activeNPCs.Add(NPC.CreateStranger(14, 15)); // Mysterious figure
+
+        // Random NPCs near temple (10, 10)
+        _activeNPCs.Add(NPC.CreateGuard(10, 11)); // Temple guardian
     }
 
 
@@ -2267,7 +2410,7 @@ public partial class RPGGame
         _hpCombat = true;
         PlayerStamina = 999; // ENCOUNTERS DON'T USE STAMINA (unlimited for random fights)
         int enemyLevel = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
-        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        InitializeEnemyWithLevel((EnemyType)_random.Next(12), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = "You are ambushed!";
@@ -2347,6 +2490,8 @@ public partial class RPGGame
     // Test helpers
     public void SetGoldForTesting(int gold) => PlayerGold = gold;
     public void SetHPForTesting(int hp) => PlayerHP = hp;
+    public void SetStaminaForTesting(int stamina) => PlayerStamina = stamina;
+    public void SetLevelForTesting(int level) => PlayerLevel = level;
 
     public void EnterDungeon()
     {
@@ -2532,7 +2677,7 @@ public partial class RPGGame
                         tile.x, tile.y,
                         "Dungeon Monster",
                         mobLevel,
-                        (EnemyType)_random.Next(3)
+                        (EnemyType)_random.Next(12)
                     );
                     _currentDungeonState.DungeonMobs.Add(mob);
 
@@ -2671,7 +2816,7 @@ public partial class RPGGame
         _hpCombat = true;
         PlayerStamina = 12;
         int enemyLevel = Math.Max(1, PlayerLevel + DungeonDepth); // Depth makes enemies harder!
-        InitializeEnemyWithLevel((EnemyType)_random.Next(3), enemyLevel);
+        InitializeEnemyWithLevel((EnemyType)_random.Next(12), enemyLevel);
         IsWon = false;
         CombatEnded = false;
         CombatLog = $"A monster lurks in the darkness (Depth {DungeonDepth})!";
@@ -3007,7 +3152,7 @@ public partial class RPGGame
     public int RollForTreasure(int dungeonDepth)
     {
         // Loot tables - deeper dungeons give more gold
-        int baseGold = 10 + (_random.Next(3) * 10); // 10-30 base
+        int baseGold = 10 + (_random.Next(3) * 10); // 10-30 base (not enemy-related!)
         int depthBonus = dungeonDepth * 10; // +10 per depth
         int totalGold = baseGold + depthBonus;
         PlayerGold += totalGold;
@@ -3072,13 +3217,22 @@ public partial class RPGGame
             while ((x == PlayerX && y == PlayerY) || terrain == "Town");
 
             // Random enemy type and derive name from it
-            EnemyType type = (EnemyType)_random.Next(3);
+            EnemyType type = (EnemyType)_random.Next(12);
             string name = type switch
             {
                 EnemyType.GoblinScout => "Goblin Scout",
                 EnemyType.GoblinWarrior => "Goblin Warrior",
                 EnemyType.GoblinArcher => "Goblin Archer",
-                _ => "Goblin Scout"
+                EnemyType.Skeleton => "Skeleton",
+                EnemyType.Zombie => "Zombie",
+                EnemyType.Wraith => "Wraith",
+                EnemyType.Wolf => "Wolf",
+                EnemyType.Bear => "Bear",
+                EnemyType.Serpent => "Serpent",
+                EnemyType.Imp => "Imp",
+                EnemyType.Hellhound => "Hellhound",
+                EnemyType.Demon => "Demon",
+                _ => "Unknown"
             };
 
             int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2)); // Level ±1 of player
@@ -3304,7 +3458,7 @@ public partial class RPGGame
         {
             if (_activeMobs.Count < _maxMobsInWorld)
             {
-                EnemyType type = (EnemyType)_random.Next(3);
+                EnemyType type = (EnemyType)_random.Next(12);
                 string name = type switch
                 {
                     EnemyType.GoblinScout => "Goblin Scout",
@@ -3331,13 +3485,22 @@ public partial class RPGGame
             }
             while ((x == PlayerX && y == PlayerY) || terrain == "Town" || IsMobAt(x, y));
 
-            EnemyType type = (EnemyType)_random.Next(3);
+            EnemyType type = (EnemyType)_random.Next(12);
             string name = type switch
             {
                 EnemyType.GoblinScout => "Goblin Scout",
                 EnemyType.GoblinWarrior => "Goblin Warrior",
                 EnemyType.GoblinArcher => "Goblin Archer",
-                _ => "Goblin Scout"
+                EnemyType.Skeleton => "Skeleton",
+                EnemyType.Zombie => "Zombie",
+                EnemyType.Wraith => "Wraith",
+                EnemyType.Wolf => "Wolf",
+                EnemyType.Bear => "Bear",
+                EnemyType.Serpent => "Serpent",
+                EnemyType.Imp => "Imp",
+                EnemyType.Hellhound => "Hellhound",
+                EnemyType.Demon => "Demon",
+                _ => "Unknown"
             };
             int level = Math.Max(1, PlayerLevel + _random.Next(-1, 2));
             _activeMobs.Add(new Mob(x, y, name, level, type));
@@ -3402,6 +3565,336 @@ public partial class RPGGame
         _activeMobs.Add(mob);
     }
 
+    // GENERATION 38: NPC Management
+    public void AddNPC(NPC npc)
+    {
+        _activeNPCs.Add(npc);
+    }
+
+    public NPC? GetNPCAt(int x, int y)
+    {
+        return _activeNPCs.FirstOrDefault(npc => npc.X == x && npc.Y == y);
+    }
+
+    public List<NPC> GetNPCsInTown(int townX, int townY)
+    {
+        // Get all NPCs in a 3x3 area around the town center
+        return _activeNPCs.Where(npc =>
+            Math.Abs(npc.X - townX) <= 1 &&
+            Math.Abs(npc.Y - townY) <= 1).ToList();
+    }
+
+    public List<NPC> GetAllNPCs()
+    {
+        return _activeNPCs.ToList();
+    }
+
+    // GENERATION 39: Quest Management
+    public void AcceptQuest(Quest quest)
+    {
+        quest.Start();
+        _activeQuests.Add(quest);
+    }
+
+    public List<Quest> GetActiveQuests()
+    {
+        return _activeQuests.ToList();
+    }
+
+    public List<Quest> GetCompletedQuests()
+    {
+        return _completedQuests.ToList();
+    }
+
+    public Quest? GetQuestById(string id)
+    {
+        return _activeQuests.FirstOrDefault(q => q.Id == id);
+    }
+
+    public void UpdateQuestProgress(string questId, int objectiveIndex, int amount = 1)
+    {
+        var quest = GetQuestById(questId);
+        if (quest == null || objectiveIndex >= quest.Objectives.Count) return;
+
+        quest.Objectives[objectiveIndex].Increment(amount);
+
+        // Auto-complete if all objectives done
+        if (quest.IsComplete() && quest.Status == QuestStatus.InProgress)
+        {
+            CompleteQuest(quest);
+        }
+    }
+
+    public void CompleteQuest(Quest quest)
+    {
+        quest.Complete();
+        _activeQuests.Remove(quest);
+        _completedQuests.Add(quest);
+
+        // Grant rewards
+        PlayerGold += quest.GoldReward;
+        ProcessXPGain(quest.XPReward);
+    }
+
+    public void ProcessXPGain(int xp)
+    {
+        PlayerXP += xp;
+        while (PlayerXP >= XPForNextLevel)
+        {
+            ProcessLevelUp();
+        }
+    }
+
+    // Track kill quests automatically
+    public void OnEnemyKilled(EnemyType type)
+    {
+        foreach (var quest in _activeQuests.Where(q => q.Type == QuestType.Kill))
+        {
+            // Check quest objectives for matching enemy types
+            if (quest.Id == "goblin_threat" && IsGoblin(type))
+            {
+                UpdateQuestProgress(quest.Id, 0);
+            }
+            else if (quest.Id == "undead_rising" && IsUndead(type))
+            {
+                UpdateQuestProgress(quest.Id, 0);
+            }
+            else if (quest.Id == "beast_hunter" && IsBeast(type))
+            {
+                UpdateQuestProgress(quest.Id, 0);
+            }
+            else if (quest.Id == "demon_hunter" && IsDemon(type))
+            {
+                UpdateQuestProgress(quest.Id, 0);
+            }
+        }
+    }
+
+    private bool IsGoblin(EnemyType type) =>
+        type == EnemyType.GoblinScout || type == EnemyType.GoblinWarrior || type == EnemyType.GoblinArcher;
+
+    private bool IsUndead(EnemyType type) =>
+        type == EnemyType.Skeleton || type == EnemyType.Zombie || type == EnemyType.Wraith;
+
+    private bool IsBeast(EnemyType type) =>
+        type == EnemyType.Wolf || type == EnemyType.Bear || type == EnemyType.Serpent;
+
+    private bool IsDemon(EnemyType type) =>
+        type == EnemyType.Imp || type == EnemyType.Hellhound || type == EnemyType.Demon;
+
+    // GENERATION 40: Reputation Management
+    public void AdjustReputation(int amount)
+    {
+        Reputation.AdjustReputation(amount);
+    }
+
+    public ReputationLevel GetReputationLevel()
+    {
+        return Reputation.GetLevel();
+    }
+
+    public string GetReputationDescription()
+    {
+        return Reputation.GetReputationDescription();
+    }
+
+    // GENERATION 41: Companion Management
+    public void SpawnCompanions()
+    {
+        _availableCompanions.Add(Companion.CreateThorin());
+        _availableCompanions.Add(Companion.CreateLyra());
+        _availableCompanions.Add(Companion.CreateElara());
+    }
+
+    public List<Companion> GetAvailableCompanions()
+    {
+        return _availableCompanions.Where(c => !c.IsRecruited).ToList();
+    }
+
+    public Companion? GetCompanionAt(int x, int y)
+    {
+        return _availableCompanions.FirstOrDefault(c =>
+            !c.IsRecruited && c.X == x && c.Y == y);
+    }
+
+    public bool RecruitCompanion(Companion companion)
+    {
+        if (ActiveCompanion != null) return false; // Already have a companion
+
+        companion.IsRecruited = true;
+        ActiveCompanion = companion;
+        return true;
+    }
+
+    public void DismissCompanion()
+    {
+        if (ActiveCompanion != null)
+        {
+            ActiveCompanion.IsRecruited = false;
+            ActiveCompanion = null;
+        }
+    }
+
+    public bool HasCompanion()
+    {
+        return ActiveCompanion != null && ActiveCompanion.IsAlive;
+    }
+
+    // GENERATION 42: Virtue System Integration
+    public void AdjustVirtue(VirtueType type, int amount)
+    {
+        Virtues.AdjustVirtue(type, amount);
+    }
+
+    public List<VirtueAbility> GetAvailableVirtueAbilities()
+    {
+        return VirtueAbility.GetAvailableAbilities(Virtues);
+    }
+
+    public string GetVirtuePath()
+    {
+        return Virtues.GetVirtuePath();
+    }
+
+    // Track virtue through actions
+    public void OnCombatVictory_TrackValor(bool fled)
+    {
+        if (!fled)
+        {
+            AdjustVirtue(VirtueType.Valor, +2); // Fought bravely
+        }
+        else
+        {
+            AdjustVirtue(VirtueType.Valor, -3); // Fled from combat
+        }
+    }
+
+    public void OnShowMercy()
+    {
+        AdjustVirtue(VirtueType.Honor, +5);
+        AdjustVirtue(VirtueType.Compassion, +3);
+    }
+
+    public void OnShowCruelty()
+    {
+        AdjustVirtue(VirtueType.Honor, -8);
+        AdjustVirtue(VirtueType.Compassion, -5);
+    }
+
+    public void OnTellTruth()
+    {
+        AdjustVirtue(VirtueType.Honesty, +4);
+    }
+
+    public void OnLie()
+    {
+        AdjustVirtue(VirtueType.Honesty, -6);
+    }
+
+    public void OnHelpNPC()
+    {
+        AdjustVirtue(VirtueType.Compassion, +4);
+    }
+
+    // GENERATION 43: Main Quest & Endings
+    public void StartMainQuest()
+    {
+        MainQuest.Start();
+    }
+
+    public void CompleteMainQuest()
+    {
+        var ending = MainQuest.DetermineEnding(Virtues, Reputation);
+        MainQuest.Complete(ending);
+        RunWon = true;
+    }
+
+    public GameEnding GetGameEnding()
+    {
+        return MainQuest.Ending;
+    }
+
+    public string GetEndingDescription()
+    {
+        return MainQuest.GetEndingDescription(MainQuest.Ending);
+    }
+
+    public int GetMainQuestProgress()
+    {
+        return MainQuest.GetCompletionPercentage();
+    }
+
+    // GENERATION 44: World Secrets
+    public Secret? CheckForSecret()
+    {
+        return Secrets.GetSecretAt(PlayerX, PlayerY);
+    }
+
+    public void DiscoverSecret()
+    {
+        Secrets.DiscoverSecret(PlayerX, PlayerY);
+    }
+
+    public int GetSecretsFound()
+    {
+        return Secrets.DiscoveredSecrets;
+    }
+
+    public int GetTotalSecrets()
+    {
+        return Secrets.TotalSecrets;
+    }
+
+    // GENERATION 46: Achievement Tracking
+    public void CheckAchievements()
+    {
+        // Combat achievements
+        if (CombatsWon >= 1) Achievements.UnlockAchievement("first_blood");
+        if (CombatsWon >= 50) Achievements.UnlockAchievement("slayer");
+        if (CombatsWon >= 200) Achievements.UnlockAchievement("legend");
+
+        // Exploration
+        if (GetSecretsFound() >= 3) Achievements.UnlockAchievement("secret_hunter");
+        if (GetSecretsFound() >= 6) Achievements.UnlockAchievement("completionist");
+        if (DungeonDepth >= 3) Achievements.UnlockAchievement("delver");
+
+        // Social
+        if (_activeQuests.Count + _completedQuests.Count >= 1) Achievements.UnlockAchievement("quest_giver");
+        if (_completedQuests.Count >= 5) Achievements.UnlockAchievement("hero_for_hire");
+        if (HasCompanion()) Achievements.UnlockAchievement("not_alone");
+        if (ActiveCompanion != null && ActiveCompanion.Loyalty >= 90) Achievements.UnlockAchievement("devoted");
+
+        // Virtue
+        foreach (var virtue in Virtues.Virtues.Values)
+        {
+            if (virtue.Score >= 60 && !Achievements.GetAchievement("virtuous").IsUnlocked)
+                Achievements.UnlockAchievement("virtuous");
+            if (virtue.Score >= 80 && !Achievements.GetAchievement("exemplar").IsUnlocked)
+                Achievements.UnlockAchievement("exemplar");
+        }
+        if (Virtues.IsExemplarInAll()) Achievements.UnlockAchievement("avatar");
+
+        // Collection
+        if (PlayerGold >= 500) Achievements.UnlockAchievement("wealthy");
+        if (PlayerGold >= 2000) Achievements.UnlockAchievement("rich");
+        if (PlayerInventory.EquippedWeapon.BonusStrength >= 1) Achievements.UnlockAchievement("armed");
+        if (PlayerInventory.EquippedArmor.BonusDefense >= 2) Achievements.UnlockAchievement("armored");
+
+        // Challenge
+        if (TotalDeaths >= 5) Achievements.UnlockAchievement("survivor");
+        if (MainQuest.IsCompleted) Achievements.UnlockAchievement("main_quest_done");
+    }
+
+    public int GetAchievementCount()
+    {
+        return Achievements.GetUnlockedCount();
+    }
+
+    public int GetTotalAchievements()
+    {
+        return Achievements.GetTotalAchievements();
+    }
+
     public Mob? GetNearestMob()
     {
         if (_activeMobs.Count == 0) return null;
@@ -3436,7 +3929,7 @@ public partial class RPGGame
         }
         while ((x == PlayerX && y == PlayerY) || terrain == "Town" || terrain == "Temple" || IsMobAt(x, y));
 
-        EnemyType type = (EnemyType)_random.Next(3);
+        EnemyType type = (EnemyType)_random.Next(12);
         string name = type switch
         {
             EnemyType.GoblinScout => "Goblin Scout",

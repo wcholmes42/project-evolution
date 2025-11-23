@@ -53,15 +53,19 @@ if (args.Length > 0 && args[0] == "auto" || Console.IsInputRedirected)
 Console.Clear();
 
 Console.WriteLine("================================================================");
-Console.WriteLine("              PROJECT EVOLUTION - GENERATION 35");
-Console.WriteLine("                  The UX Evolution Update");
+Console.WriteLine("            PROJECT EVOLUTION - GENERATION 46");
+Console.WriteLine("  🏆 COMPLETE RPG - Graphics + Achievements! 🏆");
+Console.WriteLine("  Ultima IV + Baldur's Gate + Diablo = THIS");
 Console.WriteLine("================================================================");
 Console.WriteLine();
-Console.WriteLine("  [P] Play Game (Normal Mode)");
+Console.WriteLine("  [P] Play Game (ASCII Mode)");
+Console.WriteLine("  [G] Play Game (GRAPHICS MODE!) 🎨");
+Console.WriteLine();
+Console.WriteLine("  === AI TUNING & RESEARCH ===");
 Console.WriteLine("  [T] Manual Testing & Tuning (Interactive)");
 Console.WriteLine("  [A] Automated Tuning (10 Cycles)");
 Console.WriteLine("  [C] Continuous Tuning (Infinite - ESC to stop)");
-Console.WriteLine("  [G] Gradient Descent (Backpropagation - Leaderboard)");
+Console.WriteLine("  [D] Gradient Descent (Backpropagation - Leaderboard)");
 Console.WriteLine("  [S] Single-Param Test (No Interference)");
 Console.WriteLine("  [R] Random Search (Explore Solution Space)");
 Console.WriteLine("  [X] X-MEN MUTATION MODE (Find The Unicorn!)");
@@ -70,6 +74,7 @@ Console.WriteLine("  [V] PROGRESSION TUNER (Test Levels & Builds)");
 Console.WriteLine("  [E] EVOLUTIONARY TUNER (Continuous Evolution)");
 Console.WriteLine("  [M] PROGRESSION RESEARCH (Formula Discovery)");
 Console.WriteLine("  [B] CONTINUOUS RESEARCH - CODE GEN (Auto-evolve!)");
+Console.WriteLine();
 Console.WriteLine("  [Q] Quit");
 Console.WriteLine();
 Console.WriteLine("================================================================");
@@ -78,7 +83,19 @@ Console.Write("\nChoice: ");
 var menuChoice = Console.ReadKey(intercept: true).Key;
 Console.Clear();
 
-if (menuChoice == ConsoleKey.T)
+if (menuChoice == ConsoleKey.G)
+{
+    // GENERATION 45: Graphics Mode!
+    GraphicsGameLoop.Run();
+    return;
+}
+else if (menuChoice == ConsoleKey.D)
+{
+    // Gradient descent (was G, now D)
+    GradientTuner.RunGradientTuning();
+    return;
+}
+else if (menuChoice == ConsoleKey.T)
 {
     // Run simulation/tuning mode
     SimulationRunner.RunInteractiveTuning();
@@ -94,12 +111,6 @@ else if (menuChoice == ConsoleKey.C)
 {
     // Run continuous tuning
     ContinuousTuner.RunContinuousTuning();
-    return;
-}
-else if (menuChoice == ConsoleKey.G)
-{
-    // Run gradient descent tuning
-    GradientTuner.RunGradientTuning();
     return;
 }
 else if (menuChoice == ConsoleKey.S)
@@ -440,11 +451,84 @@ while (playing)
             else if (terrain == "Town")
             {
                 ui.AddMessage("Entered Town!");
-                ui.AddMessage("[I]nn (10g) | [B]uy Potion (5g) | [S]hop | [X]it");
+                ui.AddMessage("[I]nn (10g) | [B]uy Potion (5g) | [S]hop | [T]alk | [X]it");
                 Thread.Sleep(400); // Brief pause to see options
 
                 var townKey = Console.ReadKey(intercept: true).Key;
-                if (townKey == ConsoleKey.I)
+                if (townKey == ConsoleKey.T)
+                {
+                    // GENERATION 38: Talk to NPCs!
+                    var npcs = game.GetNPCsInTown(game.PlayerX, game.PlayerY);
+                    if (npcs.Count == 0)
+                    {
+                        ui.AddMessage("No one around to talk to...");
+                    }
+                    else
+                    {
+                        // Show NPC list
+                        ui.AddMessage("--- PEOPLE IN TOWN ---");
+                        for (int i = 0; i < npcs.Count; i++)
+                        {
+                            ui.AddMessage($"[{i + 1}] {npcs[i].Name} - {npcs[i].Description}");
+                        }
+                        ui.AddMessage("Press [1-9] to talk, or any other key to cancel.");
+
+                        var npcKey = Console.ReadKey(intercept: true);
+                        if (char.IsDigit(npcKey.KeyChar))
+                        {
+                            int selection = int.Parse(npcKey.KeyChar.ToString()) - 1;
+                            if (selection >= 0 && selection < npcs.Count)
+                            {
+                                var selectedNPC = npcs[selection];
+                                bool talking = true;
+
+                                while (talking)
+                                {
+                                    var currentNode = selectedNPC.GetCurrentNode();
+                                    if (currentNode == null)
+                                    {
+                                        talking = false;
+                                        break;
+                                    }
+
+                                    ui.RenderDialogue(selectedNPC, currentNode);
+                                    var choiceKey = Console.ReadKey(intercept: true);
+
+                                    if (char.IsDigit(choiceKey.KeyChar))
+                                    {
+                                        int choiceIndex = int.Parse(choiceKey.KeyChar.ToString()) - 1;
+                                        if (choiceIndex >= 0 && choiceIndex < currentNode.Choices.Count)
+                                        {
+                                            string response = selectedNPC.Choose(choiceIndex, game);
+                                            ui.AddMessage($"{selectedNPC.Name}: {response}");
+
+                                            // Check if conversation ended
+                                            if (currentNode.Choices[choiceIndex].NextNodeId == null)
+                                            {
+                                                talking = false;
+                                                selectedNPC.ResetDialogue();
+                                            }
+
+                                            Thread.Sleep(800);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        talking = false;
+                                        selectedNPC.ResetDialogue();
+                                    }
+                                }
+
+                                // Redraw game UI
+                                ui.Initialize();
+                                ui.RenderStatusBar(game);
+                                ui.RenderMap(game);
+                                ui.RenderCommandBar(false);
+                            }
+                        }
+                    }
+                }
+                else if (townKey == ConsoleKey.I)
                 {
                     if (game.VisitInn())
                     {
@@ -607,6 +691,40 @@ while (playing)
                         continue;
                     }
 
+                    // GENERATION 36: Skills Menu!
+                    if (combatKey == ConsoleKey.S)
+                    {
+                        ui.RenderSkillsMenu(game);
+                        var skillKey = Console.ReadKey(intercept: true).Key;
+
+                        var skills = game.GetAvailableSkills();
+                        Skill? selectedSkill = null;
+
+                        if (skillKey >= ConsoleKey.D1 && skillKey <= ConsoleKey.D9)
+                        {
+                            int skillIndex = (int)skillKey - (int)ConsoleKey.D1;
+                            if (skillIndex < skills.Count)
+                            {
+                                selectedSkill = skills[skillIndex];
+                            }
+                        }
+
+                        if (selectedSkill != null && game.CanUseSkill(selectedSkill))
+                        {
+                            game.QueueSkillForNextRound(selectedSkill);
+                            ui.AddMessage($"Prepared {selectedSkill.Name}!");
+                            logger.LogEvent("SKILL", $"Queued {selectedSkill.Name}");
+                        }
+                        else if (selectedSkill != null)
+                        {
+                            ui.AddMessage($"Can't use {selectedSkill.Name}!");
+                        }
+
+                        // Redraw combat after skills menu
+                        ui.RenderCombat(game);
+                        continue;
+                    }
+
                     var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
                     int hpBefore = game.PlayerHP;
                     game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
@@ -752,6 +870,38 @@ while (playing)
                         continue;
                     }
 
+                    // GENERATION 36: Skills Menu!
+                    if (combatKey == ConsoleKey.S)
+                    {
+                        ui.RenderSkillsMenu(game);
+                        var skillKey = Console.ReadKey(intercept: true).Key;
+
+                        var skills = game.GetAvailableSkills();
+                        Skill? selectedSkill = null;
+
+                        if (skillKey >= ConsoleKey.D1 && skillKey <= ConsoleKey.D9)
+                        {
+                            int skillIndex = (int)skillKey - (int)ConsoleKey.D1;
+                            if (skillIndex < skills.Count)
+                            {
+                                selectedSkill = skills[skillIndex];
+                            }
+                        }
+
+                        if (selectedSkill != null && game.CanUseSkill(selectedSkill))
+                        {
+                            game.QueueSkillForNextRound(selectedSkill);
+                            ui.AddMessage($"Prepared {selectedSkill.Name}!");
+                        }
+                        else if (selectedSkill != null)
+                        {
+                            ui.AddMessage($"Can't use {selectedSkill.Name}!");
+                        }
+
+                        ui.RenderCombat(game);
+                        continue;
+                    }
+
                     var action = combatKey == ConsoleKey.A ? CombatAction.Attack : CombatAction.Defend;
                     game.ExecuteGameLoopRoundWithRandomHits(action, CombatAction.Attack);
                     ui.AddMessage(game.CombatLog);
@@ -847,6 +997,38 @@ while (playing)
                             HandleDeath(game.EnemyName);
                             break;
                         }
+                        continue;
+                    }
+
+                    // GENERATION 36: Skills Menu!
+                    if (combatKey == ConsoleKey.S)
+                    {
+                        ui.RenderSkillsMenu(game);
+                        var skillKey = Console.ReadKey(intercept: true).Key;
+
+                        var skills = game.GetAvailableSkills();
+                        Skill? selectedSkill = null;
+
+                        if (skillKey >= ConsoleKey.D1 && skillKey <= ConsoleKey.D9)
+                        {
+                            int skillIndex = (int)skillKey - (int)ConsoleKey.D1;
+                            if (skillIndex < skills.Count)
+                            {
+                                selectedSkill = skills[skillIndex];
+                            }
+                        }
+
+                        if (selectedSkill != null && game.CanUseSkill(selectedSkill))
+                        {
+                            game.QueueSkillForNextRound(selectedSkill);
+                            ui.AddMessage($"Prepared {selectedSkill.Name}!");
+                        }
+                        else if (selectedSkill != null)
+                        {
+                            ui.AddMessage($"Can't use {selectedSkill.Name}!");
+                        }
+
+                        ui.RenderCombat(game);
                         continue;
                     }
 
@@ -946,6 +1128,38 @@ while (playing)
                                 playing = false;
                                 break;
                             }
+                            continue;
+                        }
+
+                        // GENERATION 36: Skills Menu!
+                        if (combatKey == ConsoleKey.S)
+                        {
+                            ui.RenderSkillsMenu(game);
+                            var skillKey = Console.ReadKey(intercept: true).Key;
+
+                            var skills = game.GetAvailableSkills();
+                            Skill? selectedSkill = null;
+
+                            if (skillKey >= ConsoleKey.D1 && skillKey <= ConsoleKey.D9)
+                            {
+                                int skillIndex = (int)skillKey - (int)ConsoleKey.D1;
+                                if (skillIndex < skills.Count)
+                                {
+                                    selectedSkill = skills[skillIndex];
+                                }
+                            }
+
+                            if (selectedSkill != null && game.CanUseSkill(selectedSkill))
+                            {
+                                game.QueueSkillForNextRound(selectedSkill);
+                                ui.AddMessage($"Prepared {selectedSkill.Name}!");
+                            }
+                            else if (selectedSkill != null)
+                            {
+                                ui.AddMessage($"Can't use {selectedSkill.Name}!");
+                            }
+
+                            ui.RenderCombat(game);
                             continue;
                         }
 

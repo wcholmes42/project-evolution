@@ -18,50 +18,73 @@ public class GraphicsRenderer : IDisposable
 
     private Texture tileset;
     private bool initialized = false;
-    private string tilesetPath;
+    private string cacheDir = "Assets/Generated";
+    private string cachedTilesetPath = "Assets/Generated/procedural_tileset.png";
 
-    public GraphicsRenderer(string tilesetPath = "Assets/Tilesets/roguelike-pack.png")
+    public GraphicsRenderer()
     {
-        this.tilesetPath = tilesetPath;
+        // No external dependencies - we generate our own tiles!
     }
 
     /// <summary>
-    /// Initialize the Raylib window and load assets
+    /// Initialize the Raylib window and load/generate tileset
     /// </summary>
-    public void Initialize()
+    public void Initialize(bool fullscreen = true)
     {
-        // Start with a reasonable default window size
+        // GENERATION 47: EXCLUSIVE FULLSCREEN MODE!
         SCREEN_WIDTH = 1920;
         SCREEN_HEIGHT = 1080;
 
-        // Initialize window with maximize flag
-        Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE | ConfigFlags.FLAG_WINDOW_MAXIMIZED);
-        Raylib.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Project Evolution - Generation 35 (Graphics Mode)");
+        if (fullscreen)
+        {
+            // Exclusive fullscreen - best performance and immersion
+            Raylib.SetConfigFlags(ConfigFlags.FLAG_FULLSCREEN_MODE | ConfigFlags.FLAG_VSYNC_HINT);
+            Console.WriteLine("🎮 Initializing EXCLUSIVE FULLSCREEN mode...");
+        }
+        else
+        {
+            // Windowed mode for development/testing
+            Raylib.SetConfigFlags(ConfigFlags.FLAG_WINDOW_RESIZABLE | ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+            Console.WriteLine("🪟 Initializing windowed mode...");
+        }
+
+        Raylib.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Project Evolution - Gen 47 (Ultima IV Style!)");
         Raylib.SetTargetFPS(60);
 
         // Get actual screen dimensions after window creation
         SCREEN_WIDTH = Raylib.GetScreenWidth();
         SCREEN_HEIGHT = Raylib.GetScreenHeight();
 
-        Console.WriteLine($"Window created at {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
+        Console.WriteLine($"✓ Window created at {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
 
-        // Load tileset
-        if (!File.Exists(tilesetPath))
+        // Load or generate tileset (Ultima IV style!)
+        if (File.Exists(cachedTilesetPath))
         {
-            Console.WriteLine($"ERROR: Tileset not found at {tilesetPath}");
-            Console.WriteLine("Please download the tileset! See Assets/README.md for instructions.");
-            Console.WriteLine("\nPress any key to exit...");
-            Console.ReadKey();
-            Environment.Exit(1);
+            Console.WriteLine("📦 Loading cached procedural tileset...");
+            tileset = Raylib.LoadTexture(cachedTilesetPath);
+            Console.WriteLine($"✓ Tileset loaded from cache: {tileset.width}x{tileset.height}");
+        }
+        else
+        {
+            Console.WriteLine("🎨 Generating Ultima IV-style tileset procedurally...");
+            Console.WriteLine("   (This only happens once - will be cached!)");
+
+            var startTime = DateTime.Now;
+            tileset = ProceduralTileGenerator.GenerateTileset();
+            var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+
+            Console.WriteLine($"✓ Tileset generated in {elapsed:F0}ms: {tileset.width}x{tileset.height}");
+
+            // Save to cache for future runs
+            ProceduralTileGenerator.SaveTileset(tileset, cachedTilesetPath);
         }
 
-        tileset = Raylib.LoadTexture(tilesetPath);
         initialized = true;
 
-        Console.WriteLine($"✓ Graphics initialized: {SCREEN_WIDTH}x{SCREEN_HEIGHT} (Fullscreen)");
-        Console.WriteLine($"✓ Tileset loaded: {tileset.width}x{tileset.height}");
+        Console.WriteLine($"✓ Graphics initialized: {SCREEN_WIDTH}x{SCREEN_HEIGHT}");
         Console.WriteLine($"✓ Tile size: {TILE_SIZE}x{TILE_SIZE} + {TILE_SPACING}px spacing (scaled {SCALE}x)");
         Console.WriteLine($"✓ Tiles per row: {TILES_PER_ROW}");
+        Console.WriteLine("✓ NO EXTERNAL DEPENDENCIES - Pure procedural generation!");
     }
 
     /// <summary>
@@ -282,6 +305,22 @@ public class GraphicsRenderer : IDisposable
     public bool IsKeyPressed(KeyboardKey key)
     {
         return Raylib.IsKeyPressed(key);
+    }
+
+    /// <summary>
+    /// Get current screen width
+    /// </summary>
+    public int GetScreenWidth()
+    {
+        return SCREEN_WIDTH;
+    }
+
+    /// <summary>
+    /// Get current screen height
+    /// </summary>
+    public int GetScreenHeight()
+    {
+        return SCREEN_HEIGHT;
     }
 
     /// <summary>

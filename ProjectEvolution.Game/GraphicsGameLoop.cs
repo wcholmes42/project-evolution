@@ -19,6 +19,9 @@ public static class GraphicsGameLoop
 
         logger.LogEvent("GAME", "Project Evolution started! (Graphics Mode)");
 
+        // GENERATION 47: Create combat screen
+        var combatScreen = new GraphicsCombatScreen(renderer.GetScreenWidth(), renderer.GetScreenHeight());
+
         // Load AI-tuned config
         var optimalConfig = ConfigPersistence.LoadOptimalConfig();
         if (optimalConfig != null)
@@ -44,6 +47,78 @@ public static class GraphicsGameLoop
 
         bool playing = true;
 
+        // GENERATION 47: Combat loop with graphical UI
+        void RunGraphicalCombat(Mob? mob)
+        {
+            combatScreen.Reset();
+            combatScreen.LogMessage($"Battle started: {game.EnemyName} [Lvl {game.EnemyLevel}]");
+
+            while (!game.CombatEnded && playing && !renderer.ShouldClose())
+            {
+                renderer.BeginFrame();
+
+                // Render combat screen
+                combatScreen.Render(game, renderer);
+
+                renderer.EndFrame();
+
+                // Handle combat input
+                CombatAction? action = null;
+
+                if (renderer.IsKeyPressed(KeyboardKey.KEY_A))
+                    action = CombatAction.Attack;
+                else if (renderer.IsKeyPressed(KeyboardKey.KEY_D))
+                    action = CombatAction.Defend;
+                else if (renderer.IsKeyPressed(KeyboardKey.KEY_P))
+                {
+                    if (game.UsePotion())
+                    {
+                        combatScreen.LogMessage("Used potion! +5 HP");
+                        logger.LogEvent("COMBAT", "Used potion");
+                    }
+                    continue;
+                }
+                else if (renderer.IsKeyPressed(KeyboardKey.KEY_F))
+                {
+                    bool fled = game.AttemptFlee();
+                    combatScreen.LogMessage(game.CombatLog);
+                    logger.LogEvent("FLEE", fled ? "Fled successfully" : "Failed to flee");
+                    if (fled) break;
+                    continue;
+                }
+                else if (renderer.IsKeyPressed(KeyboardKey.KEY_S))
+                {
+                    // TODO: Skills menu (for now, just attack)
+                    action = CombatAction.Attack;
+                }
+
+                if (action.HasValue)
+                {
+                    game.ExecuteGameLoopRoundWithRandomHits(action.Value, CombatAction.Attack);
+                    combatScreen.LogMessage(game.CombatLog);
+                    logger.LogEvent("COMBAT", game.CombatLog);
+                }
+            }
+
+            // Victory or defeat
+            if (game.IsWon)
+            {
+                game.ProcessGameLoopVictory();
+                if (mob != null) game.RemoveMob(mob);
+                combatScreen.LogMessage("⚔️ VICTORY! ⚔️");
+                logger.LogEvent("VICTORY", $"Defeated {game.EnemyName}");
+
+                // Show victory message for 2 seconds
+                for (int i = 0; i < 120; i++)
+                {
+                    renderer.BeginFrame();
+                    combatScreen.Render(game, renderer);
+                    renderer.EndFrame();
+                    System.Threading.Thread.Sleep(16); // ~60 FPS
+                }
+            }
+        }
+
         // Handle death and respawn
         void HandleDeath(string killerName)
         {
@@ -59,7 +134,7 @@ public static class GraphicsGameLoop
 
             logger.LogEvent("DEATH", $"Killed by {killerName}. Respawned at Temple. Deaths: {game.TotalDeaths}");
 
-            // TODO: Show death screen in graphics mode
+            // TODO: Show death screen in graphics mode (Evolution 2)
         }
 
         // Main game loop
@@ -123,20 +198,10 @@ public static class GraphicsGameLoop
                         logger.LogEvent("ENCOUNTER", $"Mob encounter: {mob.Name} at ({game.PlayerX},{game.PlayerY})");
                         game.TriggerMobEncounter(mob);
 
-                        // TODO: Enter combat mode with graphical combat screen
-                        // For now, auto-resolve combat
-                        while (!game.CombatEnded)
-                        {
-                            game.ExecuteGameLoopRoundWithRandomHits(CombatAction.Attack, CombatAction.Attack);
-                        }
+                        // GENERATION 47: Graphical combat screen!
+                        RunGraphicalCombat(mob);
 
-                        if (game.IsWon)
-                        {
-                            game.ProcessGameLoopVictory();
-                            game.RemoveMob(mob);
-                            logger.LogEvent("VICTORY", $"Defeated {mob.Name}");
-                        }
-                        else
+                        if (!game.IsWon && game.PlayerHP <= 0)
                         {
                             HandleDeath($"{mob.Name} [Lvl {mob.Level}]");
                         }

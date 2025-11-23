@@ -11,6 +11,12 @@ public partial class RPGGame
     // Kept for backward compatibility and regression testing
     // ════════════════════════════════════════════════════════════════════
 
+    // Generation 0: Auto-win
+    public void Start()
+    {
+        IsWon = true;
+    }
+
     public void StartWithCoinFlip(bool heads)
     {
         IsWon = heads;
@@ -449,5 +455,19 @@ public partial class RPGGame
                 CombatLog += "The goblin blocks your attack!";
             }
         }
+    }
+
+    public void StartMultiEnemyCombatWithStats(int enemyCount)
+    {
+        _combatStarted = true;
+        _hpCombat = true;
+        _aiCombat = false;
+        PlayerHP = 10;
+        RemainingEnemies = enemyCount;
+        EnemyHP = 3; // Start first enemy
+        IsWon = false;
+        CombatEnded = false;
+        CombatLog = string.Empty;
+        // Stats and gold persist
     }
 }

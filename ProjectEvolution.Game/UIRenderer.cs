@@ -674,6 +674,122 @@ public class UIRenderer
         Console.ResetColor();
     }
 
+    // GENERATION 38: NPC Dialogue UI
+    public void RenderDialogue(NPC npc, DialogueNode node)
+    {
+        int startRow = StatusBarHeight + 2;
+        int menuWidth = 70;
+        int menuLeft = (80 - menuWidth) / 2;
+
+        // Clear area
+        for (int i = 0; i < 18; i++)
+        {
+            Console.SetCursorPosition(menuLeft, startRow + i);
+            Console.Write(new string(' ', menuWidth));
+        }
+
+        // Draw dialogue box
+        Console.SetCursorPosition(menuLeft, startRow);
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("╔" + new string('═', menuWidth - 2) + "╗");
+
+        // NPC name header
+        Console.SetCursorPosition(menuLeft, startRow + 1);
+        Console.Write("║");
+        Console.SetCursorPosition(menuLeft + 2, startRow + 1);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write($"💬 {npc.Name}");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.SetCursorPosition(menuLeft + menuWidth - 1, startRow + 1);
+        Console.Write("║");
+
+        Console.SetCursorPosition(menuLeft, startRow + 2);
+        Console.Write("╠" + new string('═', menuWidth - 2) + "╣");
+
+        // NPC dialogue text (word wrap)
+        Console.SetCursorPosition(menuLeft, startRow + 3);
+        Console.Write("║");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.SetCursorPosition(menuLeft + 2, startRow + 3);
+
+        string npcText = node.NPCText;
+        int maxWidth = menuWidth - 6;
+        int row = startRow + 3;
+
+        // Simple word wrap
+        while (npcText.Length > 0)
+        {
+            string line = npcText.Length <= maxWidth
+                ? npcText
+                : npcText.Substring(0, Math.Min(maxWidth, npcText.LastIndexOf(' ', Math.Min(maxWidth, npcText.Length - 1)) + 1));
+
+            if (line.Length == 0) line = npcText.Substring(0, Math.Min(maxWidth, npcText.Length)); // Force break
+
+            Console.SetCursorPosition(menuLeft, row);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("║");
+            Console.SetCursorPosition(menuLeft + 2, row);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(line.PadRight(maxWidth));
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.SetCursorPosition(menuLeft + menuWidth - 1, row);
+            Console.Write("║");
+
+            npcText = npcText.Substring(line.Length).TrimStart();
+            row++;
+            if (row > startRow + 8) break; // Limit dialogue text height
+        }
+
+        // Separator
+        while (row <= startRow + 9)
+        {
+            Console.SetCursorPosition(menuLeft, row);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("║" + new string(' ', menuWidth - 2) + "║");
+            row++;
+        }
+
+        Console.SetCursorPosition(menuLeft, startRow + 10);
+        Console.Write("╠" + new string('═', menuWidth - 2) + "╣");
+        row = startRow + 11;
+
+        // Dialogue choices
+        for (int i = 0; i < node.Choices.Count; i++)
+        {
+            var choice = node.Choices[i];
+
+            Console.SetCursorPosition(menuLeft, row);
+            Console.Write("║");
+            Console.SetCursorPosition(menuLeft + 2, row);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"[{i + 1}] ");
+            Console.ForegroundColor = ConsoleColor.White;
+
+            string choiceText = choice.Text;
+            if (choiceText.Length > menuWidth - 10) choiceText = choiceText.Substring(0, menuWidth - 13) + "...";
+            Console.Write(choiceText);
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.SetCursorPosition(menuLeft + menuWidth - 1, row);
+            Console.Write("║");
+
+            row++;
+        }
+
+        // Bottom border
+        while (row < startRow + 16)
+        {
+            Console.SetCursorPosition(menuLeft, row);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("║" + new string(' ', menuWidth - 2) + "║");
+            row++;
+        }
+
+        Console.SetCursorPosition(menuLeft, row);
+        Console.Write("╚" + new string('═', menuWidth - 2) + "╝");
+        Console.ResetColor();
+    }
+
     public void RenderDebugPanel(RPGGame game, AutoPlayer? autoPlayer)
     {
         if (autoPlayer == null) return;

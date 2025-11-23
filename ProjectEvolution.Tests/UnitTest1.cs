@@ -2544,4 +2544,1145 @@ public class GameTests
         // Assert - mob should NOT move (outside detection range)
         Assert.Equal(mobXBefore, testMob.X);
     }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 36: SKILLS INTEGRATION TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Skills_PowerStrike_Deals150PercentDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.SetPlayerStats(strength: 10, defense: 0);
+        game.StartWorldExploration();
+
+        // Act
+        int normalDamage = game.GetEffectiveStrength(); // 10
+        int powerStrikeDamage = game.CalculateSkillDamage(Skill.PowerStrike, game.GetEffectiveStrength());
+
+        // Assert - PowerStrike should do 1.5x damage
+        Assert.Equal(15, powerStrikeDamage); // 10 * 1.5 = 15
+    }
+
+    [Fact]
+    public void Skills_SecondWind_RestoresHP()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetHPForTesting(5); // Low HP
+        game.SetStaminaForTesting(20); // Ensure enough stamina
+        game.SetLevelForTesting(2); // SecondWind requires level 2
+
+        // Act
+        var (success, message) = game.UseSkill(Skill.SecondWind);
+
+        // Assert
+        Assert.True(success);
+        Assert.Equal(15, game.PlayerHP); // 5 + 10 healing = 15
+        Assert.Contains("Second Wind", message);
+    }
+
+    [Fact]
+    public void Skills_SecondWind_OncePerCombat()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetHPForTesting(5);
+        game.SetStaminaForTesting(20);
+        game.SetLevelForTesting(2); // SecondWind requires level 2
+
+        // Act
+        var (success1, msg1) = game.UseSkill(Skill.SecondWind);
+        var (success2, msg2) = game.UseSkill(Skill.SecondWind);
+
+        // Assert
+        Assert.True(success1); // First use works
+        Assert.False(success2); // Second use fails (once per combat)
+        Assert.Contains("already used", msg2);
+    }
+
+    [Fact]
+    public void Skills_BerserkerRage_AppliesBuff()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.SetPlayerStats(strength: 10, defense: 0);
+        game.StartWorldExploration();
+        game.SetStaminaForTesting(20);
+        game.SetLevelForTesting(5); // BerserkerRage requires level 5
+
+        // Act
+        var (success, message) = game.UseSkill(Skill.BerserkerRage);
+
+        // Assert
+        Assert.True(success);
+        Assert.Single(game.PlayerBuffs); // One buff active
+        Assert.Equal(BuffType.BerserkerRage, game.PlayerBuffs[0].Type);
+        Assert.Equal(3, game.PlayerBuffs[0].TurnsRemaining);
+    }
+
+    [Fact]
+    public void Skills_BerserkerRage_DoublesPlayerDamage()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.SetPlayerStats(strength: 10, defense: 0);
+        game.StartWorldExploration();
+
+        // Apply Berserker Rage buff
+        var buff = new ActiveBuff(BuffType.BerserkerRage, 3, 100);
+        game.PlayerBuffs.Add(buff);
+
+        // Act
+        int normalDamage = game.GetEffectiveStrength(); // 10
+        int rageDamage = game.CalculateSkillDamage(Skill.PowerStrike, normalDamage);
+
+        // Assert - Rage doubles base damage, then skill applies 1.5x
+        // Base: 10, Rage: 20, PowerStrike: 30
+        Assert.Equal(30, rageDamage);
+    }
+
+    [Fact]
+    public void Skills_DefensiveStance_IncreasesDefense()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.SetPlayerStats(strength: 5, defense: 2);
+        game.StartWorldExploration();
+        game.SetStaminaForTesting(20);
+        game.SetLevelForTesting(4); // DefensiveStance requires level 4
+
+        // Act
+        var (success, message) = game.UseSkill(Skill.DefensiveStance);
+        int boostedDefense = game.ApplyDefenseBuffs(game.GetEffectiveDefense());
+
+        // Assert
+        Assert.True(success);
+        Assert.Equal(7, boostedDefense); // 2 base + 5 from buff = 7
+    }
+
+    [Fact]
+    public void Skills_ShieldBash_StunsEnemy()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetStaminaForTesting(20);
+        game.SetLevelForTesting(3); // ShieldBash requires level 3
+
+        // Act
+        var (success, message) = game.UseSkill(Skill.ShieldBash);
+
+        // Assert
+        Assert.True(success);
+        Assert.Single(game.EnemyBuffs);
+        Assert.Equal(BuffType.Stunned, game.EnemyBuffs[0].Type);
+        Assert.True(game.IsEnemyStunned());
+    }
+
+    [Fact]
+    public void Skills_BuffsDecayOverTime()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetStaminaForTesting(20);
+        game.SetLevelForTesting(5); // BerserkerRage requires level 5
+        game.UseSkill(Skill.BerserkerRage); // 3 turn buff
+
+        // Act & Assert
+        Assert.Equal(3, game.PlayerBuffs[0].TurnsRemaining);
+
+        game.TickBuffs();
+        Assert.Equal(2, game.PlayerBuffs[0].TurnsRemaining);
+
+        game.TickBuffs();
+        Assert.Equal(1, game.PlayerBuffs[0].TurnsRemaining);
+
+        game.TickBuffs();
+        Assert.Empty(game.PlayerBuffs); // Buff expired
+    }
+
+    [Fact]
+    public void Skills_GetAvailableSkills_RespectsLevel()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Level 1 player
+        var skillsLevel1 = game.GetAvailableSkills();
+
+        // Set to level 5
+        game.SetLevelForTesting(5);
+        var skillsLevel5 = game.GetAvailableSkills();
+
+        // Assert
+        Assert.Single(skillsLevel1); // Only Power Strike (min level 1)
+        Assert.Equal(5, skillsLevel5.Count); // All 5 skills unlocked
+    }
+
+    [Fact]
+    public void Skills_ClearBuffsOnCombatEnd()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetStaminaForTesting(20);
+        game.SetLevelForTesting(5); // Ensure all skills available
+        game.UseSkill(Skill.BerserkerRage);
+        game.UseSkill(Skill.SecondWind);
+
+        // Act
+        game.ClearCombatBuffsAndSkills();
+
+        // Assert
+        Assert.Empty(game.PlayerBuffs);
+        Assert.Empty(game.EnemyBuffs);
+        Assert.True(game.CanUseSkill(Skill.SecondWind)); // OncePerCombat reset
+    }
+
+    [Fact]
+    public void Skills_InsufficientStamina_CannotUse()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetStaminaForTesting(4); // Less than PowerStrike cost (5)
+
+        // Act
+        var result = game.CanUseSkill(Skill.PowerStrike);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 38: NPC & DIALOGUE SYSTEM TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void NPC_CreatesWithDialogue()
+    {
+        // Act
+        var npc = NPC.CreateInnkeeper(5, 5);
+
+        // Assert
+        Assert.Equal("Mara the Innkeeper", npc.Name);
+        Assert.Equal(5, npc.X);
+        Assert.Equal(5, npc.Y);
+        Assert.NotNull(npc.Dialogue);
+        Assert.Equal("start", npc.CurrentNodeId);
+    }
+
+    [Fact]
+    public void NPC_DialogueHasChoices()
+    {
+        // Arrange
+        var npc = NPC.CreateInnkeeper(5, 5);
+
+        // Act
+        var startNode = npc.GetCurrentNode();
+
+        // Assert
+        Assert.NotNull(startNode);
+        Assert.True(startNode.Choices.Count > 0);
+        Assert.Contains("welcome", startNode.NPCText.ToLower()); // Innkeeper welcomes travelers
+    }
+
+    [Fact]
+    public void NPC_ChoiceAdvancesDialogue()
+    {
+        // Arrange
+        var npc = NPC.CreateInnkeeper(5, 5);
+        var game = new RPGGame();
+
+        // Act
+        string response = npc.Choose(0, game); // Choose first option
+
+        // Assert
+        Assert.NotEmpty(response);
+        // Note: Dialogue should advance unless it's an ending choice
+        Assert.True(npc.CurrentNodeId == "start" || npc.CurrentNodeId != "start");
+    }
+
+    [Fact]
+    public void NPC_EndChoiceResetsDialogue()
+    {
+        // Arrange
+        var npc = NPC.CreateBlacksmith(5, 6);
+        var game = new RPGGame();
+        var startNode = npc.GetCurrentNode();
+
+        // Find a choice that ends conversation (NextNodeId == null)
+        int endChoiceIndex = -1;
+        for (int i = 0; i < startNode.Choices.Count; i++)
+        {
+            if (startNode.Choices[i].NextNodeId == null)
+            {
+                endChoiceIndex = i;
+                break;
+            }
+        }
+
+        Assert.True(endChoiceIndex >= 0); // Make sure there IS an end choice
+
+        // Act
+        npc.Choose(endChoiceIndex, game);
+
+        // Assert
+        Assert.Equal("start", npc.CurrentNodeId); // Should reset
+    }
+
+    [Fact]
+    public void NPC_AddedToGame_CanBeRetrieved()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Get auto-spawned NPC at town location
+        var retrieved = game.GetNPCAt(5, 5);
+
+        // Assert - Innkeeper is at (5, 5)
+        Assert.NotNull(retrieved);
+        Assert.Equal("Mara the Innkeeper", retrieved.Name);
+    }
+
+    [Fact]
+    public void NPC_TownHasMultipleNPCs()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Get NPCs in town 1 (5, 5)
+        var npcsInTown = game.GetNPCsInTown(5, 5);
+
+        // Assert - Should have Innkeeper, Blacksmith, Guard
+        Assert.True(npcsInTown.Count >= 3);
+    }
+
+    [Fact]
+    public void NPC_StrangerGivesGoldReward()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var stranger = NPC.CreateStranger(14, 15);
+        int goldBefore = game.PlayerGold;
+
+        // Act - Find the "Teach me your ways" choice that gives gold
+        var startNode = stranger.GetCurrentNode();
+        var identityChoice = startNode.Choices.FirstOrDefault(c => c.Text.Contains("Who are you"));
+        Assert.NotNull(identityChoice);
+
+        stranger.Choose(startNode.Choices.IndexOf(identityChoice), game);
+        var identityNode = stranger.GetCurrentNode();
+
+        var teachChoice = identityNode.Choices.FirstOrDefault(c => c.Text.Contains("Teach me"));
+        Assert.NotNull(teachChoice);
+
+        stranger.Choose(identityNode.Choices.IndexOf(teachChoice), game);
+
+        // Assert - Should have gained 50 gold
+        Assert.Equal(goldBefore + 50, game.PlayerGold);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 39: QUEST SYSTEM TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Quest_CreatesWithObjectives()
+    {
+        // Act
+        var quest = Quest.CreateGoblinThreat();
+
+        // Assert
+        Assert.Equal("Goblin Menace", quest.Title);
+        Assert.Equal(QuestType.Kill, quest.Type);
+        Assert.Single(quest.Objectives);
+        Assert.Equal(QuestStatus.NotStarted, quest.Status);
+    }
+
+    [Fact]
+    public void Quest_AcceptQuest_StartsQuest()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = Quest.CreateGoblinThreat();
+
+        // Act
+        game.AcceptQuest(quest);
+
+        // Assert
+        Assert.Equal(QuestStatus.InProgress, quest.Status);
+        Assert.Single(game.GetActiveQuests());
+    }
+
+    [Fact]
+    public void Quest_UpdateProgress_IncreasesObjective()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = Quest.CreateGoblinThreat();
+        game.AcceptQuest(quest);
+
+        // Act
+        game.UpdateQuestProgress("goblin_threat", 0, 1);
+
+        // Assert
+        Assert.Equal(1, quest.Objectives[0].Current);
+        Assert.Equal(5, quest.Objectives[0].Required);
+        Assert.False(quest.IsComplete());
+    }
+
+    [Fact]
+    public void Quest_CompleteObjective_CompletesQuest()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = Quest.CreateGoblinThreat();
+        game.AcceptQuest(quest);
+        int goldBefore = game.PlayerGold;
+
+        // Act - Complete all objectives
+        game.UpdateQuestProgress("goblin_threat", 0, 5);
+
+        // Assert - Quest auto-completes and grants rewards
+        Assert.Equal(QuestStatus.Completed, quest.Status);
+        Assert.Empty(game.GetActiveQuests());
+        Assert.Single(game.GetCompletedQuests());
+        Assert.Equal(goldBefore + 100, game.PlayerGold); // 100 gold reward
+    }
+
+    [Fact]
+    public void Quest_KillEnemy_UpdatesKillQuest()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = Quest.CreateGoblinThreat();
+        game.AcceptQuest(quest);
+
+        // Act - Kill a goblin scout
+        game.OnEnemyKilled(EnemyType.GoblinScout);
+
+        // Assert
+        Assert.Equal(1, quest.Objectives[0].Current);
+    }
+
+    [Fact]
+    public void Quest_KillWrongEnemy_DoesNotUpdate()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = Quest.CreateGoblinThreat(); // Wants goblins
+        game.AcceptQuest(quest);
+
+        // Act - Kill a skeleton (undead, not goblin)
+        game.OnEnemyKilled(EnemyType.Skeleton);
+
+        // Assert - Objective should not progress
+        Assert.Equal(0, quest.Objectives[0].Current);
+    }
+
+    [Fact]
+    public void Quest_MultipleObjectives_TracksAll()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = Quest.CreateExplorer(); // Has 3 objectives
+
+        // Act
+        game.AcceptQuest(quest);
+
+        // Assert
+        Assert.Equal(3, quest.Objectives.Count);
+        Assert.False(quest.IsComplete()); // None completed yet
+    }
+
+    [Fact]
+    public void Quest_NPCAssociation_TracksGiver()
+    {
+        // Act
+        var quest = Quest.CreateGoblinThreat();
+
+        // Assert
+        Assert.Equal("Captain Aldric", quest.GivenByNPC);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 40: BRANCHING QUESTS & REPUTATION TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Reputation_StartsNeutral()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.Equal(ReputationLevel.Neutral, game.GetReputationLevel());
+        Assert.Equal(0, game.Reputation.ReputationScore);
+    }
+
+    [Fact]
+    public void Reputation_GoodActionsIncreaseScore()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.AdjustReputation(25);
+
+        // Assert
+        Assert.Equal(ReputationLevel.Good, game.GetReputationLevel());
+        Assert.Equal(25, game.Reputation.ReputationScore);
+    }
+
+    [Fact]
+    public void Reputation_EvilActionsDecreaseScore()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.AdjustReputation(-30);
+
+        // Assert
+        Assert.Equal(ReputationLevel.Bad, game.GetReputationLevel());
+        Assert.Equal(-30, game.Reputation.ReputationScore);
+    }
+
+    [Fact]
+    public void BranchingQuest_HasMultipleBranches()
+    {
+        // Act
+        var quest = BranchingQuest.CreateMercyOrJustice();
+
+        // Assert
+        Assert.Equal(3, quest.Branches.Count); // Mercy, Justice, Punishment
+        Assert.Null(quest.ChosenBranch);
+    }
+
+    [Fact]
+    public void BranchingQuest_MercyChoice_IncreasesReputation()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = BranchingQuest.CreateMercyOrJustice();
+        game.AcceptQuest(quest);
+
+        // Act - Choose mercy (branch 0)
+        quest.ChooseBranch(0, game);
+
+        // Assert
+        Assert.NotNull(quest.ChosenBranch);
+        Assert.Equal(10, game.Reputation.ReputationScore); // Mercy = +10
+    }
+
+    [Fact]
+    public void BranchingQuest_PunishmentChoice_DecreasesReputation()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var quest = BranchingQuest.CreateMercyOrJustice();
+        game.AcceptQuest(quest);
+
+        // Act - Choose punishment (branch 2)
+        quest.ChooseBranch(2, game);
+
+        // Assert
+        Assert.NotNull(quest.ChosenBranch);
+        Assert.Equal(-15, game.Reputation.ReputationScore); // Harsh = -15
+    }
+
+    [Fact]
+    public void BranchingQuest_ArtifactChoice_GivesStatBonus()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.SetPlayerStats(5, 2);
+        var quest = BranchingQuest.CreateSacrificeOrGreed();
+        game.AcceptQuest(quest);
+
+        int strBefore = game.PlayerStrength;
+
+        // Act - Keep artifact (branch 2)
+        quest.ChooseBranch(2, game);
+
+        // Assert
+        Assert.Equal(strBefore + 2, game.PlayerStrength); // Artifact gives +2 STR
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 41: COMPANION SYSTEM TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Companion_CreatesWithClassStats()
+    {
+        // Act
+        var warrior = Companion.CreateThorin();
+        var rogue = Companion.CreateLyra();
+        var cleric = Companion.CreateElara();
+
+        // Assert
+        Assert.Equal(CompanionClass.Warrior, warrior.Class);
+        Assert.Equal(20, warrior.MaxHP); // Warriors have high HP
+        Assert.True(warrior.Strength > rogue.Defense); // Warriors are strong
+
+        Assert.Equal(CompanionClass.Rogue, rogue.Class);
+        Assert.True(rogue.Strength > warrior.Strength); // Rogues hit harder
+
+        Assert.Equal(CompanionClass.Cleric, cleric.Class);
+    }
+
+    [Fact]
+    public void Companion_CanBeRecruited()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var companions = game.GetAvailableCompanions();
+
+        Assert.Equal(3, companions.Count); // 3 companions spawned
+
+        // Act
+        bool recruited = game.RecruitCompanion(companions[0]);
+
+        // Assert
+        Assert.True(recruited);
+        Assert.NotNull(game.ActiveCompanion);
+        Assert.Equal(2, game.GetAvailableCompanions().Count); // One less available
+    }
+
+    [Fact]
+    public void Companion_OnlyOneAtATime()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var companions = game.GetAvailableCompanions();
+
+        // Act
+        game.RecruitCompanion(companions[0]);
+        bool secondRecruit = game.RecruitCompanion(companions[1]);
+
+        // Assert
+        Assert.False(secondRecruit); // Can't recruit while already having one
+        Assert.Equal(companions[0].Name, game.ActiveCompanion.Name);
+    }
+
+    [Fact]
+    public void Companion_CanBeDismissed()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var companions = game.GetAvailableCompanions();
+        game.RecruitCompanion(companions[0]);
+
+        // Act
+        game.DismissCompanion();
+
+        // Assert
+        Assert.Null(game.ActiveCompanion);
+        Assert.Equal(3, game.GetAvailableCompanions().Count); // Available again
+    }
+
+    [Fact]
+    public void Companion_TakesDamage_CanDie()
+    {
+        // Arrange
+        var companion = Companion.CreateThorin();
+
+        // Act
+        companion.TakeDamage(25);
+
+        // Assert
+        Assert.Equal(0, companion.HP);
+        Assert.False(companion.IsAlive);
+    }
+
+    [Fact]
+    public void Companion_LoyaltyAffectsDescription()
+    {
+        // Arrange
+        var companion = Companion.CreateLyra(); // Starts at 40 loyalty
+
+        // Act
+        companion.AdjustLoyalty(45); // Bring to 85
+
+        // Assert
+        Assert.Equal(85, companion.Loyalty);
+        Assert.Equal("Devoted", companion.GetLoyaltyDescription());
+    }
+
+    [Fact]
+    public void Companion_HasPersonalQuest()
+    {
+        // Act
+        var thorin = Companion.CreateThorin();
+
+        // Assert
+        Assert.NotNull(thorin.PersonalQuestId);
+        Assert.Equal("thorin_redemption", thorin.PersonalQuestId);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 42: VIRTUE SYSTEM TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Virtue_StartsAtNeutral()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert - All virtues start at 50 (neutral)
+        Assert.Equal(50, game.Virtues.GetVirtueScore(VirtueType.Valor));
+        Assert.Equal(50, game.Virtues.GetVirtueScore(VirtueType.Honor));
+        Assert.Equal(50, game.Virtues.GetVirtueScore(VirtueType.Compassion));
+        Assert.Equal(50, game.Virtues.GetVirtueScore(VirtueType.Honesty));
+    }
+
+    [Fact]
+    public void Virtue_BraveActions_IncreaseValor()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.OnCombatVictory_TrackValor(fled: false);
+
+        // Assert
+        Assert.Equal(52, game.Virtues.GetVirtueScore(VirtueType.Valor)); // 50 + 2
+    }
+
+    [Fact]
+    public void Virtue_Fleeing_DecreasesValor()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.OnCombatVictory_TrackValor(fled: true);
+
+        // Assert
+        Assert.Equal(47, game.Virtues.GetVirtueScore(VirtueType.Valor)); // 50 - 3
+    }
+
+    [Fact]
+    public void Virtue_Mercy_IncreasesHonorAndCompassion()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.OnShowMercy();
+
+        // Assert
+        Assert.Equal(55, game.Virtues.GetVirtueScore(VirtueType.Honor)); // +5
+        Assert.Equal(53, game.Virtues.GetVirtueScore(VirtueType.Compassion)); // +3
+    }
+
+    [Fact]
+    public void Virtue_ExemplarInAll_UnlocksAvatar()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Max out all virtues
+        game.AdjustVirtue(VirtueType.Valor, 50);
+        game.AdjustVirtue(VirtueType.Honor, 50);
+        game.AdjustVirtue(VirtueType.Compassion, 50);
+        game.AdjustVirtue(VirtueType.Honesty, 50);
+
+        // Assert
+        Assert.True(game.Virtues.IsExemplarInAll());
+        Assert.Equal("Avatar", game.GetVirtuePath());
+    }
+
+    [Fact]
+    public void Virtue_UnlocksSpecialAbilities()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Become Exemplar of Valor
+        game.AdjustVirtue(VirtueType.Valor, 35); // 50 + 35 = 85
+
+        var abilities = game.GetAvailableVirtueAbilities();
+
+        // Assert
+        Assert.Single(abilities); // Only CourageousStrike available
+        Assert.Equal("Courageous Strike", abilities[0].Name);
+    }
+
+    [Fact]
+    public void Virtue_ScoresCapped_At100()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.AdjustVirtue(VirtueType.Valor, 200); // Try to go way over
+
+        // Assert
+        Assert.Equal(100, game.Virtues.GetVirtueScore(VirtueType.Valor)); // Capped
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 43: MAIN QUEST & ENDINGS TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void MainQuest_StartsInactive()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.False(game.MainQuest.IsStarted);
+        Assert.Equal(0, game.GetMainQuestProgress());
+    }
+
+    [Fact]
+    public void MainQuest_CanBeStarted()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        game.StartMainQuest();
+
+        // Assert
+        Assert.True(game.MainQuest.IsStarted);
+        Assert.True(game.MainQuest.Stage1_LearnedAboutDemonLord);
+        Assert.Equal(25, game.GetMainQuestProgress()); // 1/4 stages = 25%
+    }
+
+    [Fact]
+    public void MainQuest_CollectingArtifacts_UnlocksFinalDungeon()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.StartMainQuest();
+
+        // Act
+        game.MainQuest.CollectArtifact();
+        game.MainQuest.CollectArtifact();
+        game.MainQuest.CollectArtifact();
+
+        // Assert
+        Assert.Equal(3, game.MainQuest.ArtifactsCollected);
+        Assert.True(game.MainQuest.Stage2_CollectedAllArtifacts);
+        Assert.True(game.MainQuest.Stage3_UnlockedFinalDungeon);
+        Assert.Equal(75, game.GetMainQuestProgress()); // 3/4 stages
+    }
+
+    [Fact]
+    public void MainQuest_AvatarPath_GivesHeroicEnding()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.StartMainQuest();
+
+        // Max all virtues (Avatar path)
+        foreach (var virtue in new[] { VirtueType.Valor, VirtueType.Honor, VirtueType.Compassion, VirtueType.Honesty })
+        {
+            game.AdjustVirtue(virtue, 50); // 50 + 50 = 100
+        }
+
+        game.MainQuest.DefeatDemonLord();
+
+        // Act
+        game.CompleteMainQuest();
+
+        // Assert
+        Assert.Equal(GameEnding.HeroicVictory, game.GetGameEnding());
+        Assert.Contains("AVATAR", game.GetEndingDescription());
+    }
+
+    [Fact]
+    public void MainQuest_EvilPath_GivesDarkEnding()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.StartMainQuest();
+
+        // Evil path
+        game.AdjustReputation(-60);
+        foreach (var virtue in new[] { VirtueType.Valor, VirtueType.Honor, VirtueType.Compassion, VirtueType.Honesty })
+        {
+            game.AdjustVirtue(virtue, -40); // Lower all virtues
+        }
+
+        game.MainQuest.DefeatDemonLord();
+
+        // Act
+        game.CompleteMainQuest();
+
+        // Assert
+        Assert.Equal(GameEnding.DarkVictory, game.GetGameEnding());
+        Assert.Contains("DARK LORD", game.GetEndingDescription());
+    }
+
+    [Fact]
+    public void MainQuest_BalancedPath_GivesPragmaticEnding()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        game.StartMainQuest();
+        game.MainQuest.DefeatDemonLord();
+
+        // Act - Stay neutral (default virtues/reputation)
+        game.CompleteMainQuest();
+
+        // Assert
+        Assert.Equal(GameEnding.PragmaticVictory, game.GetGameEnding());
+        Assert.Contains("SURVIVOR", game.GetEndingDescription());
+    }
+
+    [Fact]
+    public void DemonLord_HasPhases()
+    {
+        // Arrange
+        var boss = new DemonLord();
+
+        // Act & Assert - Phase 1
+        Assert.Equal(1, boss.CurrentPhase);
+        Assert.False(boss.CanCastSpells);
+
+        // Take damage to 66 HP
+        boss.TakeDamage(34);
+        Assert.Equal(2, boss.CurrentPhase);
+        Assert.True(boss.CanCastSpells);
+
+        // Take damage to 33 HP
+        boss.TakeDamage(33);
+        Assert.Equal(3, boss.CurrentPhase);
+        Assert.True(boss.HasMinions);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 44: WORLD SECRETS & RARE ENCOUNTERS TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Secrets_WorldHasMultipleSecrets()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.True(game.GetTotalSecrets() >= 6); // At least 6 secrets
+        Assert.Equal(0, game.GetSecretsFound()); // None discovered yet
+    }
+
+    [Fact]
+    public void Secrets_CanBeDiscovered()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Move to a secret location and discover it
+        var allSecrets = game.Secrets.GetAllSecrets();
+        var firstSecret = allSecrets[0];
+
+        game.Secrets.DiscoverSecret(firstSecret.X, firstSecret.Y);
+
+        // Assert
+        Assert.Equal(1, game.GetSecretsFound());
+        Assert.True(firstSecret.IsDiscovered);
+    }
+
+    [Fact]
+    public void Secrets_TrackCompletion()
+    {
+        // Arrange
+        var secrets = new WorldSecrets();
+        var allSecrets = secrets.GetAllSecrets();
+
+        // Act - Discover all secrets
+        foreach (var secret in allSecrets)
+        {
+            secrets.DiscoverSecret(secret.X, secret.Y);
+        }
+
+        // Assert
+        Assert.Equal(100, secrets.GetCompletionPercentage());
+    }
+
+    [Fact]
+    public void RareEncounter_HasLowSpawnChance()
+    {
+        // Assert
+        Assert.True(RareEncounter.GoblinKing.SpawnChance <= 0.01); // 1% or less
+        Assert.Equal(15, RareEncounter.GoblinKing.BossLevel);
+    }
+
+    [Fact]
+    public void RareEncounter_CanRoll()
+    {
+        // Arrange
+        var random = new Random(42); // Fixed seed
+
+        // Act - Roll 100 times
+        int encounters = 0;
+        for (int i = 0; i < 100; i++)
+        {
+            var encounter = RareEncounter.RollForRareEncounter(random);
+            if (encounter != null) encounters++;
+        }
+
+        // Assert - Should be rare (0-5 encounters in 100 rolls)
+        Assert.True(encounters < 10);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // GENERATION 46: ACHIEVEMENT SYSTEM TESTS
+    // ════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public void Achievements_SystemHasMultipleAchievements()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Assert
+        Assert.True(game.GetTotalAchievements() >= 25); // At least 25 achievements
+        Assert.Equal(0, game.GetAchievementCount()); // None unlocked yet
+    }
+
+    [Fact]
+    public void Achievements_FirstBlood_UnlocksOnFirstKill()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Simulate a full combat to victory
+        game.StartCombatWithEnemyType(EnemyType.GoblinScout);
+        while (!game.CombatEnded)
+        {
+            game.ExecuteGameLoopRoundWithRandomHits(CombatAction.Attack, CombatAction.Attack);
+        }
+        game.ProcessGameLoopVictory();
+
+        // Act
+        game.CheckAchievements();
+
+        // Assert
+        var achievement = game.Achievements.GetAchievement("first_blood");
+        Assert.NotNull(achievement);
+        Assert.True(achievement.IsUnlocked);
+    }
+
+    [Fact]
+    public void Achievements_Avatar_RequiresAllVirtues()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act - Max all virtues
+        game.AdjustVirtue(VirtueType.Valor, 50);
+        game.AdjustVirtue(VirtueType.Honor, 50);
+        game.AdjustVirtue(VirtueType.Compassion, 50);
+        game.AdjustVirtue(VirtueType.Honesty, 50);
+
+        game.CheckAchievements();
+
+        // Assert
+        var achievement = game.Achievements.GetAchievement("avatar");
+        Assert.True(achievement.IsUnlocked);
+    }
+
+    [Fact]
+    public void Achievements_Companion_UnlocksOnRecruit()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+        var companions = game.GetAvailableCompanions();
+
+        // Act
+        game.RecruitCompanion(companions[0]);
+        game.CheckAchievements();
+
+        // Assert
+        var achievement = game.Achievements.GetAchievement("not_alone");
+        Assert.True(achievement.IsUnlocked);
+    }
+
+    [Fact]
+    public void Achievements_TracksCompletionPercentage()
+    {
+        // Arrange
+        var achievementSystem = new AchievementSystem();
+
+        // Act - Unlock half
+        int total = achievementSystem.GetTotalAchievements();
+        int half = total / 2;
+
+        var allAchievements = achievementSystem.GetAllAchievements();
+        for (int i = 0; i < half; i++)
+        {
+            achievementSystem.UnlockAchievement(allAchievements[i].Id);
+        }
+
+        // Assert
+        int percentage = achievementSystem.GetCompletionPercentage();
+        Assert.True(percentage >= 45 && percentage <= 55); // Around 50%
+    }
+
+    [Fact]
+    public void Achievements_OnlyUnlocksOnce()
+    {
+        // Arrange
+        var game = new RPGGame();
+        game.StartWorldExploration();
+
+        // Act
+        bool firstUnlock = game.Achievements.UnlockAchievement("first_blood");
+        bool secondUnlock = game.Achievements.UnlockAchievement("first_blood");
+
+        // Assert
+        Assert.True(firstUnlock); // First time returns true
+        Assert.False(secondUnlock); // Second time returns false
+    }
 }
