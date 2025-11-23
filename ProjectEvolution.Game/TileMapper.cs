@@ -69,14 +69,14 @@ public static class TileMapper
     {
         return terrain switch
         {
-            "Grass" or "Grassland" => GRASS_TILE,
-            "Forest" => FOREST_TILE,
-            "Mountain" => MOUNTAIN_TILE,
-            "Water" => WATER_TILE,
-            "Town" => TOWN_TILE,
-            "Dungeon" => DUNGEON_ENTRANCE,
-            "Temple" => TEMPLE_TILE,
-            _ => GRASS_TILE  // Default to grass
+            "Grassland" => GRASS_TILE,      // tile 4
+            "Forest" => FOREST_TILE,        // tile 6
+            "Mountain" => MOUNTAIN_TILE,    // tile 8
+            "Water" => WATER_TILE,          // tile 0
+            "Town" => TOWN_TILE,            // tile 18
+            "Dungeon" => DUNGEON_ENTRANCE,  // tile 12
+            "Temple" => TEMPLE_TILE,        // tile 22
+            _ => GRASS_TILE  // Default to grass (tile 4)
         };
     }
 
