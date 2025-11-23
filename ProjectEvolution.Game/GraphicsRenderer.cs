@@ -10,7 +10,7 @@ public class GraphicsRenderer : IDisposable
 {
     private const int TILE_SIZE = 32; // Authentic Ultima IV tiles are 32x32
     private const int TILE_SPACING = 0; // No spacing in Ultima IV tileset
-    private const int TILES_PER_ROW = 16; // Ultima IV tileset is 16 tiles wide
+    private const int TILES_PER_ROW = 1; // Tileset is a VERTICAL COLUMN (32x8192 = 1 wide, 256 tall)
     private int SCREEN_WIDTH;
     private int SCREEN_HEIGHT;
     private const int SCALE = 2; // 2x scaling for 64x64 display (good for 2560x1600)
