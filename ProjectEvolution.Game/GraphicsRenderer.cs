@@ -191,7 +191,29 @@ public class GraphicsRenderer : IDisposable
 
                 string terrain = game.GetTerrainAt(worldX, worldY);
                 int tileId = TileMapper.GetTerrainTileId(terrain);
-                DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
+
+                // DEBUG: Draw colored rectangles instead of tiles to test the loop
+                Color debugColor = terrain switch
+                {
+                    "Grass" or "Grassland" => Raylib.GREEN,
+                    "Forest" => Raylib.DARKGREEN,
+                    "Mountain" => Raylib.GRAY,
+                    "Water" => Raylib.BLUE,
+                    "Town" => Raylib.BROWN,
+                    "Temple" => Raylib.GOLD,
+                    "Dungeon" => Raylib.DARKGRAY,
+                    _ => Raylib.WHITE
+                };
+
+                Raylib.DrawRectangle(
+                    mapOffsetX + screenX * SCALED_TILE_SIZE,
+                    mapOffsetY + screenY * SCALED_TILE_SIZE,
+                    SCALED_TILE_SIZE - 2,
+                    SCALED_TILE_SIZE - 2,
+                    debugColor);
+
+                // Also try drawing from tileset (won't work if texture is bad)
+                // DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
             }
         }
 
