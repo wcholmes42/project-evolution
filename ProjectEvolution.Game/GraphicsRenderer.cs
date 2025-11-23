@@ -274,6 +274,8 @@ public class GraphicsRenderer : IDisposable
         uiY += 20;
         Raylib.DrawText("I: Character", uiX, uiY, 14, Raylib.LIGHTGRAY);
         uiY += 20;
+        Raylib.DrawText("F12: Screenshot", uiX, uiY, 14, Raylib.YELLOW);
+        uiY += 20;
         Raylib.DrawText("ESC: Quit", uiX, uiY, 14, Raylib.LIGHTGRAY);
     }
 
@@ -321,6 +323,31 @@ public class GraphicsRenderer : IDisposable
     public int GetScreenHeight()
     {
         return SCREEN_HEIGHT;
+    }
+
+    /// <summary>
+    /// Take a screenshot and save to file (for debugging)
+    /// Call this when F12 is pressed
+    /// </summary>
+    public void TakeScreenshot(string filename = "")
+    {
+        if (string.IsNullOrEmpty(filename))
+        {
+            filename = $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+        }
+
+        string path = Path.Combine("Screenshots", filename);
+
+        // Ensure directory exists
+        if (!Directory.Exists("Screenshots"))
+        {
+            Directory.CreateDirectory("Screenshots");
+        }
+
+        // Capture current framebuffer
+        Raylib.TakeScreenshot(path);
+
+        Console.WriteLine($"📸 Screenshot saved to: {path}");
     }
 
     /// <summary>

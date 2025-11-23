@@ -156,6 +156,12 @@ public static class GraphicsGameLoop
                 playing = false;
             }
 
+            // F12: Screenshot for debugging
+            if (renderer.IsKeyPressed(KeyboardKey.KEY_F12))
+            {
+                renderer.TakeScreenshot();
+            }
+
             // Movement
             if (!game.InDungeon)
             {
