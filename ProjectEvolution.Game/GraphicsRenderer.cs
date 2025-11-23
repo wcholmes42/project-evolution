@@ -175,8 +175,23 @@ public class GraphicsRenderer : IDisposable
         if (endY - startY < viewHeight)
             startY = Math.Max(0, endY - viewHeight);
 
-        // Draw map background
+        // DEBUG: Draw map background with colored border to verify area
         Raylib.DrawRectangle(mapOffsetX, mapOffsetY, viewWidth * SCALED_TILE_SIZE, viewHeight * SCALED_TILE_SIZE, Raylib.BLACK);
+        Raylib.DrawRectangleLines(mapOffsetX, mapOffsetY, viewWidth * SCALED_TILE_SIZE, viewHeight * SCALED_TILE_SIZE, Raylib.RED);
+
+        // DEBUG: Draw test grid to verify rendering
+        for (int y = 0; y < 5; y++)
+        {
+            for (int x = 0; x < 5; x++)
+            {
+                Raylib.DrawRectangle(
+                    mapOffsetX + x * SCALED_TILE_SIZE,
+                    mapOffsetY + y * SCALED_TILE_SIZE,
+                    SCALED_TILE_SIZE - 2,
+                    SCALED_TILE_SIZE - 2,
+                    new Color((byte)(x * 50), (byte)(y * 50), (byte)100, (byte)255));
+            }
+        }
 
         // Draw terrain
         for (int worldY = startY; worldY < endY; worldY++)
@@ -188,6 +203,13 @@ public class GraphicsRenderer : IDisposable
 
                 string terrain = game.GetTerrainAt(worldX, worldY);
                 int tileId = TileMapper.GetTerrainTileId(terrain);
+
+                // DEBUG: Log first few tile draws
+                if (worldX == startX && worldY == startY)
+                {
+                    Console.WriteLine($"Drawing terrain at ({worldX},{worldY}): {terrain} = tileId {tileId} at screen ({screenX},{screenY}) pixel ({mapOffsetX + screenX * SCALED_TILE_SIZE}, {mapOffsetY + screenY * SCALED_TILE_SIZE})");
+                }
+
                 DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
             }
         }
