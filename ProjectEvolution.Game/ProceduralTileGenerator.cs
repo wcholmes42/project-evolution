@@ -14,41 +14,41 @@ public static class ProceduralTileGenerator
     private const int TILES_PER_ROW = 57;
     private const int TILES_PER_COLUMN = 31;
 
-    // Ultima IV-inspired color palette
+    // Authentic Ultima IV EGA color palette (using UltimaIVPalette)
     private static class Colors
     {
-        // Terrain
-        public static readonly Color Grass = new Color(68, 154, 42, 255);      // Vibrant green
-        public static readonly Color GrassDark = new Color(48, 124, 32, 255);  // Darker green for texture
-        public static readonly Color Water = new Color(42, 100, 234, 255);     // Blue
-        public static readonly Color WaterLight = new Color(62, 120, 254, 255); // Light blue for waves
-        public static readonly Color Mountain = new Color(120, 100, 80, 255);  // Brown-gray
-        public static readonly Color MountainSnow = new Color(240, 240, 240, 255); // Snow cap
-        public static readonly Color Forest = new Color(34, 94, 24, 255);      // Dark green
-        public static readonly Color ForestTree = new Color(54, 44, 24, 255);  // Tree trunk brown
+        // Terrain - Using authentic EGA colors
+        public static readonly Color Grass = UltimaIVPalette.Terrain.Grass;
+        public static readonly Color GrassDark = UltimaIVPalette.Terrain.GrassDark;
+        public static readonly Color Water = UltimaIVPalette.Terrain.DeepWater;
+        public static readonly Color WaterLight = UltimaIVPalette.Terrain.ShallowWater;
+        public static readonly Color Mountain = UltimaIVPalette.Terrain.Mountain;
+        public static readonly Color MountainSnow = UltimaIVPalette.Terrain.MountainSnow;
+        public static readonly Color Forest = UltimaIVPalette.Terrain.Forest;
+        public static readonly Color ForestTree = UltimaIVPalette.Terrain.ForestDark;
 
         // Structures
-        public static readonly Color TownWall = new Color(160, 120, 80, 255);  // Brown
-        public static readonly Color TownRoof = new Color(180, 60, 40, 255);   // Red roof
-        public static readonly Color TempleGold = new Color(255, 215, 0, 255); // Gold
-        public static readonly Color TempleWhite = new Color(240, 240, 240, 255);
-        public static readonly Color DungeonWall = new Color(60, 60, 60, 255); // Dark gray
-        public static readonly Color DungeonFloor = new Color(40, 40, 40, 255); // Darker gray
+        public static readonly Color TownWall = UltimaIVPalette.Structures.TownWall;
+        public static readonly Color TownRoof = UltimaIVPalette.Structures.TownRoof;
+        public static readonly Color TempleGold = UltimaIVPalette.Structures.Temple;
+        public static readonly Color TempleWhite = UltimaIVPalette.Structures.TempleAccent;
+        public static readonly Color DungeonWall = UltimaIVPalette.Structures.Dungeon;
+        public static readonly Color DungeonFloor = UltimaIVPalette.Structures.DungeonDark;
 
         // Characters
-        public static readonly Color Player = new Color(255, 200, 100, 255);   // Golden hero
-        public static readonly Color PlayerArmor = new Color(200, 160, 80, 255);
+        public static readonly Color Player = UltimaIVPalette.Characters.Avatar;
+        public static readonly Color PlayerArmor = UltimaIVPalette.Characters.AvatarCloak;
 
-        // Enemies (simple colors like Ultima IV)
-        public static readonly Color Goblin = new Color(100, 180, 80, 255);    // Green
-        public static readonly Color Undead = new Color(200, 200, 220, 255);   // Pale
-        public static readonly Color Demon = new Color(200, 60, 60, 255);      // Red
-        public static readonly Color Beast = new Color(140, 100, 60, 255);     // Brown
+        // Enemies
+        public static readonly Color Goblin = UltimaIVPalette.Monsters.Goblin;
+        public static readonly Color Undead = UltimaIVPalette.Monsters.Undead;
+        public static readonly Color Demon = UltimaIVPalette.Monsters.Demon;
+        public static readonly Color Beast = UltimaIVPalette.Monsters.Beast;
 
         // Items
-        public static readonly Color PotionRed = new Color(220, 60, 60, 255);
-        public static readonly Color Gold = new Color(255, 215, 0, 255);
-        public static readonly Color Chest = new Color(139, 90, 43, 255);
+        public static readonly Color PotionRed = UltimaIVPalette.Items.Potion;
+        public static readonly Color Gold = UltimaIVPalette.Items.Gold;
+        public static readonly Color Chest = UltimaIVPalette.Items.Chest;
     }
 
     /// <summary>
@@ -114,247 +114,160 @@ public static class ProceduralTileGenerator
 
     private static void GenerateTerrainTiles()
     {
-        // Grassland (tile 0) - Simple solid green with texture dots
+        // Grassland (tile 0) - BRIGHT GREEN for visibility testing
         DrawTileAt(0, (tileX, tileY) =>
         {
+            // Fill entire tile with bright green
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Grass);
-            // Add grass texture (random-looking but deterministic)
-            for (int i = 0; i < 8; i++)
-            {
-                int px = tileX + (i * 7) % TILE_SIZE;
-                int py = tileY + (i * 11) % TILE_SIZE;
-                Raylib.DrawPixel(px, py, Colors.GrassDark);
-            }
+            // Border to verify exact tile bounds
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
 
-        // Forest (tile 1) - Dark green with simple tree
+        // Forest (tile 1) - DARK GREEN filled
         DrawTileAt(1, (tileX, tileY) =>
         {
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Forest);
-            // Tree trunk (vertical line)
-            Raylib.DrawRectangle(tileX + 7, tileY + 8, 2, 6, Colors.ForestTree);
-            // Tree crown (triangle approximation)
-            Raylib.DrawRectangle(tileX + 4, tileY + 4, 8, 2, Colors.Grass);
-            Raylib.DrawRectangle(tileX + 5, tileY + 6, 6, 2, Colors.Grass);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.Yellow);
         });
 
-        // Mountain (tile 2) - Gray triangle (peak)
+        // Mountain (tile 2) - GRAY filled
         DrawTileAt(2, (tileX, tileY) =>
         {
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Mountain);
-            // Triangle peak (draw progressively smaller lines)
-            for (int row = 0; row < 8; row++)
-            {
-                int width = 16 - (row * 2);
-                int xOffset = row;
-                Raylib.DrawRectangle(tileX + xOffset, tileY + row, width, 1, Colors.MountainSnow);
-            }
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
 
-        // Water (tile 3) - Blue with wave pattern
+        // Water (tile 3) - BLUE filled
         DrawTileAt(3, (tileX, tileY) =>
         {
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Water);
-            // Horizontal wave lines
-            Raylib.DrawRectangle(tileX + 2, tileY + 4, 12, 1, Colors.WaterLight);
-            Raylib.DrawRectangle(tileX + 1, tileY + 8, 14, 1, Colors.WaterLight);
-            Raylib.DrawRectangle(tileX + 3, tileY + 12, 10, 1, Colors.WaterLight);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.BrightCyan);
         });
     }
 
     private static void GenerateStructureTiles()
     {
-        // Town (tile 10) - Simple building (Ultima IV style)
+        // Town (tile 10) - BROWN filled
         DrawTileAt(10, (tileX, tileY) =>
         {
-            // Building base
-            Raylib.DrawRectangle(tileX + 2, tileY + 6, 12, 8, Colors.TownWall);
-            // Roof (triangle)
-            Raylib.DrawRectangle(tileX + 4, tileY + 4, 8, 2, Colors.TownRoof);
-            Raylib.DrawRectangle(tileX + 6, tileY + 2, 4, 2, Colors.TownRoof);
-            // Door
-            Raylib.DrawRectangle(tileX + 6, tileY + 10, 4, 4, Raylib.BLACK);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.TownWall);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.TownRoof);
         });
 
-        // Temple (tile 11) - Golden structure with columns
+        // Temple (tile 11) - BRIGHT YELLOW/GOLD filled
         DrawTileAt(11, (tileX, tileY) =>
         {
-            // Base
-            Raylib.DrawRectangle(tileX, tileY + 10, TILE_SIZE, 6, Colors.TempleWhite);
-            // Columns (3 pillars)
-            Raylib.DrawRectangle(tileX + 2, tileY + 4, 2, 6, Colors.TempleGold);
-            Raylib.DrawRectangle(tileX + 7, tileY + 4, 2, 6, Colors.TempleGold);
-            Raylib.DrawRectangle(tileX + 12, tileY + 4, 2, 6, Colors.TempleGold);
-            // Roof
-            Raylib.DrawRectangle(tileX + 1, tileY + 3, 14, 1, Colors.TempleGold);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.TempleGold);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.TempleWhite);
         });
 
-        // Dungeon entrance (tile 12) - Dark opening
+        // Dungeon entrance (tile 12) - DARK filled
         DrawTileAt(12, (tileX, tileY) =>
         {
-            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Mountain);
-            // Dark opening
-            Raylib.DrawRectangle(tileX + 4, tileY + 6, 8, 8, Raylib.BLACK);
-            // Stone arch
-            Raylib.DrawRectangle(tileX + 3, tileY + 5, 2, 10, Colors.DungeonWall);
-            Raylib.DrawRectangle(tileX + 11, tileY + 5, 2, 10, Colors.DungeonWall);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.DarkGray);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.Red);
         });
     }
 
     private static void GenerateCharacterTiles()
     {
-        // Player (tile 20) - Ultima IV "@" symbol style
+        // Player (tile 20) - BRIGHT WHITE/RED for maximum visibility
         DrawTileAt(20, (tileX, tileY) =>
         {
-            // Head (circle)
-            Raylib.DrawCircle(tileX + 8, tileY + 5, 3, Colors.Player);
-            // Body (rectangle)
-            Raylib.DrawRectangle(tileX + 6, tileY + 8, 4, 5, Colors.PlayerArmor);
-            // Arms (horizontal bar)
-            Raylib.DrawRectangle(tileX + 4, tileY + 9, 8, 2, Colors.PlayerArmor);
-            // Legs
-            Raylib.DrawRectangle(tileX + 6, tileY + 13, 2, 3, Colors.PlayerArmor);
-            Raylib.DrawRectangle(tileX + 8, tileY + 13, 2, 3, Colors.PlayerArmor);
+            // Fill with bright red background for testing
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.PlayerArmor);
+            // White center to stand out
+            Raylib.DrawRectangle(tileX + 4, tileY + 4, 8, 8, Colors.Player);
+            // Border
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.Yellow);
         });
 
-        // NPC (tile 21) - Similar but different color
+        // NPC (tile 21) - CYAN for visibility
         DrawTileAt(21, (tileX, tileY) =>
         {
-            Raylib.DrawCircle(tileX + 8, tileY + 5, 3, new Color(220, 180, 140, 255));
-            Raylib.DrawRectangle(tileX + 6, tileY + 8, 4, 5, new Color(100, 100, 180, 255));
-            Raylib.DrawRectangle(tileX + 4, tileY + 9, 8, 2, new Color(100, 100, 180, 255));
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.Cyan);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
     }
 
     private static void GenerateEnemyTiles()
     {
-        // Goblin (tile 30) - Simple green creature
+        // Goblin (tile 30) - BRIGHT GREEN filled
         DrawTileAt(30, (tileX, tileY) =>
         {
-            // Body (oval)
-            Raylib.DrawCircle(tileX + 8, tileY + 10, 5, Colors.Goblin);
-            // Eyes (white dots)
-            Raylib.DrawPixel(tileX + 6, tileY + 9, Raylib.WHITE);
-            Raylib.DrawPixel(tileX + 10, tileY + 9, Raylib.WHITE);
-            // Ears (triangles)
-            Raylib.DrawPixel(tileX + 4, tileY + 8, Colors.Goblin);
-            Raylib.DrawPixel(tileX + 12, tileY + 8, Colors.Goblin);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Goblin);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
 
-        // Undead (tile 31) - Skeleton (pale)
+        // Undead (tile 31) - LIGHT GRAY filled
         DrawTileAt(31, (tileX, tileY) =>
         {
-            // Skull
-            Raylib.DrawCircle(tileX + 8, tileY + 6, 4, Colors.Undead);
-            // Eye sockets (black)
-            Raylib.DrawPixel(tileX + 6, tileY + 6, Raylib.BLACK);
-            Raylib.DrawPixel(tileX + 10, tileY + 6, Raylib.BLACK);
-            // Ribcage (lines)
-            for (int i = 0; i < 3; i++)
-            {
-                Raylib.DrawRectangle(tileX + 5, tileY + 10 + (i * 2), 6, 1, Colors.Undead);
-            }
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Undead);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
 
-        // Demon (tile 32) - Red menacing figure
+        // Demon (tile 32) - BRIGHT RED filled
         DrawTileAt(32, (tileX, tileY) =>
         {
-            // Head with horns
-            Raylib.DrawCircle(tileX + 8, tileY + 7, 4, Colors.Demon);
-            // Horns
-            Raylib.DrawPixel(tileX + 5, tileY + 4, Raylib.BLACK);
-            Raylib.DrawPixel(tileX + 11, tileY + 4, Raylib.BLACK);
-            Raylib.DrawPixel(tileX + 4, tileY + 5, Raylib.BLACK);
-            Raylib.DrawPixel(tileX + 12, tileY + 5, Raylib.BLACK);
-            // Body
-            Raylib.DrawRectangle(tileX + 6, tileY + 11, 4, 4, Colors.Demon);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Demon);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.Yellow);
         });
 
-        // Beast (tile 33) - Brown animal
+        // Beast (tile 33) - BROWN filled
         DrawTileAt(33, (tileX, tileY) =>
         {
-            // Body (horizontal oval)
-            Raylib.DrawRectangle(tileX + 4, tileY + 8, 8, 6, Colors.Beast);
-            // Head
-            Raylib.DrawCircle(tileX + 11, tileY + 9, 3, Colors.Beast);
-            // Legs
-            Raylib.DrawRectangle(tileX + 5, tileY + 14, 1, 2, Colors.Beast);
-            Raylib.DrawRectangle(tileX + 10, tileY + 14, 1, 2, Colors.Beast);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Beast);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
     }
 
     private static void GenerateItemTiles()
     {
-        // Potion (tile 40) - Classic RPG potion
+        // Potion (tile 40) - BRIGHT MAGENTA filled
         DrawTileAt(40, (tileX, tileY) =>
         {
-            // Bottle body
-            Raylib.DrawRectangle(tileX + 6, tileY + 8, 4, 6, Colors.PotionRed);
-            // Cork/top
-            Raylib.DrawRectangle(tileX + 6, tileY + 7, 4, 1, Raylib.DARKGRAY);
-            // Highlight (shine)
-            Raylib.DrawPixel(tileX + 7, tileY + 9, Raylib.WHITE);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.PotionRed);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
 
-        // Gold (tile 41) - Coin or pile
+        // Gold (tile 41) - BRIGHT YELLOW filled
         DrawTileAt(41, (tileX, tileY) =>
         {
-            // Coins (circles)
-            Raylib.DrawCircle(tileX + 6, tileY + 10, 3, Colors.Gold);
-            Raylib.DrawCircle(tileX + 10, tileY + 9, 3, Colors.Gold);
-            Raylib.DrawCircle(tileX + 8, tileY + 12, 3, Colors.Gold);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Gold);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
 
-        // Treasure chest (tile 42)
+        // Treasure chest (tile 42) - BROWN filled
         DrawTileAt(42, (tileX, tileY) =>
         {
-            // Chest base
-            Raylib.DrawRectangle(tileX + 4, tileY + 9, 8, 6, Colors.Chest);
-            // Lid (curved top)
-            Raylib.DrawRectangle(tileX + 4, tileY + 7, 8, 2, Colors.Chest);
-            Raylib.DrawRectangle(tileX + 5, tileY + 6, 6, 1, Colors.Chest);
-            // Lock (gold)
-            Raylib.DrawRectangle(tileX + 7, tileY + 10, 2, 2, Colors.Gold);
+            Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Chest);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.Gold);
         });
     }
 
     private static void GenerateDungeonTiles()
     {
-        // Dungeon wall (tile 50) - Stone wall
+        // Dungeon wall (tile 50) - DARK GRAY filled
         DrawTileAt(50, (tileX, tileY) =>
         {
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.DungeonWall);
-            // Stone texture (brick pattern)
-            for (int row = 0; row < 4; row++)
-            {
-                for (int col = 0; col < 4; col++)
-                {
-                    int bx = tileX + (col * 4) + (row % 2 == 0 ? 0 : 2);
-                    int by = tileY + (row * 4);
-                    Raylib.DrawRectangleLines(bx, by, 4, 4, Raylib.BLACK);
-                }
-            }
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.LightGray);
         });
 
-        // Dungeon floor (tile 51) - Dark stone
+        // Dungeon floor (tile 51) - BLACK filled
         DrawTileAt(51, (tileX, tileY) =>
         {
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.DungeonFloor);
-            // Subtle cracks
-            Raylib.DrawPixel(tileX + 5, tileY + 6, Raylib.BLACK);
-            Raylib.DrawPixel(tileX + 11, tileY + 10, Raylib.BLACK);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.DarkGray);
         });
 
-        // Stairs down (tile 52) - ">" symbol
+        // Stairs down (tile 52) - YELLOW ">" symbol on dark
         DrawTileAt(52, (tileX, tileY) =>
         {
             Raylib.DrawRectangle(tileX, tileY, TILE_SIZE, TILE_SIZE, Colors.DungeonFloor);
-            // ">" shape for stairs down
-            Raylib.DrawRectangle(tileX + 4, tileY + 8, 1, 1, Raylib.WHITE);
-            Raylib.DrawRectangle(tileX + 5, tileY + 7, 1, 1, Raylib.WHITE);
-            Raylib.DrawRectangle(tileX + 6, tileY + 6, 1, 1, Raylib.WHITE);
-            Raylib.DrawRectangle(tileX + 7, tileY + 7, 1, 1, Raylib.WHITE);
-            Raylib.DrawRectangle(tileX + 8, tileY + 8, 1, 1, Raylib.WHITE);
+            // Large visible ">" shape
+            Raylib.DrawRectangle(tileX + 4, tileY + 4, 8, 8, UltimaIVPalette.Yellow);
+            Raylib.DrawRectangleLines(tileX, tileY, TILE_SIZE, TILE_SIZE, UltimaIVPalette.White);
         });
     }
 
@@ -388,6 +301,13 @@ public static class ProceduralTileGenerator
 
         // Export texture as PNG
         var image = Raylib.LoadImageFromTexture(tileset);
+
+        // CRITICAL: Flip Y-axis because Raylib textures are upside down when saved!
+        unsafe
+        {
+            Raylib.ImageFlipVertical(&image);
+        }
+
         Raylib.ExportImage(image, path);
         Raylib.UnloadImage(image);
 
