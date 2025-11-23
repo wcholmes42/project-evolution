@@ -63,20 +63,40 @@ public static class ProceduralTileGenerator
         var renderTexture = Raylib.LoadRenderTexture(textureWidth, textureHeight);
 
         Raylib.BeginTextureMode(renderTexture);
-        Raylib.ClearBackground(Raylib.BLACK);
+        Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)255));
+
+        Console.WriteLine("Generating tiles...");
 
         // Generate all tiles (using TileMapper IDs for consistency)
+        Console.WriteLine("  - Terrain tiles (0-3)...");
         GenerateTerrainTiles();
+
+        Console.WriteLine("  - Structure tiles (10-12)...");
         GenerateStructureTiles();
+
+        Console.WriteLine("  - Character tiles (20-21)...");
         GenerateCharacterTiles();
+
+        Console.WriteLine("  - Enemy tiles (30-33)...");
         GenerateEnemyTiles();
+
+        Console.WriteLine("  - Item tiles (40-42)...");
         GenerateItemTiles();
+
+        Console.WriteLine("  - Dungeon tiles (50-52)...");
         GenerateDungeonTiles();
+
+        Console.WriteLine("Tiles generated!");
 
         Raylib.EndTextureMode();
 
-        // Convert render texture to regular texture
-        return renderTexture.texture;
+        // IMPORTANT: Get the texture before unloading render texture
+        Texture result = renderTexture.texture;
+
+        // NOTE: Don't unload render texture here - we're using its internal texture
+        // Raylib.UnloadRenderTexture(renderTexture); // This would invalidate the texture!
+
+        return result;
     }
 
     private static void GenerateTerrainTiles()
@@ -335,6 +355,8 @@ public static class ProceduralTileGenerator
 
         int tileX = tileCol * (TILE_SIZE + TILE_SPACING);
         int tileY = tileRow * (TILE_SIZE + TILE_SPACING);
+
+        Console.WriteLine($"    Drawing tile {tileId} at ({tileX}, {tileY}) [row {tileRow}, col {tileCol}]");
 
         drawAction(tileX, tileY);
     }
