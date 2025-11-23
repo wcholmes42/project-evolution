@@ -197,6 +197,13 @@ public class GraphicsRenderer : IDisposable
                 string terrain = game.GetTerrainAt(worldX, worldY);
                 int tileId = TileMapper.GetTerrainTileId(terrain);
 
+                // DEBUG: Log first tile to see what we're getting
+                if (worldX == 10 && worldY == 10)
+                {
+                    Console.WriteLine($"DEBUG: Tile at (10,10): terrain='{terrain}' -> tileId={tileId}");
+                    Console.WriteLine($"  Expected: Temple should be tile 22");
+                }
+
                 // Draw authentic Ultima IV tile
                 DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
             }
