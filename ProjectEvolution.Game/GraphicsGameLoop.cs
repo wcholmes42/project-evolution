@@ -145,6 +145,12 @@ public static class GraphicsGameLoop
         {
             renderer.BeginFrame();
 
+            // DEBUG: Draw test rectangles DIRECTLY to verify rendering works
+            Raylib.DrawRectangle(50, 50, 200, 200, Raylib.RED);
+            Raylib.DrawRectangle(300, 50, 200, 200, Raylib.GREEN);
+            Raylib.DrawRectangle(550, 50, 200, 200, Raylib.BLUE);
+            Raylib.DrawText("TEST - Can you see these colored squares?", 50, 270, 20, Raylib.WHITE);
+
             // Render game
             renderer.DrawMap(game);
 
