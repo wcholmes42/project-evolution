@@ -209,8 +209,28 @@ public class GraphicsRenderer : IDisposable
                 string terrain = game.GetTerrainAt(worldX, worldY);
                 int tileId = TileMapper.GetTerrainTileId(terrain);
 
-                // Draw tile from procedurally generated tileset
-                DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
+                // TEMPORARY: Use colored rectangles (WORKS) while debugging texture issue
+                Color tileColor = terrain switch
+                {
+                    "Grass" or "Grassland" => UltimaIVPalette.Terrain.Grass,
+                    "Forest" => UltimaIVPalette.Terrain.Forest,
+                    "Mountain" => UltimaIVPalette.Terrain.Mountain,
+                    "Water" => UltimaIVPalette.Terrain.DeepWater,
+                    "Town" => UltimaIVPalette.Structures.TownWall,
+                    "Temple" => UltimaIVPalette.Structures.Temple,
+                    "Dungeon" => UltimaIVPalette.Structures.Dungeon,
+                    _ => UltimaIVPalette.White
+                };
+
+                Raylib.DrawRectangle(
+                    mapOffsetX + screenX * SCALED_TILE_SIZE,
+                    mapOffsetY + screenY * SCALED_TILE_SIZE,
+                    SCALED_TILE_SIZE - 2,
+                    SCALED_TILE_SIZE - 2,
+                    tileColor);
+
+                // TODO: Fix DrawTileAt texture rendering
+                // DrawTileAt(tileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
             }
         }
 
@@ -222,15 +242,32 @@ public class GraphicsRenderer : IDisposable
             {
                 int screenX = mob.X - startX;
                 int screenY = mob.Y - startY;
-                int mobTileId = TileMapper.GetMobTileId(mob.Type);
-                DrawTileAt(mobTileId, mapOffsetX + screenX * SCALED_TILE_SIZE, mapOffsetY + screenY * SCALED_TILE_SIZE);
+
+                // Draw mob as colored circle for now
+                Color mobColor = UltimaIVPalette.Monsters.Goblin; // Default green
+                Raylib.DrawCircle(
+                    mapOffsetX + screenX * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
+                    mapOffsetY + screenY * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
+                    SCALED_TILE_SIZE / 3,
+                    mobColor);
             }
         }
 
-        // Draw player
+        // Draw player (use bright white square for now)
         int playerScreenX = game.PlayerX - startX;
         int playerScreenY = game.PlayerY - startY;
-        DrawTileAt(TileMapper.PLAYER_TILE, mapOffsetX + playerScreenX * SCALED_TILE_SIZE, mapOffsetY + playerScreenY * SCALED_TILE_SIZE);
+        Raylib.DrawRectangle(
+            mapOffsetX + playerScreenX * SCALED_TILE_SIZE + 2,
+            mapOffsetY + playerScreenY * SCALED_TILE_SIZE + 2,
+            SCALED_TILE_SIZE - 4,
+            SCALED_TILE_SIZE - 4,
+            UltimaIVPalette.White);
+        // Red center to make player obvious
+        Raylib.DrawCircle(
+            mapOffsetX + playerScreenX * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
+            mapOffsetY + playerScreenY * SCALED_TILE_SIZE + SCALED_TILE_SIZE / 2,
+            SCALED_TILE_SIZE / 4,
+            UltimaIVPalette.BrightRed);
 
         // Draw UI overlay
         DrawUI(game, viewPixelsWidth + mapOffsetX + 20, mapOffsetY);
